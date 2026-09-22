@@ -1,8 +1,5 @@
-import { db } from '$lib/server/db';
-import { frames, elements } from '$lib/server/db/schema';
+import { readDashboard } from '../../view_models/dashboardViewModel.js';
 
 export async function load() {
-	const allFrames = await db.select().from(frames);
-	const allElements = await db.select().from(elements);
-	return { frames: allFrames, elements: allElements };
+	return await readDashboard();
 }
