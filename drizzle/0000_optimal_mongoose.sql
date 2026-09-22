@@ -12,6 +12,7 @@ CREATE TABLE `animejs` (
 --> statement-breakpoint
 CREATE TABLE `elements` (
 	`id` text PRIMARY KEY NOT NULL,
+	`title` text NOT NULL,
 	`value` text NOT NULL,
 	`type` text NOT NULL,
 	`frame_id` text,
