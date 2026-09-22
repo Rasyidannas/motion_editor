@@ -1,7 +1,4 @@
-import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
-
-export const task = sqliteTable('task', {
-	id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
-	title: text('title').notNull(),
-	priority: integer('priority').notNull().default(1)
-});
+export { element_types, animejs_types, utility } from './schema/enums.js'
+export { frames } from './schema/frames.js'
+export { elements } from './schema/elements.js'
+export { animejs } from './schema/animejs.js'
