@@ -36,6 +36,7 @@
 	},
 	"dependencies": {
 		"animejs": "^3.2.2",
-		"better-sqlite3": "^13.0.2"
+		"better-sqlite3": "^13.0.2",
+		"cheerio": "^1.2.0"
 	}
 }

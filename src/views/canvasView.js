@@ -2,6 +2,7 @@ import { writable, derived, get } from 'svelte/store';
 import { tick } from 'svelte';
 import TLN from '$lib/utils/tln.js';
 import '$lib/utils/tln.css';
+import { parseCodeEditor } from '$lib/parser_code_editor.js';
 
 /** @param {string} value */
 const escapeAttr = (value) => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
@@ -34,18 +35,6 @@ const parseSvgAttr = (svg, name) => {
 };
 
 /**
- * Read `name="..."` from the first opening tag of any markup block.
- * @param {string} block
- * @param {string} name
- */
-const parseFirstTagAttr = (block, name) => {
-	const match = new RegExp(`<\\s*[a-zA-Z][^\\s/>]*[^>]*\\b${name}\\s*=\\s*"([^"]*)"`, 'i').exec(
-		block ?? ''
-	);
-	return match ? unescapeAttr(match[1]) : null;
-};
-
-/**
  * Split editor content into the leading <svg>...</svg> block (the current
  * element) and anything after it (new element content, if present).
  * @param {string} src
@@ -66,27 +55,6 @@ const defaultTypeForTag = (tag) => {
 	if (tag === 'p') return 'paragraph';
 	if (tag === 'svg') return 'svg';
 	return 'container';
-};
-
-/**
- * Parse a markup fragment into a tree of element nodes (element children
- * only; whitespace text nodes are skipped, inline text stays in the parent).
- * @param {string} markup
- */
-const parseFragment = (markup) => {
-	const doc = new DOMParser().parseFromString(`<body>${markup ?? ''}</body>`, 'text/html');
-	/**
-	 * @param {Element} el
-	 * @returns {{ tag: string, title: string, type: string, markup: string, children: Array<any> }}
-	 */
-	const walk = (el) => ({
-		tag: el.tagName.toLowerCase(),
-		title: (el.getAttribute('data-element-title') ?? '').trim(),
-		type: (el.getAttribute('data-element-type') ?? '').trim(),
-		markup: el.outerHTML,
-		children: Array.from(el.children).map(walk)
-	});
-	return Array.from(doc.body.children).map(walk);
 };
 
 /** @param {string} id */
@@ -212,7 +180,8 @@ export function createCanvasView(serverData) {
 
 	/**
 	 * Insert one parsed node plus its whole subtree depth-first, so every
-	 * record exists before its children reference it. Returns the created id.
+	 * record exists before its children reference it.
+	 * Returns the created id together with its markup (for anime targeting).
 	 * @param {{ tag: string, title: string, type: string, markup: string, children: Array<any> }} node
 	 * @param {Array<string>} ancestorIds
 	 * @param {string} frameId
@@ -242,7 +211,43 @@ export function createCanvasView(serverData) {
 		for (const child of node.children) {
 			await insertNode(child, [...ancestorIds, created.id], frameId, allowed);
 		}
-		return created.id;
+		return { id: created.id, markup: node.markup };
+	};
+
+	/**
+	 * Store one parsed anime call in the animejs table (never elements).
+	 * Resolves `targets: "#some-id"` against known element markups;
+	 * falls back to the selected element.
+	 * @param {{ type: string, typeValue: Record<string, any>, util: string | null, utilValue: any }} script
+	 * @param {Array<{ id: string, markup: string }>} known
+	 * @param {string} fallbackId
+	 */
+	const postAnimeScript = async (script, known, fallbackId) => {
+		const rawTargets = String(script.typeValue?.targets ?? '').trim();
+		const targetId = rawTargets.startsWith('#') ? rawTargets.slice(1) : null;
+		let elementId = fallbackId;
+		if (targetId) {
+			const hit = known.find(
+				(k) => k.markup.includes(`id="${targetId}"`) || k.markup.includes(`id='${targetId}'`)
+			);
+			if (hit) elementId = hit.id;
+		}
+		const res = await fetch('/api/animejs', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				elementId,
+				type: script.type,
+				typeValue: script.typeValue,
+				util: script.util,
+				utilValue: script.utilValue
+			})
+		});
+		if (!res.ok) {
+			const body = await res.json().catch(() => ({}));
+			throw new Error(body?.error ?? 'Failed to save animation');
+		}
+		return res.json();
 	};
 
 	/** @param {any} element */
@@ -376,13 +381,20 @@ export function createCanvasView(serverData) {
 				}
 			}
 			if (rest) {
-				const nodes = parseFragment(rest);
-				if (nodes.length === 0) {
+				const parsed = parseCodeEditor(rest);
+				if (parsed.elements.length === 0 && parsed.scripts.length === 0) {
 					throw new Error('No HTML elements found after the <svg> block.');
 				}
 				saving.set(true);
-				for (const node of nodes) {
-					await insertNode(node, [$selectedId], $selectedElement.frameId, allowedTypes);
+				// known markups for anime target resolution (selected element first)
+				const known = [{ id: $selectedId, markup: head }];
+				for (const node of parsed.elements) {
+					const created = await insertNode(node, [$selectedId], $selectedElement.frameId, allowedTypes);
+					known.push(created);
+				}
+				// scripts go to the animejs table — never the elements table
+				for (const script of parsed.scripts) {
+					await postAnimeScript(script, known, $selectedId);
 				}
 				code.set(head);
 				await syncTln();

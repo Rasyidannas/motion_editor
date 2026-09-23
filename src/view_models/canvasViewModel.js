@@ -1,5 +1,5 @@
 import { db } from '$lib/server/db';
-import { frames, elements, treeElements, elementTypeValues } from '$lib/server/db/schema';
+import { frames, elements, treeElements, animejs, elementTypeValues, animejsTypeValues, utilityValues } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 
@@ -94,6 +94,53 @@ export async function insertElement(input) {
 		if (!ancestorId || ancestorId === created.id) continue;
 		await db.insert(treeElements).values({ ancestor: ancestorId, descendant: created.id });
 	}
+
+	return created;
+}
+
+/**
+ * Insert an animejs record linked to an element. Scripts are stored here,
+ * never in the elements table.
+ * @param {{ elementId: string, type: string, typeValue?: any, util?: string | null, utilValue?: any }} input
+ */
+export async function insertAnimejs(input) {
+	const elementId = String(input?.elementId ?? '');
+	const type = String(input?.type ?? '').trim();
+
+	if (!elementId) {
+		throw error(400, 'elementId is required');
+	}
+
+	const found = await db.select().from(elements).where(eq(elements.id, elementId));
+	if (found.length === 0) {
+		throw error(404, 'Element not found');
+	}
+
+	if (!/** @type {readonly string[]} */ (animejsTypeValues).includes(type)) {
+		throw error(400, `Invalid type. Must be one of: ${animejsTypeValues.join(', ')}`);
+	}
+
+	const util =
+		input?.util === undefined || input.util === null || String(input.util).trim() === ''
+			? null
+			: String(input.util).trim();
+	if (util !== null && !/** @type {readonly string[]} */ (utilityValues).includes(util)) {
+		throw error(400, `Invalid util. Must be one of: ${utilityValues.join(', ')}`);
+	}
+
+	const typeValue = input?.typeValue ?? null;
+	const utilValue = input?.utilValue ?? null;
+
+	const [created] = await db
+		.insert(animejs)
+		.values({
+			elementId,
+			type: /** @type {any} */ (type),
+			typeValue,
+			util: /** @type {any} */ (util),
+			utilValue
+		})
+		.returning();
 
 	return created;
 }

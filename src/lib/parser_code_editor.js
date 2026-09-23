@@ -1,44 +1,27 @@
 // @ts-nocheck
 /**
- * Parser for code editor content.
+ * Parser for code editor content (cheerio / DOM-based).
  *
  * Splits raw editor markup into typed blocks:
- * - Blocks with a single root tag → element records  (value keyed by tag name)
- * - <script> blocks → animejs records
+ * - Element nodes (svg, h1, div, …) → element records (value keyed by tag name)
+ * - <script> nodes → animejs records (parsed anime({...}) calls)
+ *
+ * Scripts are NEVER returned as elements — they always go to `scripts`
+ * so callers store them in the animejs table, never the elements table.
  *
  * @param {string} src  Raw code-editor content
  * @returns {{ elements: Array<ElementBlock>, scripts: Array<AnimeBlock> }}
  */
 
+import * as cheerio from 'cheerio';
+
 /**
- * @typedef {{ tag: string, markup: string, title: string, type: string, id: string | null, value: Record<string, string> }} ElementBlock
+ * @typedef {{ tag: string, markup: string, title: string, type: string, id: string | null, value: Record<string, string>, children: Array<ElementBlock> }} ElementBlock
  * @typedef {{ source: string, type: string, typeValue: Record<string, any>, util: string | null, utilValue: Record<string, any> | null }} AnimeBlock
  */
 
-// ---- helpers ----------------------------------------------------------------
-
-/**
- * @param {string} value
- */
-const escapeAttr = (value) => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
-
-/**
- * @param {string} value
- */
-const unescapeAttr = (value) => value.replace(/&quot;/g, '"').replace(/&amp;/g, '&');
-
-/**
- * @param {string} markup
- * @param {string} name
- */
-const getAttr = (markup, name) => {
-	const re = new RegExp(`\\b${name}\\s*=\\s*"([^"]*)"`, 'i');
-	const m = re.exec(markup);
-	return m ? unescapeAttr(m[1].trim()) : null;
-};
-
 /** known tag → built-in type mapping */
-const TAG_TYPE = /** @type {Record<string, string>} */ ({
+const TAG_TYPE = {
 	svg: 'svg',
 	h1: 'heading',
 	h2: 'heading',
@@ -67,87 +50,22 @@ const TAG_TYPE = /** @type {Record<string, string>} */ ({
 	ul: 'component',
 	ol: 'component',
 	li: 'component'
-});
-
-// ---- split top-level blocks -------------------------------------------------
-
-/**
- * Extract top-level blocks (elements and script tags) from raw markup.
- * Uses a flat regex: each top-level tag (svg, h1-6, div, etc. or script) is
- * captured with its full content up to its matching closing tag.
- * @param {string} src
- */
-const splitBlocks = (src) => {
-	const blocks = [];
-	/** @type {RegExp} */
-	const blockRe = /<(\/?)([a-zA-Z][^\s/>]*)([\s\S]*?)>/g;
-	/** @type {RegExp} */
-	const closeRe = /<\/(script|svg|h[1-6]|div|p|span|section|article|main|aside|header|footer|nav|button|a|img|input|textarea|select|label|form|ul|ol|li|component)\s*>/gi;
-
-	const openTagRe = /<([a-zA-Z][^\s/>]*)([\s\S]*?)>/;
-
-	let copy = src;
-
-	while (copy.length > 0) {
-		// Try to match a script block
-		const scriptMatch = /<script\b([^>]*)>([\s\S]*?)<\/script\s*>/i.exec(copy);
-		let scriptPos = scriptMatch ? scriptMatch.index : -1;
-
-		// Try to match the first top-level opening tag
-		const topLevelRe = /<(svg|h[1-6]|div|p|span|section|article|main|aside|header|footer|nav|button|a|img|input|textarea|select|label|form|ul|ol|li)\b([^>]*)>/i;
-		const elemMatch = topLevelRe.exec(copy);
-		let elemPos = elemMatch ? elemMatch.index : -1;
-
-		// If nothing found, stop
-		if (scriptPos === -1 && elemPos === -1) break;
-
-		// Pick the earliest match
-		if (scriptPos !== -1 && (scriptPos < elemPos || elemPos === -1)) {
-			// Loose text before the script
-			const before = copy.slice(0, scriptPos).trim();
-			if (before) { /* ignore loose text */ }
-			const tag = scriptMatch[0];
-			blocks.push({ type: 'script', raw: tag, content: scriptMatch[2].trim() });
-			copy = copy.slice(scriptPos + tag.length);
-			continue;
-		}
-
-		// Loose text before the element
-		const before = copy.slice(0, elemPos).trim();
-		if (before) { /* ignore loose text */ }
-
-		const tagName = elemMatch[1].toLowerCase();
-		const openingMatch = copy.slice(elemPos);
-		const startTagMatch = openingMatch.match(openTagRe);
-		if (!startTagMatch) { copy = copy.slice(elemPos + 1); continue; }
-		const fullStart = startTagMatch[0];
-
-		// Check if self-closing (<tag ... />)
-		if (/\/\s*>$/.test(fullStart.trim())) {
-			blocks.push({ type: 'element', raw: fullStart });
-			copy = copy.slice(elemPos + fullStart.length);
-			continue;
-		}
-
-		// Find the matching closing tag
-		const endRe = new RegExp(`<\\/${tagName}\\s*>`, 'i');
-		const rest = openingMatch.slice(fullStart.length);
-		const endMatch = rest.match(endRe);
-		if (endMatch) {
-			const block = openingMatch.slice(0, fullStart.length + endMatch.index + endMatch[0].length);
-			blocks.push({ type: 'element', raw: block });
-			copy = copy.slice(elemPos + block.length);
-		} else {
-			// No closing tag — push the opening tag as-is
-			blocks.push({ type: 'element', raw: fullStart });
-			copy = copy.slice(elemPos + fullStart.length);
-		}
-	}
-
-	return blocks;
 };
 
 // ---- anime.js detection -----------------------------------------------------
+
+/**
+ * Strip one pair of surrounding single/double quotes (JSON.parse can't
+ * handle single-quoted JS strings).
+ * @param {string} value
+ */
+const stripQuotes = (value) => {
+	const v = value.trim();
+	if ((v.startsWith("'") && v.endsWith("'")) || (v.startsWith('"') && v.endsWith('"'))) {
+		return v.slice(1, -1);
+	}
+	return v;
+};
 
 /**
  * Extract structured info from the raw object literal of one anime({...}) call.
@@ -174,7 +92,7 @@ const parseAnimeObject = (raw) => {
 
 	// extract easing
 	const easeM = /easing\s*:\s*('[^']*'|"[^"]*")/.exec(raw);
-	if (easeM) obj.easing = JSON.parse(easeM[1]);
+	if (easeM) obj.easing = stripQuotes(easeM[1]);
 
 	// extract loop
 	const loopM = /loop\s*:\s*(true|false|\d+)/.exec(raw);
@@ -184,7 +102,7 @@ const parseAnimeObject = (raw) => {
 
 	// extract direction
 	const dirM = /direction\s*:\s*('[^']*'|"[^"]*")/.exec(raw);
-	if (dirM) obj.direction = JSON.parse(dirM[1]);
+	if (dirM) obj.direction = stripQuotes(dirM[1]);
 
 	// detect type
 	return { type: 'animate', typeValue: obj, util: null, utilValue: null };
@@ -211,51 +129,53 @@ const parseAnimeCalls = (body) => {
  * @param {string} src
  */
 export function parseCodeEditor(src) {
-	const blocks = splitBlocks(src);
+	const $ = cheerio.load(`<body>${src ?? ''}</body>`);
 	/** @type {ElementBlock[]} */
 	const elements = [];
 	/** @type {AnimeBlock[]} */
 	const scripts = [];
 
-	for (const block of blocks) {
-		if (block.type === 'script') {
-			const body = block.content;
-
-			// detect anime call(s)
-			const animeCalls = parseAnimeCalls(body);
-			for (const call of animeCalls) {
-				scripts.push({ source: body, ...call });
-			}
-			continue;
+	/** Collect anime calls from a <script> node (never an element). */
+	const collectScript = (el) => {
+		const body = $(el).html() ?? '';
+		if (!body.trim()) return;
+		for (const call of parseAnimeCalls(body)) {
+			scripts.push({ source: body, ...call });
 		}
+	};
 
-		// element block
-		const m = /<([a-zA-Z][^\s/>]*)/.exec(block.raw);
-		if (!m) continue;
-		const tag = m[1].toLowerCase();
-		const title = getAttr(block.raw, 'data-element-title') ?? '';
-		const type = getAttr(block.raw, 'data-element-type') ?? TAG_TYPE[tag] ?? 'component';
-		const id = getAttr(block.raw, 'data-element-id');
-		const value = { [tag]: block.raw };
-
-		elements.push({ tag, markup: block.raw, title, type, id, value });
-	}
-
-	// If no anime calls were found in <script> blocks but a script still
-	// exists, push it as a raw script block
-	if (scripts.length === 0) {
-		for (const block of blocks) {
-			if (block.type === 'script' && block.content.trim()) {
-				scripts.push({
-					source: block.content,
-					type: 'animate',
-					typeValue: {},
-					util: null,
-					utilValue: null
-				});
+	/** Walk one element node (scripts excluded, collected separately). */
+	const walkElement = (el) => {
+		const $el = $(el);
+		const tag = (el.tagName || '').toLowerCase();
+		const title = ($el.attr('data-element-title') ?? '').trim();
+		const type = ($el.attr('data-element-type') ?? '').trim() || TAG_TYPE[tag] || 'component';
+		const id = $el.attr('data-element-id') ?? null;
+		const markup = $.html(el);
+		/** @type {ElementBlock[]} */
+		const children = [];
+		$el.children().each((_, child) => {
+			if (child.type !== 'tag' && child.type !== 'script') return;
+			if ((child.tagName || '').toLowerCase() === 'script') {
+				collectScript(child);
+				return;
 			}
-		}
-	}
+			children.push(walkElement(child));
+		});
+		return { tag, markup, title, type, id, value: { [tag]: markup }, children };
+	};
+
+	$('body')
+		.children()
+		.each((_, el) => {
+			if (el.type !== 'tag' && el.type !== 'script') return;
+			const tag = (el.tagName || '').toLowerCase();
+			if (tag === 'script') {
+				collectScript(el);
+				return;
+			}
+			elements.push(walkElement(el));
+		});
 
 	return { elements, scripts };
 }
