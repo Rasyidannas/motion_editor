@@ -105,5 +105,29 @@
 				<iframe title="Preview" srcdoc={previewDoc} class="flex-1 bg-white"></iframe>
 			</section>
 		</div>
+
+		<section class="flex shrink-0 h-[240px] flex-col border-t border-white/10 bg-gray-950">
+			<div class="flex items-center justify-between border-b border-white/10 px-5 py-2.5">
+				<h2 class="text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-500">Layers</h2>
+				<span class="font-mono text-[11px] text-gray-600">{data.elements.length} element{data.elements.length !== 1 ? 's' : ''}</span>
+			</div>
+			<div class="flex gap-2 overflow-x-auto px-5 py-3">
+				{#each data.elements as element, idx}
+					<button
+						type="button"
+						onclick={() => selectElement(element)}
+						class="flex shrink-0 items-center gap-2.5 rounded-lg px-3 py-2 text-left transition {element.id === selectedId
+							? 'bg-gradient-to-r from-primary to-secondary text-white shadow-sm'
+							: 'border border-white/10 bg-gray-900 text-gray-400 hover:bg-gray-800 hover:text-gray-200'}"
+					>
+						<span class="flex h-5 w-5 items-center justify-center rounded bg-black/30 font-mono text-[10px] text-white">{idx + 1}</span>
+						<div>
+							<p class="text-xs font-medium">{element.title}</p>
+							<p class="font-mono text-[10px] opacity-60">{element.type}</p>
+						</div>
+					</button>
+				{/each}
+			</div>
+		</section>
 	{/if}
 </div>

@@ -1,4 +1,5 @@
-export { element_types, animejs_types, utility } from './schema/enums.js'
+export { elementTypeValues, animejsTypeValues, utilityValues } from './schema/enums.js'
 export { frames } from './schema/frames.js'
 export { elements } from './schema/elements.js'
+export { treeElements } from './schema/tree_elements.js'
 export { animejs } from './schema/animejs.js'

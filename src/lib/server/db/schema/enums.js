@@ -1,5 +1,44 @@
-import { text } from 'drizzle-orm/sqlite-core'
+/** @type {readonly ['rectangle', 'elipse', 'triangle', 'star']} */
+export const elementTypeValues = ['rectangle', 'elipse', 'triangle', 'star'];
 
-export const element_types = text('element_types')
-export const animejs_types = text('animejs_types')
-export const utility = text('utility')
+/** @type {readonly ['timer', 'animate', 'timeline', 'layout', 'svg', 'anime_text', 'easing']} */
+export const animejsTypeValues = [
+	'timer',
+	'animate',
+	'timeline',
+	'layout',
+	'svg',
+	'anime_text',
+	'easing'
+];
+
+/**
+ * @type {readonly ['stagger', 'get', 'utility_set', 'clean_inline_style', 'remove', 'sync', 'keep_time', 'random', 'create_seeded_random', 'random_pick', 'shuffle', 'round', 'clamp', 'snap', 'wrap', 'map_range', 'lerp', 'damp', 'round_pad', 'pad_start', 'pad_end', 'deg_end', 'deg_to_rad', 'rad_to_deg', 'chain_able']}
+ */
+export const utilityValues = [
+	'stagger',
+	'get',
+	'utility_set',
+	'clean_inline_style',
+	'remove',
+	'sync',
+	'keep_time',
+	'random',
+	'create_seeded_random',
+	'random_pick',
+	'shuffle',
+	'round',
+	'clamp',
+	'snap',
+	'wrap',
+	'map_range',
+	'lerp',
+	'damp',
+	'round_pad',
+	'pad_start',
+	'pad_end',
+	'deg_end',
+	'deg_to_rad',
+	'rad_to_deg',
+	'chain_able'
+];
