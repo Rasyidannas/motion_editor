@@ -12,6 +12,9 @@ export async function PATCH({ params, request }) {
 	let title;
 	/** @type {string | undefined} */
 	let type;
+	/** @type {any} */
+	let value;
+	let hasValue = false;
 
 	if (body.title !== undefined) {
 		title = String(body.title).trim();
@@ -24,13 +27,22 @@ export async function PATCH({ params, request }) {
 		type = String(body.type).trim();
 	}
 
-	if (title === undefined && type === undefined) {
+	if (body.value !== undefined) {
+		if (typeof body.value !== 'object' || body.value === null) {
+			return json({ error: 'value must be an object' }, { status: 400 });
+		}
+		value = body.value;
+		hasValue = true;
+	}
+
+	if (title === undefined && type === undefined && !hasValue) {
 		return json({ error: 'Nothing to update' }, { status: 400 });
 	}
 
 	const updated = await updateElement(params.id, {
 		...(title !== undefined ? { title } : {}),
-		...(type !== undefined ? { type } : {})
+		...(type !== undefined ? { type } : {}),
+		...(hasValue ? { value } : {})
 	});
 
 	return json(updated);

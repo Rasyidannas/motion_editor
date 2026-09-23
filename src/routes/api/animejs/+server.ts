@@ -1,5 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { insertAnimejs } from '../../../view_models/canvasViewModel.js';
+import { insertAnimejs, deleteAnimejsByElement } from '../../../view_models/canvasViewModel.js';
 
 export async function POST({ request }) {
 	const body = (await request.json()) ?? {};
@@ -13,4 +13,14 @@ export async function POST({ request }) {
 	});
 
 	return json(created, { status: 201 });
+}
+
+export async function DELETE({ request }) {
+	const body = (await request.json()) ?? {};
+
+	if (!body.elementId) {
+		return json({ error: 'elementId is required' }, { status: 400 });
+	}
+
+	return json(await deleteAnimejsByElement(String(body.elementId)));
 }

@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import { frames, elements, treeElements, animejs, elementTypeValues, animejsTypeValues, utilityValues } from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 
 export async function readCanvas(/** @type {string} */ frameId) {
@@ -11,10 +11,16 @@ export async function readCanvas(/** @type {string} */ frameId) {
 	}
 
 	const frameElements = await db.select().from(elements).where(eq(elements.frameId, frameId));
+	const elementIds = frameElements.map((/** @type {any} */ row) => row.id);
+	const frameAnime =
+		elementIds.length > 0
+			? await db.select().from(animejs).where(inArray(animejs.elementId, elementIds))
+			: [];
 
 	return {
 		frame: found[0],
 		elements: frameElements,
+		animejs: frameAnime,
 		elementTypes: [...elementTypeValues]
 	};
 }
@@ -26,10 +32,10 @@ export async function updateElementTitle(/** @type {string} */ elementId, /** @t
 
 /**
  * @param {string} elementId
- * @param {{ title?: string, type?: string }} patch
+ * @param {{ title?: string, type?: string, value?: any }} patch
  */
 export async function updateElement(elementId, patch) {
-	/** @type {{ title?: string, type?: any, updatedAt: Date }} */
+	/** @type {{ title?: string, type?: any, value?: any, updatedAt: Date }} */
 	const set = { updatedAt: new Date() };
 
 	if (patch.title !== undefined) {
@@ -41,6 +47,13 @@ export async function updateElement(elementId, patch) {
 			throw error(400, `Invalid type. Must be one of: ${elementTypeValues.join(', ')}`);
 		}
 		set.type = patch.type;
+	}
+
+	if (patch.value !== undefined) {
+		if (typeof patch.value !== 'object' || patch.value === null) {
+			throw error(400, 'value must be an object');
+		}
+		set.value = patch.value;
 	}
 
 	const updated = await db.update(elements).set(set).where(eq(elements.id, elementId)).returning();
@@ -143,4 +156,17 @@ export async function insertAnimejs(input) {
 		.returning();
 
 	return created;
+}
+
+/**
+ * Delete every animejs record linked to one element (used to re-sync the
+ * script block from editor code).
+ * @param {string} elementId
+ */
+export async function deleteAnimejsByElement(elementId) {
+	if (!elementId) {
+		throw error(400, 'elementId is required');
+	}
+	await db.delete(animejs).where(eq(animejs.elementId, elementId));
+	return { ok: true };
 }

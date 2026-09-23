@@ -3,51 +3,7 @@ import { tick } from 'svelte';
 import TLN from '$lib/utils/tln.js';
 import '$lib/utils/tln.css';
 import { parseCodeEditor } from '$lib/parser_code_editor.js';
-
-/** @param {string} value */
-const escapeAttr = (value) => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
-
-/** @param {string} value */
-const unescapeAttr = (value) => value.replace(/&quot;/g, '"').replace(/&amp;/g, '&');
-
-/**
- * @param {string} svg
- * @param {string} name
- * @param {string} value
- */
-const ensureSvgAttr = (svg, name, value) => {
-	if (!svg) return svg;
-	const safe = escapeAttr(value);
-	const present = new RegExp(`\\b${name}\\s*=\\s*"`);
-	if (present.test(svg)) {
-		return svg.replace(new RegExp(`(\\b${name}\\s*=\\s*")[^"]*(")`), `$1${safe}$2`);
-	}
-	return svg.replace(/<svg\b/i, `<svg ${name}="${safe}"`);
-};
-
-/**
- * @param {string} svg
- * @param {string} name
- */
-const parseSvgAttr = (svg, name) => {
-	const match = new RegExp(`<svg\\b[^>]*\\b${name}\\s*=\\s*"([^"]*)"`, 'i').exec(svg ?? '');
-	return match ? unescapeAttr(match[1]) : null;
-};
-
-/**
- * Split editor content into the leading <svg>...</svg> block (the current
- * element) and anything after it (new element content, if present).
- * @param {string} src
- */
-const splitFirstSvg = (src) => {
-	const match = /<svg\b[^>]*>[\s\S]*?<\/svg\s*>/i.exec(src ?? '');
-	if (!match) {
-		return { head: /** @type {string | null} */ (null), rest: (src ?? '').trim() };
-	}
-	const head = match[0];
-	const rest = (src.slice(0, match.index) + src.slice(match.index + head.length)).trim();
-	return { head, rest };
-};
+import { mergeCodeEditor } from '$lib/utils/merge_code_editor.js';
 
 /** @param {string} tag */
 const defaultTypeForTag = (tag) => {
@@ -64,7 +20,7 @@ export const shortId = (id) => (id ? String(id).slice(0, 8) : '—');
 export const formatDate = (value) => (value ? new Date(value).toLocaleString() : '—');
 
 /**
- * @param {{ frame: any, elements: any[], elementTypes?: string[] }} serverData
+ * @param {{ frame: any, elements: any[], animejs?: Array<any>, elementTypes?: string[] }} serverData
  */
 export function createCanvasView(serverData) {
 	const selectedId = writable(/** @type {string | null} */ (null));
@@ -135,33 +91,10 @@ export function createCanvasView(serverData) {
 </html>`);
 
 	/** @param {any} element */
-	const rawSvg = (element) => {
-		const value = element?.value;
-		if (!value || typeof value !== 'object') return '';
-		const key = resolveType(element);
-		if (typeof value[key] === 'string') return value[key];
-		if (typeof value.svg === 'string') return value.svg;
-		if (typeof value.html === 'string') return value.html;
-		return '';
-	};
-
-	/** @param {any} element */
 	const resolveTitle = (element) => get(titleOverrides)[element.id] ?? element.title;
 
 	/** @param {any} element */
 	const resolveType = (element) => get(typeOverrides)[element.id] ?? element.type;
-
-	/** @param {any} element */
-	const getSvg = (element) =>
-		ensureSvgAttr(
-			ensureSvgAttr(
-				ensureSvgAttr(rawSvg(element), 'data-element-title', resolveTitle(element)),
-				'data-element-type',
-				resolveType(element)
-			),
-			'data-element-id',
-			element.id
-		);
 
 	/** @param {HTMLTextAreaElement} node */
 	const initTln = (node) => {
@@ -216,22 +149,10 @@ export function createCanvasView(serverData) {
 
 	/**
 	 * Store one parsed anime call in the animejs table (never elements).
-	 * Resolves `targets: "#some-id"` against known element markups;
-	 * falls back to the selected element.
 	 * @param {{ type: string, typeValue: Record<string, any>, util: string | null, utilValue: any }} script
-	 * @param {Array<{ id: string, markup: string }>} known
-	 * @param {string} fallbackId
+	 * @param {string} elementId
 	 */
-	const postAnimeScript = async (script, known, fallbackId) => {
-		const rawTargets = String(script.typeValue?.targets ?? '').trim();
-		const targetId = rawTargets.startsWith('#') ? rawTargets.slice(1) : null;
-		let elementId = fallbackId;
-		if (targetId) {
-			const hit = known.find(
-				(k) => k.markup.includes(`id="${targetId}"`) || k.markup.includes(`id='${targetId}'`)
-			);
-			if (hit) elementId = hit.id;
-		}
+	const postAnimeScript = async (script, elementId) => {
 		const res = await fetch('/api/animejs', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
@@ -253,9 +174,21 @@ export function createCanvasView(serverData) {
 	/** @param {any} element */
 	const selectElement = (element) => {
 		selectedId.set(element.id);
-		code.set(getSvg(element));
 		saveError.set('');
 		justSaved.set(false);
+		scrollEditorTo(element.id);
+	};
+
+	/** Scroll the code editor so the block with this element id is visible. */
+	const scrollEditorTo = (/** @type {string} */ id) => {
+		const ta = document.getElementById('editor');
+		if (!ta || !(ta instanceof HTMLTextAreaElement)) return;
+		const idx = ta.value.indexOf(`data-element-id="${id}"`);
+		if (idx === -1) return;
+		const lines = ta.value.slice(0, idx).split('\n').length - 1;
+		const lineHeight = parseFloat(getComputedStyle(ta).lineHeight) || 19;
+		ta.scrollTop = lines * lineHeight;
+		ta.focus({ preventScroll: true });
 	};
 
 	const syncTln = async () => {
@@ -321,83 +254,39 @@ export function createCanvasView(serverData) {
 	};
 
 	const saveElement = async () => {
-		const $selectedId = get(selectedId);
 		const $selectedElement = get(selectedElement);
-		if (!$selectedId || !$selectedElement) return;
+		if (!$selectedElement) return;
 		saveError.set('');
 		justSaved.set(false);
 		try {
 			const $code = get(code);
-			const { head, rest } = splitFirstSvg($code);
-			if (!head) {
-				throw new Error('No <svg>...</svg> block found. Keep the element markup in the editor.');
-			}
-			const parsedTitle = parseSvgAttr(head, 'data-element-title');
-			const parsedType = parseSvgAttr(head, 'data-element-type');
-			const parsedId = parseSvgAttr(head, 'data-element-id');
-			if (parsedId !== null && parsedId !== $selectedId) {
-				throw new Error('Changing data-element-id is not allowed. It identifies this element in the database.');
-			}
-			if (parsedTitle === null) {
-				throw new Error('Add data-element-title="..." to the <svg> tag to rename this element.');
-			}
-			if (!parsedTitle.trim()) {
-				throw new Error('Title must not be empty.');
-			}
 			const allowedTypes = Array.isArray(serverData.elementTypes) ? serverData.elementTypes : [];
-			if (
-				parsedType !== null &&
-				allowedTypes.length > 0 &&
-				!/** @type {readonly string[]} */ (allowedTypes).includes(parsedType.trim())
-			) {
-				throw new Error(`Invalid type. Must be one of: ${allowedTypes.join(', ')}.`);
+			const parsed = parseCodeEditor($code);
+			if (parsed.elements.length === 0 && parsed.scripts.length === 0) {
+				throw new Error('No elements found in the editor.');
 			}
-			/** @type {{ title?: string, type?: string }} */
-			const patch = {};
-			if (parsedTitle.trim() !== resolveTitle($selectedElement)) {
-				patch.title = parsedTitle.trim();
+			saving.set(true);
+			const frameId = $selectedElement.frameId ?? serverData.frame.id;
+			const knownById = new Map(
+				get(elements).map((/** @type {any} */ e) => [e.id, e])
+			);
+			// synced records (id + current markup) for anime target resolution
+			/** @type {Array<{ id: string, markup: string }>} */
+			const synced = [];
+			for (const node of parsed.elements) {
+				await syncNode(node, [], frameId, allowedTypes, knownById, synced);
 			}
-			if (parsedType !== null && parsedType.trim() !== resolveType($selectedElement)) {
-				patch.type = parsedType.trim();
+			// scripts go to the animejs table — never the elements table.
+			// Refresh per targeted element so the code stays the source of truth.
+			const touchedIds = new Set();
+			for (const script of parsed.scripts) {
+				touchedIds.add(resolveAnimeTarget(script, synced, $selectedElement.id));
 			}
-			if (patch.title !== undefined || patch.type !== undefined) {
-				saving.set(true);
-				const res = await fetch(`/api/elements/${$selectedId}`, {
-					method: 'PATCH',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify(patch)
-				});
-				if (!res.ok) {
-					const body = await res.json().catch(() => ({}));
-					throw new Error(body?.error ?? 'Failed to save element');
-				}
-				if (patch.title !== undefined) {
-					const nextTitle = patch.title;
-					titleOverrides.update((/** @type {Record<string, string>} */ o) => ({ ...o, [$selectedId]: nextTitle }));
-				}
-				if (patch.type !== undefined) {
-					const nextType = patch.type;
-					typeOverrides.update((/** @type {Record<string, string>} */ o) => ({ ...o, [$selectedId]: nextType }));
-				}
+			for (const id of touchedIds) {
+				await deleteAnimeRows(id);
 			}
-			if (rest) {
-				const parsed = parseCodeEditor(rest);
-				if (parsed.elements.length === 0 && parsed.scripts.length === 0) {
-					throw new Error('No HTML elements found after the <svg> block.');
-				}
-				saving.set(true);
-				// known markups for anime target resolution (selected element first)
-				const known = [{ id: $selectedId, markup: head }];
-				for (const node of parsed.elements) {
-					const created = await insertNode(node, [$selectedId], $selectedElement.frameId, allowedTypes);
-					known.push(created);
-				}
-				// scripts go to the animejs table — never the elements table
-				for (const script of parsed.scripts) {
-					await postAnimeScript(script, known, $selectedId);
-				}
-				code.set(head);
-				await syncTln();
+			for (const script of parsed.scripts) {
+				await postAnimeScript(script, resolveAnimeTarget(script, synced, $selectedElement.id));
 			}
 			justSaved.set(true);
 			setTimeout(() => justSaved.set(false), 2000);
@@ -408,11 +297,140 @@ export function createCanvasView(serverData) {
 		}
 	};
 
-	// Initial selection from server data.
+	/**
+	 * Resolve an anime call to an element id via `targets: "#some-id"`,
+	 * matched against synced markups. Falls back to the given element.
+	 * @param {{ typeValue: Record<string, any> }} script
+	 * @param {Array<{ id: string, markup: string }>} synced
+	 * @param {string} fallbackId
+	 */
+	const resolveAnimeTarget = (script, synced, fallbackId) => {
+		const rawTargets = String(script.typeValue?.targets ?? '').trim();
+		const targetId = rawTargets.startsWith('#') ? rawTargets.slice(1) : null;
+		if (!targetId) return fallbackId;
+		const hit = synced.find(
+			(entry) => entry.markup.includes(`id="${targetId}"`) || entry.markup.includes(`id='${targetId}'`)
+		);
+		return hit ? hit.id : fallbackId;
+	};
+
+	/**
+	 * Sync one parsed node (and its subtree): update the record when its
+	 * data-element-id matches a frame element, otherwise insert it.
+	 * Returns the record id together with its markup.
+	 * @param {{ tag: string, title: string, type: string, id: string | null, markup: string, children: Array<any> }} node
+	 * @param {Array<string>} ancestorIds
+	 * @param {string} frameId
+	 * @param {Array<string>} allowed
+	 * @param {Map<string, any>} knownById
+	 * @param {Array<{ id: string, markup: string }>} synced
+	 */
+	const syncNode = async (node, ancestorIds, frameId, allowed, knownById, synced) => {
+		const parsedId = node.id && knownById.has(node.id) ? node.id : null;
+		if (parsedId) {
+			const record = knownById.get(parsedId);
+			const title = node.title?.trim() || resolveTitle(record);
+			let type = (node.type || '').trim() || resolveType(record);
+			if (allowed.length > 0 && !allowed.includes(type)) {
+				throw new Error(
+					`Invalid type "${type}". Must be one of: ${allowed.join(', ')}.`
+				);
+			}
+			const value = { [type]: node.markup };
+			/** @type {{ title?: string, type?: string, value?: any }} */
+			const patch = {};
+			if (title !== resolveTitle(record)) patch.title = title;
+			if (type !== resolveType(record)) patch.type = type;
+			if (JSON.stringify(value) !== JSON.stringify(storedMarkup(record))) {
+				patch.value = value;
+			}
+			if (patch.title !== undefined || patch.type !== undefined || patch.value !== undefined) {
+				await patchElement(record.id, patch);
+			}
+			synced.push({ id: record.id, markup: node.markup });
+			for (const child of node.children) {
+				await syncNode(child, [...ancestorIds, record.id], frameId, allowed, knownById, synced);
+			}
+			return { id: record.id, markup: node.markup };
+		}
+		if (node.id && !knownById.has(node.id)) {
+			throw new Error(
+				`Unknown data-element-id "${node.id}". It does not belong to this frame.`
+			);
+		}
+		const created = await insertNode(node, ancestorIds, frameId, allowed);
+		synced.push(created);
+		for (const child of node.children) {
+			await syncNode(child, [...ancestorIds, created.id], frameId, allowed, knownById, synced);
+		}
+		return created;
+	};
+
+	/**
+	 * PATCH one element record.
+	 * @param {string} id
+	 * @param {{ title?: string, type?: string, value?: any }} patch
+	 */
+	const patchElement = async (id, patch) => {
+		const res = await fetch(`/api/elements/${id}`, {
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(patch)
+		});
+		if (!res.ok) {
+			const body = await res.json().catch(() => ({}));
+			throw new Error(body?.error ?? 'Failed to save element');
+		}
+		const updated = await res.json();
+		if (patch.title !== undefined) {
+			const nextTitle = patch.title;
+			titleOverrides.update((/** @type {Record<string, string>} */ o) => ({ ...o, [id]: nextTitle }));
+		}
+		if (patch.type !== undefined) {
+			const nextType = patch.type;
+			typeOverrides.update((/** @type {Record<string, string>} */ o) => ({ ...o, [id]: nextType }));
+		}
+		elements.update((/** @type {Array<any>} */ list) =>
+			list.map((/** @type {any} */ e) => (e.id === id ? { ...e, ...updated } : e))
+		);
+		return updated;
+	};
+
+	/**
+	 * Stored markup of a record (value keyed by type, legacy svg/html fallback).
+	 * @param {any} record
+	 */
+	const storedMarkup = (record) => {
+		const value = record?.value;
+		if (!value || typeof value !== 'object') return '';
+		for (const key of [record?.type, 'svg', 'html']) {
+			if (typeof key === 'string' && typeof value[key] === 'string') return value[key];
+		}
+		const first = Object.values(value).find((v) => typeof v === 'string');
+		return typeof first === 'string' ? first : '';
+	};
+
+	/**
+	 * DELETE every animejs row linked to one element.
+	 * @param {string} elementId
+	 */
+	const deleteAnimeRows = async (elementId) => {
+		const res = await fetch('/api/animejs', {
+			method: 'DELETE',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ elementId })
+		});
+		if (!res.ok) {
+			const body = await res.json().catch(() => ({}));
+			throw new Error(body?.error ?? 'Failed to refresh animations');
+		}
+	};
+
+	// Initial selection + merged editor content (all elements + animejs script).
 	if (serverData.elements.length > 0) {
 		selectedId.set(serverData.elements[0].id);
-		code.set(getSvg(serverData.elements[0]));
 	}
+	code.set(mergeCodeEditor(serverData.elements, serverData.animejs ?? []));
 
 	// Playback controls for the preview iframe. The iframe runs the user's
 	// scripts (srcdoc without sandbox), plus a small runtime injected above
