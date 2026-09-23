@@ -1,67 +1,127 @@
 <script>
+	import TLN from '$lib/utils/tln.js';
+	import '$lib/utils/tln.css';
 	let { data } = $props();
 
-	/** @param {any} value */
-	const formatDate = (value) => (value ? new Date(value).toLocaleString() : '—');
-	/** @param {any} id */
-	const shortId = (id) => (id ? String(id).slice(0, 8) : '—');
+	const getSvg = (/** @type {any} */ element) => {
+		const value = element?.value;
+		return value && value.svg ? String(value.svg) : '';
+	};
+
+	const shortId = (/** @type {string} */ id) => (id ? id.slice(0, 8) : '—');
+
+	let selectedId = $state(/** @type {string|null} */ (null));
+	let code = $state('');
+
+	/** @param {HTMLTextAreaElement} element */
+	const initTln = (element) => {
+		element.id = 'editor';
+		TLN.append_line_numbers('editor');
+		return {
+			destroy() { try { TLN.remove_line_numbers('editor'); } catch { /* ok */ } }
+		};
+	};
+
+	$effect(() => {
+		if (selectedId === null && data.elements.length > 0) {
+			selectedId = data.elements[0].id;
+			code = getSvg(data.elements[0]);
+		}
+	});
+
+	$effect(function refreshTln() {
+		if (selectedId) {
+			TLN.remove_line_numbers('editor');
+			TLN.append_line_numbers('editor');
+		}
+	});
+
+	const selectElement = (/** @type {any} */ element) => {
+		selectedId = element.id;
+		code = getSvg(element);
+	};
+
+	const selectedElement = $derived(
+		/** @type {any} */ (data.elements.find((/** @type {any} */ e) => e.id === selectedId) ?? null)
+	);
+
+	const previewDoc = $derived(
+		`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>*,*::after,*::before{margin:0;padding:0;box-sizing:border-box}</style>
+<script src="https://cdn.jsdelivr.net/npm/animejs@3/lib/anime.min.js"><\/script>
+<script>const{animate}=anime<\/script>
+</head>
+<body>${code}</body>
+</html>`
+	);
 </script>
 
-<div class="min-h-screen bg-black text-gray-100">
-	<div class="mx-auto max-w-6xl px-6 py-10">
-		<a href="/dashboard" class="text-sm text-gray-400 transition hover:text-white">← Back to frames</a>
-
-		<header class="mt-3 flex flex-wrap items-end justify-between gap-4">
-			<div>
-				<p class="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Canvas</p>
-				<h1 class="mt-1 text-3xl font-bold tracking-tight text-white">{data.frame.title}</h1>
-				<p class="mt-1 font-mono text-xs text-gray-500">
-					{shortId(data.frame.id)} · updated {formatDate(data.frame.updatedAt)}
-				</p>
+<div class="flex h-screen flex-col bg-black text-gray-100">
+	<div class="flex shrink-0 items-center justify-between border-b border-white/10 px-5 py-3">
+		<div class="flex items-center gap-3">
+			<h1 class="text-sm font-semibold text-white">Canvas | {data.frame.title}</h1>
+			<span class="font-mono text-[11px] text-gray-500">{shortId(data.frame.id)}</span>
+		</div>
+		<div class="flex items-center gap-3">
+			<div class="flex gap-1.5">
+				{#each data.elements as element}
+					<button
+						type="button"
+						onclick={() => selectElement(element)}
+						class="rounded-md px-2.5 py-1.5 text-xs font-medium transition {element.id === selectedId
+							? 'bg-gradient-to-r from-primary to-secondary text-white shadow-sm'
+							: 'bg-gray-900 text-gray-400 hover:bg-gray-800 hover:text-gray-200'}"
+					>
+						{element.title}
+					</button>
+				{/each}
 			</div>
-			<span class="rounded-full border border-white/20 bg-gray-950 px-3 py-1 text-xs font-medium text-gray-200">
-				{data.elements.length} {data.elements.length === 1 ? 'element' : 'elements'}
-			</span>
-		</header>
-
-		<div class="mt-8 grid gap-6 lg:grid-cols-[1fr_280px]">
-			<section class="overflow-hidden rounded-2xl border border-white/10 bg-gray-950">
-				<div class="border-b border-white/10 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
-					Stage
-				</div>
-				{#if data.elements.length === 0}
-					<p class="px-5 py-10 text-center text-sm text-gray-500">No elements on this canvas yet.</p>
-				{:else}
-					<div class="flex min-h-96 flex-wrap content-start items-start gap-4 p-5">
-						{#each data.elements as element}
-							{@const value = /** @type {any} */ (element.value)}
-							{#if value && value.svg}
-								<div class="flex items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-black p-2 [&>svg]:max-h-40 [&>svg]:w-auto">
-									{@html value.svg}
-								</div>
-							{/if}
-						{/each}
-					</div>
-				{/if}
-			</section>
-
-			<aside class="h-fit rounded-2xl border border-white/10 bg-gray-950 p-5">
-				<h2 class="text-sm font-semibold uppercase tracking-wider text-gray-400">Layers</h2>
-				{#if data.elements.length === 0}
-					<p class="mt-3 text-sm text-gray-500">Nothing here yet.</p>
-				{:else}
-					<ul class="mt-3 space-y-2">
-						{#each data.elements as element}
-							<li class="flex items-center justify-between gap-2 rounded-lg bg-gray-900 px-3 py-2 text-sm">
-								<span class="truncate text-gray-200">{element.title}</span>
-								<span class="shrink-0 rounded-full bg-secondary/30 px-2 py-0.5 font-mono text-[11px] text-gray-300">
-									{element.type}
-								</span>
-							</li>
-						{/each}
-					</ul>
-				{/if}
-			</aside>
+			<button class="btn-primary text-xs">Export</button>
 		</div>
 	</div>
+
+	{#if data.elements.length === 0}
+		<div class="flex flex-1 items-center justify-center">
+			<div class="rounded-2xl border border-white/10 bg-gray-950 p-10 text-center">
+				<p class="text-lg font-medium text-gray-200">No elements on this canvas yet</p>
+				<p class="mt-1 text-sm text-gray-500">
+					Run <code class="rounded bg-gray-900 px-1.5 py-0.5 text-gray-300">npm run db:seed</code> to populate.
+				</p>
+			</div>
+		</div>
+	{:else}
+		<div class="flex flex-1 overflow-hidden">
+			<section class="flex w-1/2 flex-col border-r border-white/10">
+				<div class="flex shrink-0 items-center justify-between border-b border-white/10 bg-gray-950 px-5 py-2.5">
+					<h2 class="text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-500">Code editor</h2>
+					{#if selectedElement}
+						<span class="rounded bg-secondary/30 px-2 py-0.5 font-mono text-[11px] text-gray-300">
+							{selectedElement.title}
+						</span>
+					{/if}
+				</div>
+				<div class="flex flex-1">
+					<textarea
+						use:initTln
+						bind:value={code}
+						spellcheck="false"
+						class="flex-1 resize-none bg-black py-4 font-mono text-xs leading-relaxed text-gray-200 placeholder-gray-600 focus:outline-none"
+						placeholder="<svg>…</svg>"
+					></textarea>
+				</div>
+			</section>
+
+			<section class="flex w-1/2 flex-col">
+				<div class="flex shrink-0 items-center justify-between border-b border-white/10 bg-gray-950 px-5 py-2.5">
+					<h2 class="text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-500">Preview</h2>
+					<span class="font-mono text-[11px] text-gray-600">live</span>
+				</div>
+				<iframe title="Preview" srcdoc={previewDoc} class="flex-1 bg-white"></iframe>
+			</section>
+		</div>
+	{/if}
 </div>
