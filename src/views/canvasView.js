@@ -130,13 +130,34 @@ export function createCanvasView(serverData) {
     };
   }
   if (window.anime && !window.animate) { window.animate = window.anime.animate; }
-  // Remote control from the parent editor: pause / resume every running instance.
+  // Registry of every animation instance ever seen. anime.js drops paused
+  // instances from anime.running, so pausing from that list would make a
+  // later play a no-op — our own list never drops them.
+  var registry = (window.__playedAnims = window.__playedAnims || []);
+  function snapshot() {
+    try {
+      var running = window.anime && anime.running;
+      if (!running) return;
+      for (var i = 0; i < running.length; i++) {
+        if (registry.indexOf(running[i]) === -1) registry.push(running[i]);
+      }
+    } catch (err) { /* ignore */ }
+  }
+  setInterval(snapshot, 250);
+  snapshot();
+  // Remote control from the parent editor: pause / resume every known instance.
+  // Note: play() on a finished one-shot does nothing visible, so those restart.
   window.addEventListener('message', function (e) {
     try {
       var d = e.data || {};
-      if (!window.anime || !anime.running) return;
-      if (d.type === 'anim-pause') anime.running.slice().forEach(function (a) { if (a.pause) a.pause(); });
-      if (d.type === 'anim-play') anime.running.slice().forEach(function (a) { if (a.play) a.play(); });
+      snapshot();
+      if (d.type === 'anim-pause') registry.forEach(function (a) { if (a.pause) a.pause(); });
+      if (d.type === 'anim-play') registry.forEach(function (a) {
+        if (!a) return;
+        if (a.paused && a.play) { a.play(); return; }
+        if (a.completed && a.restart) { a.restart(); return; }
+        if (a.play) a.play();
+      });
     } catch (err) { /* ignore */ }
   });
 })();
@@ -385,7 +406,6 @@ export function createCanvasView(serverData) {
 	// scripts (srcdoc without sandbox), plus a small runtime injected above
 	// that pauses/resumes every running anime.js instance on postMessage.
 	const playing = writable(true);
-	const replayId = writable(0);
 	/** @type {HTMLIFrameElement | null} */
 	let previewNode = null;
 
@@ -414,11 +434,6 @@ export function createCanvasView(serverData) {
 			postToPreview({ type: next ? 'anim-play' : 'anim-pause' });
 			return next;
 		});
-	};
-
-	const replay = () => {
-		playing.set(true);
-		replayId.update((n) => n + 1);
 	};
 
 	// Editing code reloads the iframe, which restarts animations from scratch.
@@ -450,13 +465,11 @@ export function createCanvasView(serverData) {
 		selectedElement,
 		previewDoc,
 		playing,
-		replayId,
 		selectElement,
 		saveElement,
 		initTln,
 		attachPreview,
 		togglePlay,
-		replay,
 		chatInput,
 		chatMessages,
 		chatLoading,

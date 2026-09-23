@@ -18,7 +18,6 @@
 		selectedElement,
 		previewDoc,
 		playing,
-		replayId,
 		chatInput,
 		chatMessages,
 		chatLoading,
@@ -94,18 +93,9 @@
 						>
 							{$playing ? 'Pause' : 'Play'}
 						</button>
-						<button
-							type="button"
-							onclick={view.replay}
-							class="rounded-md bg-gray-900 px-2.5 py-1 font-mono text-[11px] text-gray-300 transition hover:bg-gray-800 hover:text-white"
-						>
-							Replay
-						</button>
 					</div>
 				</div>
-				{#key $replayId}
-					<iframe title="Preview" use:view.attachPreview srcdoc={$previewDoc} class="flex-1 bg-white"></iframe>
-				{/key}
+				<iframe title="Preview" use:view.attachPreview srcdoc={$previewDoc} class="flex-1 bg-white"></iframe>
 			</section>
 
 			<aside class="flex w-80 shrink-0 flex-col border-l border-white/10 bg-gray-950">
