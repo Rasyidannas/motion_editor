@@ -125,7 +125,7 @@ export function createCanvasView(serverData) {
 	 * Insert one parsed node plus its whole subtree depth-first, so every
 	 * record exists before its children reference it.
 	 * Returns the created id together with its markup (for anime targeting).
-	 * @param {{ tag: string, title: string, type: string, markup: string, children: Array<any> }} node
+	 * @param {{ id?: string | null, tag: string, title: string, type: string, markup: string, children: Array<any> }} node
 	 * @param {Array<string>} ancestorIds
 	 * @param {string} frameId
 	 * @param {Array<string>} allowed
@@ -143,7 +143,7 @@ export function createCanvasView(serverData) {
 		const res = await fetch('/api/elements', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ frameId, ancestorIds, title, type, value })
+			body: JSON.stringify({ id: node.id, frameId, ancestorIds, title, type, value })
 		});
 		if (!res.ok) {
 			const body = await res.json().catch(() => ({}));
@@ -152,7 +152,7 @@ export function createCanvasView(serverData) {
 		const created = await res.json();
 		elements.update((/** @type {Array<any>} */ list) => [...list, created]);
 		for (const child of node.children) {
-			await insertNode(child, [...ancestorIds, created.id], frameId, allowed);
+			await insertNode(child, [...ancestorIds, /** @type {string} */ (node.id)], frameId, allowed);
 		}
 		return { id: created.id, markup: node.markup };
 	};
@@ -363,11 +363,8 @@ export function createCanvasView(serverData) {
 			}
 			return { id: record.id, markup: node.markup };
 		}
-		if (node.id && !knownById.has(node.id)) {
-			throw new Error(
-				`Unknown data-element-id "${node.id}". It does not belong to this frame.`
-			);
-		}
+		// Unknown data-element-id — insert as new element (parser-generated
+		// IDs are passed to the API so the stored markup stays consistent).
 		const created = await insertNode(node, ancestorIds, frameId, allowed);
 		synced.push(created);
 		for (const child of node.children) {

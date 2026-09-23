@@ -54,6 +54,13 @@ const TAG_TYPE = {
 
 // ---- anime.js detection -----------------------------------------------------
 
+/** Generate a v4 UUID (safe in both Node and browser). */
+const generateId = () =>
+	'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+		const r = (Math.random() * 16) | 0;
+		return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+	});
+
 /**
  * Convert a JS literal value (from a parsed object literal) into a JSON-safe value.
  * Handles strings, numbers, booleans, null, arrays, and plain nested objects.
@@ -186,25 +193,43 @@ export function parseCodeEditor(src) {
 		}
 	};
 
-	/** Walk one element node (scripts excluded, collected separately). */
+	/** Walk one element node (scripts excluded, collected separately).
+	 *  Nested child elements (e.g. <rect> inside <svg>) are NOT returned as
+	 *  separate ElementBlocks — they stay embedded in the parent's markup
+	 *  with their data-element-id already injected into the DOM so anime.js
+	 *  can target them by ID.
+	 */
 	const walkElement = (el) => {
 		const $el = $(el);
 		const tag = (el.tagName || '').toLowerCase();
 		const title = ($el.attr('data-element-title') ?? '').trim();
 		const type = ($el.attr('data-element-type') ?? '').trim() || TAG_TYPE[tag] || 'component';
-		const id = $el.attr('data-element-id') ?? null;
+		const id = $el.attr('data-element-id') || generateId();
+		$el.attr('data-element-id', id);
+
+		// Inject data-element-id into all descendant DOM nodes (for anime
+		// targeting) and collect <script> blocks — but do NOT create separate
+		// child ElementBlocks since they stay inside the parent's markup.
+		const injectDescendantIds = (parent) => {
+			$(parent)
+				.children()
+				.each((_, child) => {
+					if (child.type !== 'tag' && child.type !== 'script') return;
+					if ((child.tagName || '').toLowerCase() === 'script') {
+						collectScript(child);
+						return;
+					}
+					const $child = $(child);
+					if (!$child.attr('data-element-id')) {
+						$child.attr('data-element-id', generateId());
+					}
+					injectDescendantIds(child);
+				});
+		};
+		injectDescendantIds(el);
+
 		const markup = $.html(el);
-		/** @type {ElementBlock[]} */
-		const children = [];
-		$el.children().each((_, child) => {
-			if (child.type !== 'tag' && child.type !== 'script') return;
-			if ((child.tagName || '').toLowerCase() === 'script') {
-				collectScript(child);
-				return;
-			}
-			children.push(walkElement(child));
-		});
-		return { tag, markup, title, type, id, value: { [tag]: markup }, children };
+		return { tag, markup, title, type, id, value: { [tag]: markup }, children: [] };
 	};
 
 	$('body')

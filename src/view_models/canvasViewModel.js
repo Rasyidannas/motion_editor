@@ -69,9 +69,13 @@ export async function updateElement(elementId, patch) {
  * Insert a new element at the end of a frame's order and link it in the
  * closure table: always a self row, plus one row per ancestor id so the
  * full ancestor chain (e.g. div -> h1) is recorded.
- * @param {{ frameId: string, ancestorIds?: Array<string> | null, title: string, type: string, value: any }} input
+ * Accepts an optional client-provided `id` (UUID) — when present the server
+ * uses it instead of generating a new one, which keeps data-element-id
+ * attributes in the stored markup consistent with the element record.
+ * @param {{ id?: string | null, frameId: string, ancestorIds?: Array<string> | null, title: string, type: string, value: any }} input
  */
 export async function insertElement(input) {
+	const id = input?.id ? String(input.id).trim() : undefined;
 	const frameId = String(input?.frameId ?? '');
 	const title = String(input?.title ?? '').trim();
 	const type = String(input?.type ?? '').trim();
@@ -95,10 +99,10 @@ export async function insertElement(input) {
 		return order > max ? order : max;
 	}, -1) + 1;
 
-	const [created] = await db
-		.insert(elements)
-		.values({ title, type: /** @type {any} */ (type), value: input.value, order: nextOrder, frameId })
-		.returning();
+	const base = { title, type: /** @type {any} */ (type), value: input.value, order: nextOrder, frameId };
+	const values = id ? { ...base, id } : base;
+
+	const [created] = await db.insert(elements).values(values).returning();
 
 	await db.insert(treeElements).values({ ancestor: created.id, descendant: created.id });
 

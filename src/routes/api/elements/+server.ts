@@ -5,6 +5,7 @@ export async function POST({ request }) {
 	const body = (await request.json()) ?? {};
 
 	const created = await insertElement({
+		id: body.id,
 		frameId: body.frameId,
 		ancestorIds: body.ancestorIds ?? [],
 		title: body.title,
