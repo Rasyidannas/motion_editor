@@ -38,67 +38,104 @@ export function createCanvasView(serverData) {
 			/** @type {any} */ ($list.find((/** @type {any} */ e) => e.id === $id) ?? null)
 	);
 
-	const previewDoc = derived(code, (/** @type {string} */ $code) => `<!DOCTYPE html>
+	const previewDoc = derived(code, (/** @type {string} */ $code) => {
+		// Split user code into element markup and script blocks so the
+		// script content can be placed inside a <script type="module">
+		// that imports animejs v4 before running.
+		/** @type {string[]} */
+		const scriptBodies = [];
+		const bodyHtml = ($code ?? '').replace(
+			/<script>([\s\S]*?)<\/script>/g,
+			(/** @type {string} */ _, /** @type {string} */ inner) => {
+				scriptBodies.push(inner);
+				return '';
+			}
+		);
+
+		return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>*,*::after,*::before{margin:0;padding:0;box-sizing:border-box}</style>
-<script src="https://cdn.jsdelivr.net/npm/animejs@3/lib/anime.min.js"><\/script>
-<script>
-(function () {
-  // v4-style animate() alias for the v3 global, so both APIs work.
-  if (window.anime && !window.anime.animate) {
-    window.anime.animate = function (targets, params) {
-      return window.anime(Object.assign({ targets: targets }, params || {}));
-    };
-  }
-  if (window.anime && !window.animate) { window.animate = window.anime.animate; }
-  // Registry of every animation instance ever seen. anime.js drops paused
-  // instances from anime.running, so pausing from that list would make a
-  // later play a no-op — our own list never drops them.
-  var registry = (window.__playedAnims = window.__playedAnims || []);
-  function snapshot() {
-    try {
-      var running = window.anime && anime.running;
-      if (!running) return;
-      for (var i = 0; i < running.length; i++) {
-        if (registry.indexOf(running[i]) === -1) registry.push(running[i]);
-      }
-    } catch (err) { /* ignore */ }
-  }
-  setInterval(snapshot, 250);
-  snapshot();
-  // Direct control API — called by the parent via contentWindow.__animControl
-  window.__animControl = function (action) {
-    try {
-      snapshot();
-      if (action === 'pause') registry.forEach(function (a) { if (a.pause) a.pause(); });
-      if (action === 'play') registry.forEach(function (a) {
-        if (!a) return;
-        if (a.paused && a.play) { a.play(); return; }
-        if (a.completed && a.restart) { a.restart(); return; }
-        if (a.play) a.play();
-      });
-    } catch (err) { /* ignore */ }
-  };
-  window.addEventListener('error', function (e) {
-    try {
-      var msg = (e.message || 'Script error') + (e.lineno ? ' (line ' + e.lineno + ')' : '');
-      window.parent.postMessage({ type: 'preview-error', message: String(msg).slice(0, 300) }, '*');
-    } catch (err) { /* ignore */ }
-  });
-  window.addEventListener('unhandledrejection', function (e) {
-    try {
-      var reason = (e.reason && (e.reason.message || e.reason)) || 'Unhandled rejection';
-      window.parent.postMessage({ type: 'preview-error', message: String(reason).slice(0, 300) }, '*');
-    } catch (err) { /* ignore */ }
-  });
-})();
+<script type="module">
+import {
+  animate, createTimeline, createScope, createTimer, createDraggable,
+  createSpring, createMotionPath, createDrawable,
+  morphTo, onScroll, splitText,
+  stagger, random, utils, globals, engine
+} from '/animejs.esm.min.js';
+
+// Expose every v4 export as a global so both module and non-module
+// scripts in the editor can reference them directly.
+window.animate         = animate;
+window.createTimeline  = createTimeline;
+window.createScope     = createScope;
+window.createTimer     = createTimer;
+window.createDraggable = createDraggable;
+window.createSpring    = createSpring;
+window.createMotionPath = createMotionPath;
+window.createDrawable  = createDrawable;
+window.morphTo         = morphTo;
+window.onScroll        = onScroll;
+window.splitText       = splitText;
+window.stagger         = stagger;
+window.random          = random;
+window.utils           = utils;
+window.globals         = globals;
+window.__engine        = engine;
+
+// Registry of every animation instance ever seen. The engine drops
+// paused instances from its linked list, so pausing from that list
+// would make a later play a no-op — our own list never drops them.
+var registry = (window.__playedAnims = []);
+function snapshot() {
+  try {
+    var child = engine._head;
+    while (child) {
+      if (registry.indexOf(child) === -1) registry.push(child);
+      child = child._next;
+    }
+  } catch (err) { /* ignore */ }
+}
+setInterval(snapshot, 250);
+snapshot();
+
+// Direct control API — called by the parent via contentWindow.__animControl
+window.__animControl = function (action) {
+  try {
+    snapshot();
+    if (action === 'pause') registry.forEach(function (a) { if (a.pause) a.pause(); });
+    if (action === 'play') registry.forEach(function (a) {
+      if (!a) return;
+      if (a.paused && a.play) { a.play(); return; }
+      if (a.completed && a.restart) { a.restart(); return; }
+      if (a.play) a.play();
+    });
+  } catch (err) { /* ignore */ }
+};
+
+// Forward script errors to the parent editor.
+window.addEventListener('error', function (e) {
+  try {
+    var msg = (e.message || 'Script error') + (e.lineno ? ' (line ' + e.lineno + ')' : '');
+    window.parent.postMessage({ type: 'preview-error', message: String(msg).slice(0, 300) }, '*');
+  } catch (err) { /* ignore */ }
+});
+window.addEventListener('unhandledrejection', function (e) {
+  try {
+    var reason = (e.reason && (e.reason.message || e.reason)) || 'Unhandled rejection';
+    window.parent.postMessage({ type: 'preview-error', message: String(reason).slice(0, 300) }, '*');
+  } catch (err) { /* ignore */ }
+});
+
+// --- user anime code (extracted from the editor) ---
+${scriptBodies.join('\n')}
 <\/script>
 </head>
-<body>${$code}</body>
-</html>`);
+<body>${bodyHtml}</body>
+</html>`;
+	});
 
 	/** @param {any} element */
 	const resolveTitle = (element) => get(titleOverrides)[element.id] ?? element.title;
