@@ -42,6 +42,38 @@ npm run db:seed
 
 Seed logic is defined in `src/lib/server/db/seed.js`.
 
+## AI Chat
+
+The canvas page has an AI Chat drawer (toggle in the top bar) that edits the
+code editor: describe a change, the reply replaces the editor code, and the
+preview updates live. An Undo button restores the previous code.
+
+It calls an OpenAI-compatible chat completions API, configured via `.env`:
+
+```sh
+AI_API_KEY=sk-...
+AI_MODEL=gpt-4o-mini
+# AI_API_URL=https://api.openai.com/v1
+```
+
+Other providers work by pointing `AI_API_URL` at them, e.g. OpenRouter
+(`https://openrouter.ai/api/v1`), Groq (`https://api.groq.com/openai/v1`), or a
+local Ollama (`http://localhost:11434/v1` with any `AI_API_KEY` value).
+
+### OpenRouter setup
+
+1. Create a key at https://openrouter.ai/keys
+2. Set in `.env`:
+```sh
+AI_API_URL=https://openrouter.ai/api/v1
+AI_API_KEY=sk-or-...
+AI_MODEL=openrouter/free
+```
+`openrouter/free` auto-routes to a currently-free model (the free roster
+churns, so this is stabler than pinning a `:free` ID; pick a specific one from
+https://openrouter.ai/models if you prefer). Optional `AI_SITE_URL` /
+`AI_SITE_NAME` are sent as `HTTP-Referer` / `X-Title` for OpenRouter rankings.
+
 ## Adding a Column
 
 1. Edit the table definition in `src/lib/server/db/schema/<file>.js`:

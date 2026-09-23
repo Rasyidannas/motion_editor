@@ -222,6 +222,59 @@ export function createCanvasView(serverData) {
 		}
 	};
 
+	const chatInput = writable('');
+	const chatMessages = writable(/** @type {Array<{ role: string, content: string }>} */ ([]));
+	const chatLoading = writable(false);
+	const lastBeforeAi = writable(/** @type {string | null} */ (null));
+
+	const sendChat = async () => {
+		const input = get(chatInput).trim();
+		if (!input || get(chatLoading)) return;
+		const $code = get(code);
+		const $selectedElement = get(selectedElement);
+		chatMessages.update((m) => [...m, { role: 'user', content: input }]);
+		chatInput.set('');
+		chatLoading.set(true);
+		try {
+			const res = await fetch('/api/ai/chat', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					message: input,
+					code: $code,
+					title: $selectedElement ? resolveTitle($selectedElement) : '',
+					type: $selectedElement ? resolveType($selectedElement) : ''
+				})
+			});
+			const body = await res.json().catch(() => ({}));
+			if (!res.ok) {
+				throw new Error(body?.error ?? 'AI request failed');
+			}
+			if (!body?.code) {
+				throw new Error('The AI returned no code.');
+			}
+			lastBeforeAi.set($code);
+			code.set(String(body.code));
+			await syncTln();
+			chatMessages.update((m) => [...m, { role: 'assistant', content: body.note ?? 'Code updated.' }]);
+		} catch (/** @type {any} */ err) {
+			chatMessages.update((m) => [
+				...m,
+				{ role: 'assistant', content: `Error: ${err?.message ?? 'AI request failed'}` }
+			]);
+		} finally {
+			chatLoading.set(false);
+		}
+	};
+
+	const undoAi = () => {
+		const prev = get(lastBeforeAi);
+		if (prev === null) return;
+		code.set(prev);
+		lastBeforeAi.set(null);
+		syncTln();
+	};
+
 	const saveElement = async () => {
 		const $selectedId = get(selectedId);
 		const $selectedElement = get(selectedElement);
@@ -335,6 +388,12 @@ export function createCanvasView(serverData) {
 		selectElement,
 		saveElement,
 		initTln,
+		chatInput,
+		chatMessages,
+		chatLoading,
+		lastBeforeAi,
+		sendChat,
+		undoAi,
 		destroy() {
 			unsubscribeSelection();
 		}

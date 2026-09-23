@@ -16,8 +16,20 @@
 		saveError,
 		justSaved,
 		selectedElement,
-		previewDoc
+		previewDoc,
+		chatInput,
+		chatMessages,
+		chatLoading,
+		lastBeforeAi
 	} = view;
+
+	let chatScroll = $state(/** @type {HTMLElement | null} */ (null));
+
+	$effect(() => {
+		$chatMessages;
+		$chatLoading;
+		chatScroll?.scrollTo({ top: chatScroll.scrollHeight });
+	});
 </script>
 
 <div class="flex h-screen flex-col bg-black text-gray-100">
@@ -68,13 +80,63 @@
 				</div>
 			</section>
 
-			<section class="flex w-2/3 flex-col">
+			<section class="flex min-w-0 flex-1 flex-col">
 				<div class="flex shrink-0 items-center justify-between border-b border-white/10 bg-gray-950 px-5 py-2.5">
 					<h2 class="text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-500">Preview</h2>
 					<span class="font-mono text-[11px] text-gray-600">live</span>
 				</div>
 				<iframe title="Preview" srcdoc={$previewDoc} class="flex-1 bg-white"></iframe>
 			</section>
+
+			<aside class="flex w-80 shrink-0 flex-col border-l border-white/10 bg-gray-950">
+				<div class="flex shrink-0 items-center justify-between border-b border-white/10 px-4 py-2.5">
+					<h2 class="text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-500">AI Assistant</h2>
+					{#if $lastBeforeAi !== null}
+						<button type="button" onclick={view.undoAi} class="font-mono text-[11px] text-gray-400 transition hover:text-white">
+							Undo
+						</button>
+					{/if}
+				</div>
+					<div bind:this={chatScroll} class="flex-1 space-y-3 overflow-y-auto px-4 py-3">
+						{#if $chatMessages.length === 0}
+							<p class="text-xs leading-relaxed text-gray-500">
+								Ask for an edit, e.g. “make the rect red” or “round the corners more”. The reply replaces the editor code and previews live.
+							</p>
+						{/if}
+						{#each $chatMessages as message}
+							{#if message.role === 'user'}
+								<p class="ml-8 rounded-lg bg-gradient-to-r from-primary to-secondary px-3 py-2 text-xs text-white">{message.content}</p>
+							{:else}
+								<p class="mr-8 rounded-lg bg-gray-900 px-3 py-2 text-xs leading-relaxed text-gray-200">{message.content}</p>
+							{/if}
+						{/each}
+						{#if $chatLoading}
+							<p class="mr-8 animate-pulse rounded-lg bg-gray-900 px-3 py-2 text-xs text-gray-400">Thinking…</p>
+						{/if}
+					</div>
+					<div class="shrink-0 border-t border-white/10 p-3">
+						<textarea
+							bind:value={$chatInput}
+							rows="2"
+							placeholder="Ask AI to edit the code… (Enter to send)"
+							onkeydown={(e) => {
+								if (e.key === 'Enter' && !e.shiftKey) {
+									e.preventDefault();
+									view.sendChat();
+								}
+							}}
+							class="w-full resize-none rounded-lg border border-white/10 bg-black px-3 py-2 text-xs text-gray-100 placeholder-gray-600 focus:border-white/25 focus:outline-none"
+						></textarea>
+						<button
+							type="button"
+							onclick={view.sendChat}
+							disabled={$chatLoading || !$chatInput.trim()}
+							class="btn-primary mt-2 w-full px-3 py-1.5 text-xs"
+						>
+							{$chatLoading ? 'Sending…' : 'Send'}
+						</button>
+					</div>
+				</aside>
 		</div>
 
 		<section class="flex shrink-0 h-[240px] flex-col border-t border-white/10 bg-gray-950">
