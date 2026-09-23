@@ -174,3 +174,32 @@ export async function deleteAnimejsByElement(elementId) {
 	await db.delete(animejs).where(eq(animejs.elementId, elementId));
 	return { ok: true };
 }
+
+/**
+ * Delete one element and everything linked to it: its animejs records, its
+ * closure-table rows (self + ancestors + descendants), and the record itself.
+ * Children of a deleted parent are also removed by the cascade on the
+ * elements.frameId… but descendants are linked via tree_elements, so we
+ * explicitly delete all tree_elements rows referencing this element first.
+ * @param {string} elementId
+ */
+export async function deleteElement(elementId) {
+	if (!elementId) {
+		throw error(400, 'elementId is required');
+	}
+
+	const found = await db.select().from(elements).where(eq(elements.id, elementId));
+	if (found.length === 0) {
+		throw error(404, 'Element not found');
+	}
+
+	// remove animejs records targeting this element
+	await db.delete(animejs).where(eq(animejs.elementId, elementId));
+	// remove closure rows where this element is ancestor or descendant
+	await db.delete(treeElements).where(eq(treeElements.ancestor, elementId));
+	await db.delete(treeElements).where(eq(treeElements.descendant, elementId));
+	// finally the element record itself (descendant rows cascade)
+	await db.delete(elements).where(eq(elements.id, elementId));
+
+	return { ok: true };
+}

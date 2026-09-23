@@ -298,6 +298,21 @@ export function createCanvasView(serverData) {
 			for (const script of parsed.scripts) {
 				await postAnimeScript(script, resolveAnimeTarget(script, synced, $selectedElement.id));
 			}
+			// Delete any existing DB elements that were NOT present in the editor
+			// (the user removed them from the code).
+			const syncedIds = new Set(synced.map((e) => e.id));
+			const toDelete = get(elements).filter(
+				(el) => !syncedIds.has(el.id) && el.frameId === frameId
+			);
+			for (const el of toDelete) {
+				await fetch(`/api/elements/${el.id}`, { method: 'DELETE' });
+			}
+			if (toDelete.length > 0) {
+				elements.update((/** @type {Array<any>} */ list) =>
+					list.filter((e) => syncedIds.has(e.id) || e.frameId !== frameId)
+				);
+			}
+
 			justSaved.set(true);
 			setTimeout(() => justSaved.set(false), 2000);
 		} catch (/** @type {any} */ err) {

@@ -1,5 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { updateElement } from '../../../../view_models/canvasViewModel.js';
+import { updateElement, deleteElement } from '../../../../view_models/canvasViewModel.js';
 
 export async function PATCH({ params, request }) {
 	const body = (await request.json()) ?? {};
@@ -46,4 +46,13 @@ export async function PATCH({ params, request }) {
 	});
 
 	return json(updated);
+}
+
+export async function DELETE({ params }) {
+	if (!params.id) {
+		return json({ error: 'Missing element id' }, { status: 400 });
+	}
+
+	await deleteElement(params.id);
+	return json({ ok: true });
 }
