@@ -91,8 +91,8 @@ const convertJsValue = (raw) => {
 	if (v.startsWith('{') && v.endsWith('}')) {
 		return parseRawObject(v);
 	}
-	// fallback — keep as raw string
-	return v;
+	// fallback — wrap as raw JS expression so fmtJsValue outputs it unquoted
+	return { __expr: v };
 };
 
 /**
@@ -179,6 +179,7 @@ const parseAnimeCalls = (body) => {
 		if (targetsRaw) {
 			typeValue.targets = convertJsValue(targetsRaw);
 		}
+		typeValue._callStyle = 'animate';
 		results.push({ type: 'animate', typeValue, util: null, utilValue: null });
 	}
 	return results;

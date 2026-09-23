@@ -81,6 +81,10 @@ const withDataAttrs = (markup, attrs) => {
 
 /** @param {any} value @returns {string} */
 const fmtJsValue = (value) => {
+	// Raw JS expression (e.g. utils.round(0)) — output unquoted
+	if (value && typeof value === 'object' && '__expr' in value) {
+		return String(value.__expr);
+	}
 	if (typeof value === 'string') {
 		return `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
 	}
@@ -98,6 +102,21 @@ const fmtJsValue = (value) => {
 /** @param {any} typeValue */
 const stringifyAnimeCall = (typeValue) => {
 	if (!typeValue || typeof typeValue !== 'object') return '';
+
+	// Preserve animate(targets, {params}) syntax
+	if (typeValue._callStyle === 'animate') {
+		const targets = typeValue.targets;
+		const rest = { ...typeValue };
+		delete rest.targets;
+		delete rest._callStyle;
+		const body = Object.entries(rest)
+			.map(([key, value]) => `    ${key}: ${fmtJsValue(value)}`)
+			.join(',\n');
+		if (!body) return '';
+		return `  animate(${fmtJsValue(targets)}, {\n${body}\n  });`;
+	}
+
+	// Default anime({...}) format
 	const body = Object.entries(typeValue)
 		.map(([key, value]) => `    ${key}: ${fmtJsValue(value)}`)
 		.join(',\n');
