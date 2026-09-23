@@ -1,5 +1,5 @@
-/** @type {readonly ['rectangle', 'elipse', 'triangle', 'star']} */
-export const elementTypeValues = ['rectangle', 'elipse', 'triangle', 'star'];
+/** @type {readonly ['svg', 'heading', 'paragraph', 'container', 'component']} */
+export const elementTypeValues = ['svg', 'heading', 'paragraph', 'container', 'component'];
 
 /** @type {readonly ['timer', 'animate', 'timeline', 'layout', 'svg', 'anime_text', 'easing']} */
 export const animejsTypeValues = [

@@ -9,6 +9,7 @@
 	const {
 		selectedId,
 		code,
+		elements,
 		titleOverrides,
 		typeOverrides,
 		saving,
@@ -29,7 +30,7 @@
 		</div>
 	</div>
 
-	{#if view.elements.length === 0}
+	{#if $elements.length === 0}
 		<div class="flex flex-1 items-center justify-center">
 			<div class="rounded-2xl border border-white/10 bg-gray-950 p-10 text-center">
 				<p class="text-lg font-medium text-gray-200">No elements on this canvas yet</p>
@@ -79,10 +80,10 @@
 		<section class="flex shrink-0 h-[240px] flex-col border-t border-white/10 bg-gray-950">
 			<div class="flex items-center justify-between border-b border-white/10 px-5 py-2.5">
 				<h2 class="text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-500">Layers</h2>
-				<span class="font-mono text-[11px] text-gray-600">{view.elements.length} element{view.elements.length !== 1 ? 's' : ''}</span>
+				<span class="font-mono text-[11px] text-gray-600">{$elements.length} element{$elements.length !== 1 ? 's' : ''}</span>
 			</div>
 			<div class="flex gap-2 overflow-x-auto px-5 py-3">
-				{#each view.elements as element, idx}
+				{#each $elements as element, idx}
 					<button
 						type="button"
 						onclick={() => view.selectElement(element)}

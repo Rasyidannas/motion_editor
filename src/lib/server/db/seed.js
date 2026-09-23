@@ -34,14 +34,14 @@ export const seedElements = async (/** @type {any} */ db, /** @type {string} */ 
   if (existing.length === 0) {
     await db.insert(elements).values({ 
       title: "Rectangle", 
-      type: "rectangle", 
+      type: "svg", 
       frameId,
       value: { svg: '<svg width="300" height="130" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="100" x="10" y="10" rx="20" ry="20" fill="blue" /></svg>' }
     });
   } else {
     await db.update(elements).set({ 
       title: "Rectangle", 
-      type: "rectangle", 
+      type: "svg", 
       frameId,
       value: { svg: '<svg width="300" height="130" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="100" x="10" y="10" rx="20" ry="20" fill="blue" /></svg>' } 
     }).where(eq(elements.id, existing[0].id));

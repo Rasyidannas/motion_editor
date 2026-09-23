@@ -33,6 +33,62 @@ const parseSvgAttr = (svg, name) => {
 	return match ? unescapeAttr(match[1]) : null;
 };
 
+/**
+ * Read `name="..."` from the first opening tag of any markup block.
+ * @param {string} block
+ * @param {string} name
+ */
+const parseFirstTagAttr = (block, name) => {
+	const match = new RegExp(`<\\s*[a-zA-Z][^\\s/>]*[^>]*\\b${name}\\s*=\\s*"([^"]*)"`, 'i').exec(
+		block ?? ''
+	);
+	return match ? unescapeAttr(match[1]) : null;
+};
+
+/**
+ * Split editor content into the leading <svg>...</svg> block (the current
+ * element) and anything after it (new element content, if present).
+ * @param {string} src
+ */
+const splitFirstSvg = (src) => {
+	const match = /<svg\b[^>]*>[\s\S]*?<\/svg\s*>/i.exec(src ?? '');
+	if (!match) {
+		return { head: /** @type {string | null} */ (null), rest: (src ?? '').trim() };
+	}
+	const head = match[0];
+	const rest = (src.slice(0, match.index) + src.slice(match.index + head.length)).trim();
+	return { head, rest };
+};
+
+/** @param {string} tag */
+const defaultTypeForTag = (tag) => {
+	if (/^h[1-6]$/.test(tag)) return 'heading';
+	if (tag === 'p') return 'paragraph';
+	if (tag === 'svg') return 'svg';
+	return 'container';
+};
+
+/**
+ * Parse a markup fragment into a tree of element nodes (element children
+ * only; whitespace text nodes are skipped, inline text stays in the parent).
+ * @param {string} markup
+ */
+const parseFragment = (markup) => {
+	const doc = new DOMParser().parseFromString(`<body>${markup ?? ''}</body>`, 'text/html');
+	/**
+	 * @param {Element} el
+	 * @returns {{ tag: string, title: string, type: string, markup: string, children: Array<any> }}
+	 */
+	const walk = (el) => ({
+		tag: el.tagName.toLowerCase(),
+		title: (el.getAttribute('data-element-title') ?? '').trim(),
+		type: (el.getAttribute('data-element-type') ?? '').trim(),
+		markup: el.outerHTML,
+		children: Array.from(el.children).map(walk)
+	});
+	return Array.from(doc.body.children).map(walk);
+};
+
 /** @param {string} id */
 export const shortId = (id) => (id ? String(id).slice(0, 8) : '—');
 
@@ -45,14 +101,17 @@ export const formatDate = (value) => (value ? new Date(value).toLocaleString() :
 export function createCanvasView(serverData) {
 	const selectedId = writable(/** @type {string | null} */ (null));
 	const code = writable('');
+	const elements = writable(/** @type {Array<any>} */ ([...serverData.elements]));
 	const titleOverrides = writable(/** @type {Record<string, string>} */ ({}));
 	const typeOverrides = writable(/** @type {Record<string, string>} */ ({}));
 	const saving = writable(false);
 	const saveError = writable('');
 	const justSaved = writable(false);
 
-	const selectedElement = derived(selectedId, (/** @type {string | null} */ $id) =>
-		/** @type {any} */ (serverData.elements.find((/** @type {any} */ e) => e.id === $id) ?? null)
+	const selectedElement = derived(
+		[selectedId, elements],
+		(/** @type {[string | null, Array<any>]} */ [$id, $list]) =>
+			/** @type {any} */ ($list.find((/** @type {any} */ e) => e.id === $id) ?? null)
 	);
 
 	const previewDoc = derived(code, (/** @type {string} */ $code) => `<!DOCTYPE html>
@@ -70,7 +129,12 @@ export function createCanvasView(serverData) {
 	/** @param {any} element */
 	const rawSvg = (element) => {
 		const value = element?.value;
-		return value && value.svg ? String(value.svg) : '';
+		if (!value || typeof value !== 'object') return '';
+		const key = resolveType(element);
+		if (typeof value[key] === 'string') return value[key];
+		if (typeof value.svg === 'string') return value.svg;
+		if (typeof value.html === 'string') return value.html;
+		return '';
 	};
 
 	/** @param {any} element */
@@ -106,12 +170,56 @@ export function createCanvasView(serverData) {
 		};
 	};
 
+	/**
+	 * Insert one parsed node plus its whole subtree depth-first, so every
+	 * record exists before its children reference it. Returns the created id.
+	 * @param {{ tag: string, title: string, type: string, markup: string, children: Array<any> }} node
+	 * @param {Array<string>} ancestorIds
+	 * @param {string} frameId
+	 * @param {Array<string>} allowed
+	 */
+	const insertNode = async (node, ancestorIds, frameId, allowed) => {
+		const title = node.title || `Untitled ${node.tag}`;
+		let type = node.type;
+		if (!type || (allowed.length > 0 && !allowed.includes(type))) {
+			type = defaultTypeForTag(node.tag);
+		}
+		if (allowed.length > 0 && !allowed.includes(type)) {
+			type = allowed.includes('container') ? 'container' : allowed[0];
+		}
+		const value = { [type]: node.markup };
+		const res = await fetch('/api/elements', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ frameId, ancestorIds, title, type, value })
+		});
+		if (!res.ok) {
+			const body = await res.json().catch(() => ({}));
+			throw new Error(body?.error ?? `Failed to insert <${node.tag}> element`);
+		}
+		const created = await res.json();
+		elements.update((/** @type {Array<any>} */ list) => [...list, created]);
+		for (const child of node.children) {
+			await insertNode(child, [...ancestorIds, created.id], frameId, allowed);
+		}
+		return created.id;
+	};
+
 	/** @param {any} element */
 	const selectElement = (element) => {
 		selectedId.set(element.id);
 		code.set(getSvg(element));
 		saveError.set('');
 		justSaved.set(false);
+	};
+
+	const syncTln = async () => {
+		await tick();
+		const ta = document.getElementById('editor');
+		const wrapper = ta?.previousSibling;
+		if (ta && wrapper instanceof HTMLElement && wrapper.classList.contains('tln-wrapper')) {
+			TLN.update_line_numbers(ta, wrapper);
+		}
 	};
 
 	const saveElement = async () => {
@@ -122,9 +230,13 @@ export function createCanvasView(serverData) {
 		justSaved.set(false);
 		try {
 			const $code = get(code);
-			const parsedTitle = parseSvgAttr($code, 'data-element-title');
-			const parsedType = parseSvgAttr($code, 'data-element-type');
-			const parsedId = parseSvgAttr($code, 'data-element-id');
+			const { head, rest } = splitFirstSvg($code);
+			if (!head) {
+				throw new Error('No <svg>...</svg> block found. Keep the element markup in the editor.');
+			}
+			const parsedTitle = parseSvgAttr(head, 'data-element-title');
+			const parsedType = parseSvgAttr(head, 'data-element-type');
+			const parsedId = parseSvgAttr(head, 'data-element-id');
 			if (parsedId !== null && parsedId !== $selectedId) {
 				throw new Error('Changing data-element-id is not allowed. It identifies this element in the database.');
 			}
@@ -150,28 +262,37 @@ export function createCanvasView(serverData) {
 			if (parsedType !== null && parsedType.trim() !== resolveType($selectedElement)) {
 				patch.type = parsedType.trim();
 			}
-			if (patch.title === undefined && patch.type === undefined) {
-				justSaved.set(true);
-				setTimeout(() => justSaved.set(false), 2000);
-				return;
+			if (patch.title !== undefined || patch.type !== undefined) {
+				saving.set(true);
+				const res = await fetch(`/api/elements/${$selectedId}`, {
+					method: 'PATCH',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(patch)
+				});
+				if (!res.ok) {
+					const body = await res.json().catch(() => ({}));
+					throw new Error(body?.error ?? 'Failed to save element');
+				}
+				if (patch.title !== undefined) {
+					const nextTitle = patch.title;
+					titleOverrides.update((/** @type {Record<string, string>} */ o) => ({ ...o, [$selectedId]: nextTitle }));
+				}
+				if (patch.type !== undefined) {
+					const nextType = patch.type;
+					typeOverrides.update((/** @type {Record<string, string>} */ o) => ({ ...o, [$selectedId]: nextType }));
+				}
 			}
-			saving.set(true);
-			const res = await fetch(`/api/elements/${$selectedId}`, {
-				method: 'PATCH',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(patch)
-			});
-			if (!res.ok) {
-				const body = await res.json().catch(() => ({}));
-				throw new Error(body?.error ?? 'Failed to save element');
-			}
-			if (patch.title !== undefined) {
-				const nextTitle = patch.title;
-				titleOverrides.update((/** @type {Record<string, string>} */ o) => ({ ...o, [$selectedId]: nextTitle }));
-			}
-			if (patch.type !== undefined) {
-				const nextType = patch.type;
-				typeOverrides.update((/** @type {Record<string, string>} */ o) => ({ ...o, [$selectedId]: nextType }));
+			if (rest) {
+				const nodes = parseFragment(rest);
+				if (nodes.length === 0) {
+					throw new Error('No HTML elements found after the <svg> block.');
+				}
+				saving.set(true);
+				for (const node of nodes) {
+					await insertNode(node, [$selectedId], $selectedElement.frameId, allowedTypes);
+				}
+				code.set(head);
+				await syncTln();
 			}
 			justSaved.set(true);
 			setTimeout(() => justSaved.set(false), 2000);
@@ -196,18 +317,12 @@ export function createCanvasView(serverData) {
 			firstSelection = false;
 			return;
 		}
-		tick().then(() => {
-			const ta = document.getElementById('editor');
-			const wrapper = ta?.previousSibling;
-			if (ta && wrapper instanceof HTMLElement && wrapper.classList.contains('tln-wrapper')) {
-				TLN.update_line_numbers(ta, wrapper);
-			}
-		});
+		syncTln();
 	});
 
 	return {
 		frame: serverData.frame,
-		elements: serverData.elements,
+		elements,
 		selectedId,
 		code,
 		titleOverrides,
