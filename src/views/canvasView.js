@@ -1,6 +1,7 @@
 import { writable, derived, get } from 'svelte/store';
 import { tick } from 'svelte';
 import TLN from '$lib/utils/tln.js';
+import '$lib/utils/tln.css';
 
 /** @param {string} value */
 const escapeAttr = (value) => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
@@ -81,9 +82,13 @@ export function createCanvasView(serverData) {
 	/** @param {any} element */
 	const getSvg = (element) =>
 		ensureSvgAttr(
-			ensureSvgAttr(rawSvg(element), 'data-element-title', resolveTitle(element)),
-			'data-element-type',
-			resolveType(element)
+			ensureSvgAttr(
+				ensureSvgAttr(rawSvg(element), 'data-element-title', resolveTitle(element)),
+				'data-element-type',
+				resolveType(element)
+			),
+			'data-element-id',
+			element.id
 		);
 
 	/** @param {HTMLTextAreaElement} node */
@@ -119,6 +124,10 @@ export function createCanvasView(serverData) {
 			const $code = get(code);
 			const parsedTitle = parseSvgAttr($code, 'data-element-title');
 			const parsedType = parseSvgAttr($code, 'data-element-type');
+			const parsedId = parseSvgAttr($code, 'data-element-id');
+			if (parsedId !== null && parsedId !== $selectedId) {
+				throw new Error('Changing data-element-id is not allowed. It identifies this element in the database.');
+			}
 			if (parsedTitle === null) {
 				throw new Error('Add data-element-title="..." to the <svg> tag to rename this element.');
 			}
