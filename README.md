@@ -1,6 +1,39 @@
 # Motion Editor
 
-SvelteKit project with Drizzle ORM and SQLite.
+SvelteKit project with Drizzle ORM and SQLite using an **MVVM** (Model-View-ViewModel) architecture.
+
+### What is the Model?
+
+Business logic, API calls, databases, repositories — the data layer.
+
+- **Server-side handlers** (`src/routes/api/`) expose CRUD endpoints for elements and animejs records.
+- **View models** (`src/view_models/`) encapsulate all database operations (Drizzle queries, inserts, deletes) and validation.
+- **DB schema** (`src/lib/server/db/schema/`) defines tables, enums, and relationships.
+- Core data structures: `ElementBlock` / `AnimeBlock` (parser output), DB rows from `elements` and `animejs` tables.
+
+The Model never imports View or ViewModel code — it is a pure data/service layer.
+
+### What is the View?
+
+Displaying data and capturing user interactions (clicks, typing, etc.), forwarding actions to the ViewModel.
+
+- **Svelte pages & components** (`src/routes/canvas/[frameId]/+page.svelte`) render the UI: code editor, element tree, preview iframe, playback controls, AI chat drawer.
+- The View binds to reactive stores exposed by the ViewModel (`$code`, `$elements`, `$selectedElement`, `$previewDoc`, `$saving`, `$saveError`, …).
+- User actions (typing in the editor, clicking Save, toggling play/pause, selecting an element) call ViewModel methods (`view.saveElement()`, `view.selectElement()`, `view.togglePlay()`, …).
+- The View never calls the Model directly — it only talks to the ViewModel.
+
+### What is the ViewModel?
+
+Holds and exposes observable UI state. Receives user actions from the View, calls the Model to get or persist data, and exposes results reactively back to the View.
+
+- **`createCanvasView(serverData)`** (`src/views/canvasView.js`) is the central ViewModel factory. It owns all writable/derived Svelte stores:
+  - `code`, `elements`, `selectedElement`, `previewDoc`, `saving`, `saveError`, `playing`, …
+- Methods like `saveElement()`, `selectElement()`, `togglePlay()`, `sendChat()` orchestrate the flow: parse editor content → call Model APIs → update stores → the View re-renders automatically.
+- The ViewModel is also responsible for **preparing/formatting data** for the View:
+  - `parseCodeEditor()` splits raw editor text into typed `ElementBlock[]` and `AnimeBlock[]` arrays.
+  - `mergeCodeEditor()` reverses it: reassembles DB records back into a single editor string on page load.
+  - `previewDoc` is a derived store that wraps user code in a complete HTML document with animejs imports and runtime controls.
+- The ViewModel holds **no DOM references** — it is fully testable without a browser.
 
 ## Database Schema
 
