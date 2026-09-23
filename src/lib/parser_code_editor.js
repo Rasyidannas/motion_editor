@@ -78,8 +78,8 @@ const convertJsValue = (raw) => {
 	if (v === 'true') return true;
 	if (v === 'false') return false;
 	if (v === 'null' || v === 'undefined') return null;
-	// number
-	if (/^-?\d+(\.\d+)?$/.test(v)) return Number(v);
+	// number (also handles `.5` / `-.5` without leading digit)
+	if (/^-?(?:\d+(?:\.\d+)?|\.\d+)$/.test(v)) return Number(v);
 	// array literal (may contain nested)
 	if (v.startsWith('[') && v.endsWith(']')) {
 		const inner = v.slice(1, -1);
@@ -158,16 +158,28 @@ const parseAnimeObject = (raw) => {
 };
 
 /**
- * Detect ALL `anime({...})` calls in a script body.
+ * Detect ALL `anime({...})` AND `animate(targets, {...})` calls in a script body.
  * @param {string} body
  * @returns {Array<{ type: string, typeValue: Record<string, any>, util: string | null, utilValue: Record<string, any> | null }>}
  */
 const parseAnimeCalls = (body) => {
 	const results = [];
-	const callRe = /anime\s*\(\s*\{([\s\S]*?)\}\s*\)/g;
+	// detect anime({...})
+	const animeRe = /anime\s*\(\s*\{([\s\S]*?)\}\s*\)/g;
 	let m;
-	while ((m = callRe.exec(body)) !== null) {
+	while ((m = animeRe.exec(body)) !== null) {
 		results.push(parseAnimeObject(m[1]));
+	}
+	// detect animate(targets, {params})
+	const animateRe = /animate\s*\(\s*([\s\S]*?)\s*,\s*\{([\s\S]*?)\}\s*\)/g;
+	while ((m = animateRe.exec(body)) !== null) {
+		const targetsRaw = m[1].trim();
+		const paramsRaw = m[2];
+		const typeValue = parseRawObject(`{${paramsRaw}}`);
+		if (targetsRaw) {
+			typeValue.targets = convertJsValue(targetsRaw);
+		}
+		results.push({ type: 'animate', typeValue, util: null, utilValue: null });
 	}
 	return results;
 };
