@@ -60,7 +60,7 @@ export function createCanvasView(serverData) {
 <style>*,*::after,*::before{margin:0;padding:0;box-sizing:border-box}</style>
 <script type="module">
 import {
-  animate, createTimeline, createScope, createTimer, createDraggable,
+  animate, waapi, createTimeline, createScope, createTimer, createDraggable,
   createSpring, createMotionPath, createDrawable,
   morphTo, onScroll, splitText,
   stagger, random, utils, globals, engine
@@ -69,6 +69,7 @@ import {
 // Expose every v4 export as a global so both module and non-module
 // scripts in the editor can reference them directly.
 window.animate         = animate;
+window.waapi           = waapi;
 window.createTimeline  = createTimeline;
 window.createScope     = createScope;
 window.createTimer     = createTimer;
@@ -114,6 +115,21 @@ window.__animControl = function (action) {
     });
   } catch (err) { /* ignore */ }
 };
+
+// Fallback for postMessage-based control (legacy v3 / Docker-cached builds)
+window.addEventListener('message', function (e) {
+  try {
+    var d = e.data || {};
+    snapshot();
+    if (d.type === 'anim-pause') registry.forEach(function (a) { if (a.pause) a.pause(); });
+    if (d.type === 'anim-play') registry.forEach(function (a) {
+      if (!a) return;
+      if (a.paused && a.play) { a.play(); return; }
+      if (a.completed && a.restart) { a.restart(); return; }
+      if (a.play) a.play();
+    });
+  } catch (err) { /* ignore */ }
+});
 
 // Forward script errors to the parent editor.
 window.addEventListener('error', function (e) {
@@ -514,8 +530,12 @@ ${scriptBodies.join('\n')}
 			const next = !v;
 			try {
 				const cw = /** @type {any} */ (previewNode?.contentWindow);
-				if (cw && typeof cw.__animControl === 'function') {
-					cw.__animControl(next ? 'play' : 'pause');
+				if (cw) {
+					if (typeof cw.__animControl === 'function') {
+						cw.__animControl(next ? 'play' : 'pause');
+					} else {
+						cw.postMessage({ type: next ? 'anim-play' : 'anim-pause' }, '*');
+					}
 				}
 			} catch {
 				/* iframe not ready */
