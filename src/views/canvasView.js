@@ -121,7 +121,26 @@ export function createCanvasView(serverData) {
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>*,*::after,*::before{margin:0;padding:0;box-sizing:border-box}</style>
 <script src="https://cdn.jsdelivr.net/npm/animejs@3/lib/anime.min.js"><\/script>
-<script>const{animate}=anime<\/script>
+<script>
+(function () {
+  // v4-style animate() alias for the v3 global, so both APIs work.
+  if (window.anime && !window.anime.animate) {
+    window.anime.animate = function (targets, params) {
+      return window.anime(Object.assign({ targets: targets }, params || {}));
+    };
+  }
+  if (window.anime && !window.animate) { window.animate = window.anime.animate; }
+  // Remote control from the parent editor: pause / resume every running instance.
+  window.addEventListener('message', function (e) {
+    try {
+      var d = e.data || {};
+      if (!window.anime || !anime.running) return;
+      if (d.type === 'anim-pause') anime.running.slice().forEach(function (a) { if (a.pause) a.pause(); });
+      if (d.type === 'anim-play') anime.running.slice().forEach(function (a) { if (a.play) a.play(); });
+    } catch (err) { /* ignore */ }
+  });
+})();
+<\/script>
 </head>
 <body>${$code}</body>
 </html>`);
@@ -362,6 +381,51 @@ export function createCanvasView(serverData) {
 		code.set(getSvg(serverData.elements[0]));
 	}
 
+	// Playback controls for the preview iframe. The iframe runs the user's
+	// scripts (srcdoc without sandbox), plus a small runtime injected above
+	// that pauses/resumes every running anime.js instance on postMessage.
+	const playing = writable(true);
+	const replayId = writable(0);
+	/** @type {HTMLIFrameElement | null} */
+	let previewNode = null;
+
+	/** @param {HTMLIFrameElement} node */
+	const attachPreview = (node) => {
+		previewNode = node;
+		return {
+			destroy() {
+				if (previewNode === node) previewNode = null;
+			}
+		};
+	};
+
+	/** @param {{ type: string }} msg */
+	const postToPreview = (msg) => {
+		try {
+			previewNode?.contentWindow?.postMessage(msg, '*');
+		} catch {
+			/* iframe not ready yet */
+		}
+	};
+
+	const togglePlay = () => {
+		playing.update((v) => {
+			const next = !v;
+			postToPreview({ type: next ? 'anim-play' : 'anim-pause' });
+			return next;
+		});
+	};
+
+	const replay = () => {
+		playing.set(true);
+		replayId.update((n) => n + 1);
+	};
+
+	// Editing code reloads the iframe, which restarts animations from scratch.
+	code.subscribe(() => {
+		playing.set(true);
+	});
+
 	// Keep TLN line numbers in sync after switching elements (post-render).
 	let firstSelection = true;
 	const unsubscribeSelection = selectedId.subscribe((/** @type {string | null} */ $id) => {
@@ -385,9 +449,14 @@ export function createCanvasView(serverData) {
 		justSaved,
 		selectedElement,
 		previewDoc,
+		playing,
+		replayId,
 		selectElement,
 		saveElement,
 		initTln,
+		attachPreview,
+		togglePlay,
+		replay,
 		chatInput,
 		chatMessages,
 		chatLoading,

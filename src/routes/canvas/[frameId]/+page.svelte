@@ -17,6 +17,8 @@
 		justSaved,
 		selectedElement,
 		previewDoc,
+		playing,
+		replayId,
 		chatInput,
 		chatMessages,
 		chatLoading,
@@ -83,9 +85,27 @@
 			<section class="flex min-w-0 flex-1 flex-col">
 				<div class="flex shrink-0 items-center justify-between border-b border-white/10 bg-gray-950 px-5 py-2.5">
 					<h2 class="text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-500">Preview</h2>
-					<span class="font-mono text-[11px] text-gray-600">live</span>
+					<div class="flex items-center gap-2">
+						<span class="font-mono text-[11px] text-gray-600">live</span>
+						<button
+							type="button"
+							onclick={view.togglePlay}
+							class="rounded-md bg-gray-900 px-2.5 py-1 font-mono text-[11px] text-gray-300 transition hover:bg-gray-800 hover:text-white"
+						>
+							{$playing ? 'Pause' : 'Play'}
+						</button>
+						<button
+							type="button"
+							onclick={view.replay}
+							class="rounded-md bg-gray-900 px-2.5 py-1 font-mono text-[11px] text-gray-300 transition hover:bg-gray-800 hover:text-white"
+						>
+							Replay
+						</button>
+					</div>
 				</div>
-				<iframe title="Preview" srcdoc={$previewDoc} class="flex-1 bg-white"></iframe>
+				{#key $replayId}
+					<iframe title="Preview" use:view.attachPreview srcdoc={$previewDoc} class="flex-1 bg-white"></iframe>
+				{/key}
 			</section>
 
 			<aside class="flex w-80 shrink-0 flex-col border-l border-white/10 bg-gray-950">
