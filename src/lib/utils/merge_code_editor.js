@@ -27,7 +27,13 @@ export function mergeCodeEditor(elements, animeRecords) {
 	}
 
 	const calls = (animeRecords ?? [])
-		.map((row) => stringifyAnimeCall(row?.typeValue))
+		.map((row) => {
+			let tv = row?.typeValue;
+			if (typeof tv === 'string') {
+				try { tv = JSON.parse(tv); } catch { tv = null; }
+			}
+			return stringifyAnimeCall(tv);
+		})
 		.filter(Boolean);
 	if (calls.length > 0) {
 		blocks.push(`<script>\n${calls.join('\n')}\n</script>`);

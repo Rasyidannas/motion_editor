@@ -69,19 +69,29 @@ export function createCanvasView(serverData) {
   }
   setInterval(snapshot, 250);
   snapshot();
-  // Remote control from the parent editor: pause / resume every known instance.
-  // Note: play() on a finished one-shot does nothing visible, so those restart.
-  window.addEventListener('message', function (e) {
+  // Direct control API — called by the parent via contentWindow.__animControl
+  window.__animControl = function (action) {
     try {
-      var d = e.data || {};
       snapshot();
-      if (d.type === 'anim-pause') registry.forEach(function (a) { if (a.pause) a.pause(); });
-      if (d.type === 'anim-play') registry.forEach(function (a) {
+      if (action === 'pause') registry.forEach(function (a) { if (a.pause) a.pause(); });
+      if (action === 'play') registry.forEach(function (a) {
         if (!a) return;
         if (a.paused && a.play) { a.play(); return; }
         if (a.completed && a.restart) { a.restart(); return; }
         if (a.play) a.play();
       });
+    } catch (err) { /* ignore */ }
+  };
+  window.addEventListener('error', function (e) {
+    try {
+      var msg = (e.message || 'Script error') + (e.lineno ? ' (line ' + e.lineno + ')' : '');
+      window.parent.postMessage({ type: 'preview-error', message: String(msg).slice(0, 300) }, '*');
+    } catch (err) { /* ignore */ }
+  });
+  window.addEventListener('unhandledrejection', function (e) {
+    try {
+      var reason = (e.reason && (e.reason.message || e.reason)) || 'Unhandled rejection';
+      window.parent.postMessage({ type: 'preview-error', message: String(reason).slice(0, 300) }, '*');
     } catch (err) { /* ignore */ }
   });
 })();
@@ -436,6 +446,7 @@ export function createCanvasView(serverData) {
 	// scripts (srcdoc without sandbox), plus a small runtime injected above
 	// that pauses/resumes every running anime.js instance on postMessage.
 	const playing = writable(true);
+	const previewError = writable('');
 	/** @type {HTMLIFrameElement | null} */
 	let previewNode = null;
 
@@ -449,19 +460,17 @@ export function createCanvasView(serverData) {
 		};
 	};
 
-	/** @param {{ type: string }} msg */
-	const postToPreview = (msg) => {
-		try {
-			previewNode?.contentWindow?.postMessage(msg, '*');
-		} catch {
-			/* iframe not ready yet */
-		}
-	};
-
 	const togglePlay = () => {
 		playing.update((v) => {
 			const next = !v;
-			postToPreview({ type: next ? 'anim-play' : 'anim-pause' });
+			try {
+				const cw = /** @type {any} */ (previewNode?.contentWindow);
+				if (cw && typeof cw.__animControl === 'function') {
+					cw.__animControl(next ? 'play' : 'pause');
+				}
+			} catch {
+				/* iframe not ready */
+			}
 			return next;
 		});
 	};
@@ -469,7 +478,27 @@ export function createCanvasView(serverData) {
 	// Editing code reloads the iframe, which restarts animations from scratch.
 	code.subscribe(() => {
 		playing.set(true);
+		previewError.set('');
 	});
+
+	// Script errors inside the preview are forwarded here so silent
+	// failures (a script that dies before animating anything) become visible.
+	// Guarded for SSR: only registers in the browser.
+	/** @param {MessageEvent} event */
+	const onPreviewMessage = (event) => {
+		try {
+			if (event.source !== previewNode?.contentWindow) return;
+			const data = event.data;
+			if (data && data.type === 'preview-error' && data.message) {
+				previewError.set(String(data.message));
+			}
+		} catch {
+			/* ignore */
+		}
+	};
+	if (typeof window !== 'undefined') {
+		window.addEventListener('message', onPreviewMessage);
+	}
 
 	// Keep TLN line numbers in sync after switching elements (post-render).
 	let firstSelection = true;
@@ -495,6 +524,7 @@ export function createCanvasView(serverData) {
 		selectedElement,
 		previewDoc,
 		playing,
+		previewError,
 		selectElement,
 		saveElement,
 		initTln,
@@ -508,6 +538,9 @@ export function createCanvasView(serverData) {
 		undoAi,
 		destroy() {
 			unsubscribeSelection();
+			if (typeof window !== 'undefined') {
+				window.removeEventListener('message', onPreviewMessage);
+			}
 		}
 	};
 }

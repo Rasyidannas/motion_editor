@@ -55,57 +55,99 @@ const TAG_TYPE = {
 // ---- anime.js detection -----------------------------------------------------
 
 /**
- * Strip one pair of surrounding single/double quotes (JSON.parse can't
- * handle single-quoted JS strings).
- * @param {string} value
+ * Convert a JS literal value (from a parsed object literal) into a JSON-safe value.
+ * Handles strings, numbers, booleans, null, arrays, and plain nested objects.
+ * @param {string} raw
+ * @returns {any}
  */
-const stripQuotes = (value) => {
-	const v = value.trim();
+const convertJsValue = (raw) => {
+	const v = raw.trim();
+	if (!v) return undefined;
+	// quoted string
 	if ((v.startsWith("'") && v.endsWith("'")) || (v.startsWith('"') && v.endsWith('"'))) {
-		return v.slice(1, -1);
+		return v.slice(1, -1).replace(/\\'/g, "'").replace(/\\"/g, '"').replace(/\\\\/g, '\\');
 	}
+	// booleans / null
+	if (v === 'true') return true;
+	if (v === 'false') return false;
+	if (v === 'null' || v === 'undefined') return null;
+	// number
+	if (/^-?\d+(\.\d+)?$/.test(v)) return Number(v);
+	// array literal (may contain nested)
+	if (v.startsWith('[') && v.endsWith(']')) {
+		const inner = v.slice(1, -1);
+		if (!inner.trim()) return [];
+		const items = splitTopLevel(inner, ',');
+		return items.map((item) => convertJsValue(item));
+	}
+	// object literal (nested)
+	if (v.startsWith('{') && v.endsWith('}')) {
+		return parseRawObject(v);
+	}
+	// fallback — keep as raw string
 	return v;
 };
 
 /**
- * Extract structured info from the raw object literal of one anime({...}) call.
+ * Split a string at a delimiter that is not inside braces, brackets, or quotes.
+ * @param {string} str
+ * @param {string} delim
+ * @returns {string[]}
+ */
+const splitTopLevel = (str, delim) => {
+	const parts = [];
+	let depth = 0;
+	let start = 0;
+	let inStr = null; // ' or " or null
+	for (let i = 0; i < str.length; i++) {
+		const ch = str[i];
+		const prev = i > 0 ? str[i - 1] : '';
+		if (inStr) {
+			if (ch === inStr && prev !== '\\') inStr = null;
+			continue;
+		}
+		if (ch === "'" || ch === '"') { inStr = ch; continue; }
+		if (ch === '{' || ch === '[') { depth++; continue; }
+		if (ch === '}' || ch === ']') { depth--; continue; }
+		if (depth === 0 && ch === delim) {
+			parts.push(str.slice(start, i));
+			start = i + 1;
+		}
+	}
+	parts.push(str.slice(start));
+	return parts;
+};
+
+/**
+ * Parse a raw JS object literal string (including outer braces) into a plain object.
  * @param {string} raw
+ * @returns {Record<string, any>}
+ */
+const parseRawObject = (raw) => {
+	/** @type {Record<string, any>} */
+	const obj = {};
+	// strip surrounding braces
+	const inner = raw.replace(/^\s*\{\s*/, '').replace(/\s*\}\s*$/, '').trim();
+	if (!inner) return obj;
+	const pairs = splitTopLevel(inner, ',');
+	for (const pair of pairs) {
+		const colonIdx = pair.indexOf(':');
+		if (colonIdx === -1) continue;
+		const key = pair.slice(0, colonIdx).trim().replace(/^['"]|['"]$/g, '');
+		const valStr = pair.slice(colonIdx + 1);
+		obj[key] = convertJsValue(valStr);
+	}
+	return obj;
+};
+
+/**
+ * Extract structured info from the raw object literal of one anime({...}) call.
+ * @param {string} raw  Content INSIDE the outer {} of anime({...})
  * @returns {{ type: string, typeValue: Record<string, any>, util: string | null, utilValue: Record<string, any> | null }}
  */
 const parseAnimeObject = (raw) => {
-	/** @type {Record<string, any>} */
-	const obj = {};
-
-	// extract targets
-	const targetM = /targets\s*:\s*('[^']*'|"[^"]*"|[^,}]+)/.exec(raw);
-	if (targetM) {
-		let v = targetM[1].trim();
-		if ((v.startsWith("'") && v.endsWith("'")) || (v.startsWith('"') && v.endsWith('"'))) {
-			v = v.slice(1, -1);
-		}
-		obj.targets = v;
-	}
-
-	// extract duration
-	const durM = /duration\s*:\s*(\d+)/.exec(raw);
-	if (durM) obj.duration = Number(durM[1]);
-
-	// extract easing
-	const easeM = /easing\s*:\s*('[^']*'|"[^"]*")/.exec(raw);
-	if (easeM) obj.easing = stripQuotes(easeM[1]);
-
-	// extract loop
-	const loopM = /loop\s*:\s*(true|false|\d+)/.exec(raw);
-	if (loopM) {
-		obj.loop = loopM[1] === 'true' ? true : loopM[1] === 'false' ? false : Number(loopM[1]);
-	}
-
-	// extract direction
-	const dirM = /direction\s*:\s*('[^']*'|"[^"]*")/.exec(raw);
-	if (dirM) obj.direction = stripQuotes(dirM[1]);
-
-	// detect type
-	return { type: 'animate', typeValue: obj, util: null, utilValue: null };
+	const typeValue = parseRawObject(`{${raw}}`);
+	return { type: 'animate', typeValue, util: null, utilValue: null };
 };
 
 /**

@@ -18,6 +18,7 @@
 		selectedElement,
 		previewDoc,
 		playing,
+		previewError,
 		chatInput,
 		chatMessages,
 		chatLoading,
@@ -85,7 +86,13 @@
 				<div class="flex shrink-0 items-center justify-between border-b border-white/10 bg-gray-950 px-5 py-2.5">
 					<h2 class="text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-500">Preview</h2>
 					<div class="flex items-center gap-2">
-						<span class="font-mono text-[11px] text-gray-600">live</span>
+						{#if $previewError}
+							<span class="max-w-64 truncate font-mono text-[11px] text-red-400" title={$previewError}>
+								{$previewError}
+							</span>
+						{:else}
+							<span class="font-mono text-[11px] text-gray-600">live</span>
+						{/if}
 						<button
 							type="button"
 							onclick={view.togglePlay}
