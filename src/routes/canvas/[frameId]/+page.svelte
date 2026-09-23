@@ -64,22 +64,8 @@
 	<div class="flex shrink-0 items-center justify-between border-b border-white/10 px-5 py-3">
 		<div class="flex items-center gap-3">
 			<h1 class="text-sm font-semibold text-white">Canvas | {data.frame.title}</h1>
-			<span class="font-mono text-[11px] text-gray-500">{shortId(data.frame.id)}</span>
 		</div>
 		<div class="flex items-center gap-3">
-			<div class="flex gap-1.5">
-				{#each data.elements as element}
-					<button
-						type="button"
-						onclick={() => selectElement(element)}
-						class="rounded-md px-2.5 py-1.5 text-xs font-medium transition {element.id === selectedId
-							? 'bg-gradient-to-r from-primary to-secondary text-white shadow-sm'
-							: 'bg-gray-900 text-gray-400 hover:bg-gray-800 hover:text-gray-200'}"
-					>
-						{element.title}
-					</button>
-				{/each}
-			</div>
 			<button class="btn-primary text-xs">Export</button>
 		</div>
 	</div>
@@ -95,27 +81,23 @@
 		</div>
 	{:else}
 		<div class="flex flex-1 overflow-hidden">
-			<section class="flex w-1/2 flex-col border-r border-white/10">
+			<section class="flex w-1/3 flex-col border-r border-white/10">
 				<div class="flex shrink-0 items-center justify-between border-b border-white/10 bg-gray-950 px-5 py-2.5">
 					<h2 class="text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-500">Code editor</h2>
-					{#if selectedElement}
-						<span class="rounded bg-secondary/30 px-2 py-0.5 font-mono text-[11px] text-gray-300">
-							{selectedElement.title}
-						</span>
-					{/if}
 				</div>
 				<div class="flex flex-1">
 					<textarea
 						use:initTln
 						bind:value={code}
+						wrap="off"
 						spellcheck="false"
-						class="flex-1 resize-none bg-black py-4 font-mono text-xs leading-relaxed text-gray-200 placeholder-gray-600 focus:outline-none"
+						class="flex-1 resize-none bg-black py-2 font-mono text-xs leading-relaxed text-gray-200 placeholder-gray-600 focus:outline-none whitespace-pre"
 						placeholder="<svg>…</svg>"
 					></textarea>
 				</div>
 			</section>
 
-			<section class="flex w-1/2 flex-col">
+			<section class="flex w-2/3 flex-col">
 				<div class="flex shrink-0 items-center justify-between border-b border-white/10 bg-gray-950 px-5 py-2.5">
 					<h2 class="text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-500">Preview</h2>
 					<span class="font-mono text-[11px] text-gray-600">live</span>
