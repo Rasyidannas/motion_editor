@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>main page</title>
+    <link href="css/style.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  </head>
+  <body>
+    <iframe
+      src="components/bg_purple_style_1.html"
+      style="position: fixed; inset: 0; width: 100%; height: 100%; border: 0; z-index: -1;"
+    ></iframe>
+
+    <div id="scene-container" class="relative z-10"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/animejs/dist/bundles/anime.umd.min.js"></script>
+    <script src="scripts/animate.js"></script>
+    <script>
+      fetch('content/scene_1.html')
+        .then(r => r.text())
+        .then(html => {
+          document.getElementById('scene-container').innerHTML = html;
+          animateScene1();
+        });
+    </script>
+  </body>
+</html>
