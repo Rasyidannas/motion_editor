@@ -83,6 +83,14 @@ function animateScene2() {
     scale: [1, 0.9, 1],
     duration: 350,
     ease: 'inOutQuad',
+    onBegin: () => {
+      // Cursor "click": turn all scene_2 text black
+      document.querySelectorAll('#in, #minutes, #btn-publish a').forEach((el) => {
+        el.classList.remove('bg-clip-text', 'text-transparent');
+        el.style.backgroundImage = 'none';
+        el.style.color = '#000';
+      });
+    },
   }).add('#bg-frame-2', {
     clipPath: ['circle(0% at 50% 50%)', 'circle(150% at 50% 50%)'],
     duration: 100,
