@@ -358,6 +358,40 @@
 
   var dpr = Math.min(window.devicePixelRatio || 1, 2);
 
+  // Static gradient: no time-based animation. Render on demand only
+  // (init / resize / cursor move), with time frozen at 0.
+  var running = true;
+  var rafId = 0;
+  function renderOnce() {
+    resize();
+    gl.uniform4f(loc.scene, canvas.width, canvas.height, 0.0, params.colorCount);
+    gl.uniform4f(loc.shape, params.scale, params.intensity, params.paramA, params.warp);
+    gl.uniform4f(loc.surface, params.detail, params.contrast, params.brightness, params.saturation);
+    gl.uniform4f(loc.finish, params.hue, params.vignette, params.blur, params.grain);
+    gl.uniform4f(loc.transform, params.seed, params.rotate, params.drift, params.oklab);
+    gl.uniform4f(loc.space, params.offsetX, params.offsetY, mouseX, mouseY);
+    gl.uniform4f(loc.cursor, cursorPresence, params.cursorEffect, params.cursorStrength, params.cursorRadius);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+  function requestRender() {
+    if (!running) return;
+    if (rafId) return;
+    rafId = requestAnimationFrame(function () { rafId = 0; renderOnce(); });
+  }
+  function pause() { running = false; if (rafId) cancelAnimationFrame(rafId); rafId = 0; }
+  function resume() { if (!running) { running = true; } requestRender(); }
+  // Keep legacy render() name working (frozen time, single frame).
+  function render(now) { renderOnce(); }
+  window.addEventListener('message', function (e) {
+    if (e.data === 'pause') pause();
+    else if (e.data === 'resume') resume();
+  });
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden && !window.__bgHold) requestRender();
+  });
+  window.__bgHold = false;
+  if (window.location.hash === '#paused') { window.__bgHold = true; running = false; }
+
   function resize() {
     var w = Math.round(canvas.clientWidth * dpr);
     var h = Math.round(canvas.clientHeight * dpr);
@@ -368,28 +402,17 @@
     }
   }
 
-  function render(now) {
-    resize();
-    gl.uniform4f(loc.scene, canvas.width, canvas.height, now * 0.001, params.colorCount);
-    gl.uniform4f(loc.shape, params.scale, params.intensity, params.paramA, params.warp);
-    gl.uniform4f(loc.surface, params.detail, params.contrast, params.brightness, params.saturation);
-    gl.uniform4f(loc.finish, params.hue, params.vignette, params.blur, params.grain);
-    gl.uniform4f(loc.transform, params.seed, params.rotate, params.drift, params.oklab);
-    gl.uniform4f(loc.space, params.offsetX, params.offsetY, mouseX, mouseY);
-    gl.uniform4f(loc.cursor, cursorPresence, params.cursorEffect, params.cursorStrength, params.cursorRadius);
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
-    requestAnimationFrame(render);
-  }
-
-  window.addEventListener('resize', resize);
+  window.addEventListener('resize', requestRender);
   canvas.addEventListener('mousemove', function (e) {
     var r = canvas.getBoundingClientRect();
     mouseX = ((e.clientX - r.left) / r.width) * 2.0 - 1.0;
     mouseY = ((e.clientY - r.top) / r.height) * 2.0 - 1.0;
     cursorPresence = 1.0;
+    requestRender();
   });
   canvas.addEventListener('mouseleave', function () {
     cursorPresence = 0.0;
+    requestRender();
   });
   canvas.addEventListener('touchmove', function (e) {
     var touch = e.touches[0];
@@ -397,13 +420,15 @@
     mouseX = ((touch.clientX - r.left) / r.width) * 2.0 - 1.0;
     mouseY = ((touch.clientY - r.top) / r.height) * 2.0 - 1.0;
     cursorPresence = 1.0;
+    requestRender();
   }, { passive: true });
   canvas.addEventListener('touchend', function () {
     cursorPresence = 0.0;
+    requestRender();
   });
 
   resize();
-  requestAnimationFrame(render);
+  renderOnce();
 })();
 </script>
 </body>

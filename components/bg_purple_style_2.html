@@ -7,7 +7,7 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { width: 100%; height: 100%; overflow: hidden; background: transparent; }
-  canvas { display: block; width: 100vw; height: 100vh; }
+  canvas { display: block; width: 100vw; height: 100vh; background: transparent; }
   .label {
     position: fixed;
     top: 20px;
@@ -31,8 +31,9 @@
 // ─────────────────────────────────────────────
 (function () {
   var canvas = document.getElementById('canvas');
-  var gl = canvas.getContext('webgl', { antialias: false });
+  var gl = canvas.getContext('webgl', { antialias: false, alpha: true, premultipliedAlpha: false });
   if (!gl) return;
+  gl.clearColor(0.0, 0.0, 0.0, 0.0);
 
   var params = {
     colors: [
@@ -308,7 +309,10 @@
     '  if (u_grain > 0.0001)',
     '    col += (grainHash(',
     '      gl_FragCoord.xy + vec2(u_seed * 17.0, u_seed * 31.0)) - 0.5) * u_grain;',
-    '  gl_FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);',
+    '  col = clamp(col, 0.0, 1.0);',
+    '  float whiteDist = distance(col, vec3(1.0));',
+    '  float alpha = smoothstep(0.0, 0.35, whiteDist);',
+    '  gl_FragColor = vec4(col, alpha);',
     '}'
   ].join('\n');
 
@@ -347,7 +351,43 @@
   var mouseX = 0.0, mouseY = 0.0;
   var cursorPresence = 0.0;
 
-  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  // Perf: cap DPR at 1 — fullscreen FBM shader is fill-rate bound.
+  var dpr = 1;
+
+  // Static gradient: no time-based animation. Render on demand only
+  // (init / resize / cursor move), with time frozen at 0.
+  var running = true;
+  var rafId = 0;
+  function renderOnce() {
+    resize();
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.uniform4f(loc.scene, canvas.width, canvas.height, 0.0, params.colorCount);
+    gl.uniform4f(loc.shape, params.scale, params.intensity, params.paramA, params.warp);
+    gl.uniform4f(loc.surface, params.detail, params.contrast, params.brightness, params.saturation);
+    gl.uniform4f(loc.finish, params.hue, params.vignette, params.blur, params.grain);
+    gl.uniform4f(loc.transform, params.seed, params.rotate, params.drift, params.oklab);
+    gl.uniform4f(loc.space, params.offsetX, params.offsetY, mouseX, mouseY);
+    gl.uniform4f(loc.cursor, cursorPresence, params.cursorEffect, params.cursorStrength, params.cursorRadius);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+  function requestRender() {
+    if (!running) return;
+    if (rafId) return;
+    rafId = requestAnimationFrame(function () { rafId = 0; renderOnce(); });
+  }
+  function pause() { running = false; if (rafId) cancelAnimationFrame(rafId); rafId = 0; }
+  function resume() { if (!running) { running = true; } requestRender(); }
+  // Keep legacy render() name working (frozen time, single frame).
+  function render(now) { renderOnce(); }
+  window.addEventListener('message', function (e) {
+    if (e.data === 'pause') pause();
+    else if (e.data === 'resume') resume();
+  });
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden && !window.__bgHold) requestRender();
+  });
+  window.__bgHold = false;
+  if (window.location.hash === '#paused') { window.__bgHold = true; running = false; }
 
   function resize() {
     var w = Math.round(canvas.clientWidth * dpr);
@@ -359,28 +399,17 @@
     }
   }
 
-  function render(now) {
-    resize();
-    gl.uniform4f(loc.scene, canvas.width, canvas.height, now * 0.001, params.colorCount);
-    gl.uniform4f(loc.shape, params.scale, params.intensity, params.paramA, params.warp);
-    gl.uniform4f(loc.surface, params.detail, params.contrast, params.brightness, params.saturation);
-    gl.uniform4f(loc.finish, params.hue, params.vignette, params.blur, params.grain);
-    gl.uniform4f(loc.transform, params.seed, params.rotate, params.drift, params.oklab);
-    gl.uniform4f(loc.space, params.offsetX, params.offsetY, mouseX, mouseY);
-    gl.uniform4f(loc.cursor, cursorPresence, params.cursorEffect, params.cursorStrength, params.cursorRadius);
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
-    requestAnimationFrame(render);
-  }
-
-  window.addEventListener('resize', resize);
+  window.addEventListener('resize', requestRender);
   canvas.addEventListener('mousemove', function (e) {
     var r = canvas.getBoundingClientRect();
     mouseX = ((e.clientX - r.left) / r.width) * 2.0 - 1.0;
     mouseY = ((e.clientY - r.top) / r.height) * 2.0 - 1.0;
     cursorPresence = 1.0;
+    requestRender();
   });
   canvas.addEventListener('mouseleave', function () {
     cursorPresence = 0.0;
+    requestRender();
   });
   canvas.addEventListener('touchmove', function (e) {
     var touch = e.touches[0];
@@ -388,13 +417,15 @@
     mouseX = ((touch.clientX - r.left) / r.width) * 2.0 - 1.0;
     mouseY = ((touch.clientY - r.top) / r.height) * 2.0 - 1.0;
     cursorPresence = 1.0;
+    requestRender();
   }, { passive: true });
   canvas.addEventListener('touchend', function () {
     cursorPresence = 0.0;
+    requestRender();
   });
 
   resize();
-  requestAnimationFrame(render);
+  renderOnce();
 })();
 </script>
 </body>
