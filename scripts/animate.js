@@ -5,7 +5,7 @@ function animateScene1() {
     opacity: [0, 1],
     scale: [0, 1],
     duration: 400,
-    delay: stagger(300, { start: 2000 }),
+    delay: stagger(300, { start: 5000 }),
     ease: spring({ bounce: 0.15, duration: 400 }),
   })
   .add('#black-box', {
@@ -38,7 +38,7 @@ function animateScene1() {
 }
 
 function animateScene2() {
-  const { stagger, spring, cubicBezier, createTimeline } = anime;
+  const { animate, stagger, spring, cubicBezier, createTimeline } = anime;
   const tl = createTimeline();
   tl.add('#scene_2', {
     opacity: [0, 1],
@@ -59,6 +59,20 @@ function animateScene2() {
     scale: [1.25, 1],
     duration: 700,
     ease: spring({ bounce: 0.5, duration: 700 }),
-    onBegin: () => { document.querySelector('#btn-publish').style.display = ''; },
+    onBegin: () => {
+      document.querySelector('#btn-publish').style.display = '';
+      const parts = document.querySelectorAll('#btn-publish svg circle, #btn-publish svg path');
+      parts.forEach(el => {
+        const len = el.getTotalLength();
+        el.style.strokeDasharray = len;
+        el.style.strokeDashoffset = len;
+      });
+      animate(parts, {
+        strokeDashoffset: 0,
+        duration: 900,
+        delay: stagger(120),
+        ease: 'inOutCirc',
+      });
+    },
   });
 }
