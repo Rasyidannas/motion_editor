@@ -58,7 +58,7 @@ function animateScene2() {
     opacity: [0, 1],
     scale: [1.25, 1],
     duration: 700,
-    ease: spring({ bounce: 0.35, duration: 400 }),
+    ease: spring({ bounce: 0.5, duration: 700 }),
     onBegin: () => { document.querySelector('#btn-publish').style.display = ''; },
   });
 }
