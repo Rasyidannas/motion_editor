@@ -83,5 +83,14 @@ function animateScene2() {
     scale: [1, 0.9, 1],
     duration: 350,
     ease: 'inOutQuad',
+  }).add('#scene_2', {
+    scale: [1, 0],
+    opacity: [1, 0],
+    duration: 500,
+    ease: 'inCubic',
+  }).add('#bg-frame-2', {
+    clipPath: ['circle(0% at 50% 50%)', 'circle(150% at 50% 50%)'],
+    duration: 900,
+    ease: 'inOutCubic',
   });
 }
