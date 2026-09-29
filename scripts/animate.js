@@ -5,7 +5,7 @@ function animateScene1() {
     opacity: [0, 1],
     scale: [0, 1],
     duration: 400,
-    delay: stagger(300, { start: 5000 }),
+    delay: stagger(300, { start: 3000 }),
     ease: spring({ bounce: 0.15, duration: 400 }),
   })
   .add('#black-box', {
@@ -83,14 +83,14 @@ function animateScene2() {
     scale: [1, 0.9, 1],
     duration: 350,
     ease: 'inOutQuad',
-  }).add('#scene_2', {
+  }).add('#bg-frame-2', {
+    clipPath: ['circle(0% at 50% 50%)', 'circle(150% at 50% 50%)'],
+    duration: 100,
+    ease: 'inOutCubic',
+  }, '<<').add('#scene_2', {
     scale: [1, 0],
     opacity: [1, 0],
     duration: 500,
     ease: 'inCubic',
-  }).add('#bg-frame-2', {
-    clipPath: ['circle(0% at 50% 50%)', 'circle(150% at 50% 50%)'],
-    duration: 900,
-    ease: 'inOutCubic',
   });
 }
