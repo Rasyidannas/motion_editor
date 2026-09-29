@@ -15,5 +15,16 @@ function animateScene1() {
     duration: 600,
     ease: spring({ bounce: 0.35, duration: 600 }),
     onBegin: () => document.querySelector('#black-box video')?.play(),
+  })
+  .add('#black-box', {
+    rotate: 5,
+    duration: 400,
+    delay: 500,
+    ease: 'outCubic',
+  }).add('#word-first, #word-second, #black-box', {
+    opacity:[1, 0],
+    delay: 800,
+    duration: 100,
+    ease: 'outCubic'
   });
 }
