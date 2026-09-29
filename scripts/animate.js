@@ -74,5 +74,14 @@ function animateScene2() {
         ease: 'inOutCirc',
       });
     },
+  }).add('#cursor', {
+    translate: ['50vw -10vh', '45vw 50vh'],
+    duration: 900,
+    ease: 'inOutCubic',
+    onBegin: () => { document.querySelector('#cursor').style.display = ''; },
+  }).add('#btn-publish', {
+    scale: [1, 0.9, 1],
+    duration: 350,
+    ease: 'inOutQuad',
   });
 }
