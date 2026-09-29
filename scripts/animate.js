@@ -87,10 +87,17 @@ function animateScene2() {
     clipPath: ['circle(0% at 50% 50%)', 'circle(150% at 50% 50%)'],
     duration: 100,
     ease: 'inOutCubic',
-  }, '<<').add('#scene_2', {
-    scale: [1, 0],
+  }, '<<')
+  .add('#scene_2', {
     opacity: [1, 0],
-    duration: 500,
+    y: [0, -80],
+    duration: 400,
+    delay: 1200,
     ease: 'inCubic',
-  });
+  })
+  .add('#bg-frame-3', {
+    translateY: ['-100%', '100%'],
+    duration: 900,
+    ease: 'inOutCubic',
+  }, '<<');
 }
