@@ -25,6 +25,40 @@ function animateScene1() {
     opacity:[1, 0],
     delay: 800,
     duration: 100,
-    ease: 'outCubic'
+    ease: 'outCubic',
+    onComplete: () => {
+      fetch('content/scene_2.html')
+        .then(r => r.text())
+        .then(html => {
+          document.getElementById('scene-container').innerHTML = html;
+          animateScene2();
+        });
+    }
+  });
+}
+
+function animateScene2() {
+  const { stagger, spring, cubicBezier, createTimeline } = anime;
+  const tl = createTimeline();
+  tl.add('#scene_2', {
+    opacity: [0, 1],
+    duration: 100,
+    delay: stagger(300),
+    ease: 'outCubic',
+  }).add('#scene_2', {
+    left: ['200rem', '60rem'],
+    duration: 2500,
+    ease: cubicBezier(0.341,0.362,0.659,0.665),
+  }).add('#scene_2', {
+    scale: [10, 1],
+    left: ['60rem', '0rem'],
+    duration: 1,
+    ease: 'linear'
+  }).add('#btn-publish', {
+    opacity: [0, 1],
+    scale: [1.25, 1],
+    duration: 700,
+    ease: spring({ bounce: 0.35, duration: 400 }),
+    onBegin: () => { document.querySelector('#btn-publish').style.display = ''; },
   });
 }
