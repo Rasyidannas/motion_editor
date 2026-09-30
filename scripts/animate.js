@@ -136,7 +136,14 @@ function animateScene3() {
   .add('#scene_3', {
     y: ['0%', '-50%'],
     duration: 5050,
-    delay: 800,
+    delay: 200,
     ease: cubicBezier(0.341,0.362,0.659,0.665),
   })
+  .add('#scene_3', {
+    opacity: [1, 0],
+    // y: ['-50%', '-52%'],
+    duration: 10,
+    delay: 200,
+    ease: 'inCubic',
+  });
 }
