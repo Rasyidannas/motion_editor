@@ -7,7 +7,7 @@ function animateScene1() {
     duration: 400,
     delay: stagger(300),
     ease: spring({ bounce: 0.15, duration: 400 }),
-  }, 3000)
+  }, 5000)
   .add('#black-box', {
     width: [0, '6rem'],
     opacity: [0, 1],
