@@ -119,7 +119,7 @@ function animateScene2() {
 }
 
 function animateScene3() {
-  const { spring, createTimeline } = anime;
+  const { spring, cubicBezier, createTimeline } = anime;
   const tl = createTimeline();
   tl.add('#scene-container svg', {
     opacity: [0, 1],
@@ -132,5 +132,11 @@ function animateScene3() {
     y: [40, 0],
     duration: 600,
     ease: spring({ bounce: 0.25, duration: 600 }),
-  }, '<-=700');
+  }, '<-=700')
+  .add('#scene_3', {
+    y: ['0%', '-50%'],
+    duration: 4050,
+    delay: 800,
+    ease: cubicBezier(0.341,0.362,0.659,0.665),
+  })
 }
