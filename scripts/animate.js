@@ -145,5 +145,33 @@ function animateScene3() {
     duration: 10,
     delay: 200,
     ease: 'inCubic',
+    onComplete: () => {
+      fetch('content/scene_4.html')
+        .then(r => r.text())
+        .then(html => {
+          document.getElementById('scene-container').innerHTML = html;
+          animateScene4();
+        });
+    },
   });
+}
+
+function animateScene4() {
+  const { spring, createTimeline } = anime;
+  const tl = createTimeline();
+  tl.add('#scene_4 #black-box', {
+    scale: [3.5, 2],
+    width: ['24rem', '6rem'],
+    height: ['24rem', '6rem'],
+    opacity: [1, 1],
+    duration: 1000,
+    ease: spring({ bounce: 0.35, duration: 1000 }),
+    onBegin: () => document.querySelector('#scene_4 #black-box video')?.play(),
+  })
+  .add('#scene_4 p', {
+    opacity: [0, 1],
+    y: [40, 0],
+    duration: 600,
+    ease: spring({ bounce: 0.25, duration: 600 }),
+  }, '<-=700');
 }
