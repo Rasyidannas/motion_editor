@@ -135,7 +135,7 @@ function animateScene3() {
   }, '<-=700')
   .add('#scene_3', {
     y: ['0%', '-50%'],
-    duration: 4050,
+    duration: 5050,
     delay: 800,
     ease: cubicBezier(0.341,0.362,0.659,0.665),
   })
