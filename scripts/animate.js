@@ -102,10 +102,35 @@ function animateScene2() {
     duration: 400,
     delay: 1200,
     ease: 'inCubic',
+    onComplete: () => {
+      fetch('content/scene_3.html')
+        .then(r => r.text())
+        .then(html => {
+          document.getElementById('scene-container').innerHTML = html;
+          animateScene3();
+        });
+    },
   })
   .add('#bg-frame-3', {
     translateY: ['-100%', '100%'],
     duration: 900,
     ease: 'inOutCubic',
   }, '<<');
+}
+
+function animateScene3() {
+  const { spring, createTimeline } = anime;
+  const tl = createTimeline();
+  tl.add('#scene-container svg', {
+    opacity: [0, 1],
+    scale: [0.6, 1],
+    duration: 700,
+    ease: spring({ bounce: 0.4, duration: 700 }),
+  })
+  .add('#built', {
+    opacity: [0, 1],
+    y: [40, 0],
+    duration: 600,
+    ease: spring({ bounce: 0.25, duration: 600 }),
+  }, '<-=700');
 }
