@@ -1,0 +1,22 @@
+{
+	"/": [],
+	"/api/ai/chat": [
+		"src/routes/api/ai/chat/+server.ts"
+	],
+	"/api/animejs": [
+		"src/routes/api/animejs/+server.ts"
+	],
+	"/api/elements": [
+		"src/routes/api/elements/+server.ts"
+	],
+	"/api/elements/[id]": [
+		"src/routes/api/elements/[id]/+server.ts"
+	],
+	"/canvas/[frameId]": [
+		"src/routes/canvas/[frameId]/+page.server.ts"
+	],
+	"/dashboard": [
+		"src/routes/dashboard/+page.ts",
+		"src/routes/dashboard/+page.server.ts"
+	]
+}

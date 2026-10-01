@@ -1,31 +1,20 @@
 {
-  "name": "motion_editor",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "my-animation",
+  "private": true,
+  "version": "0.0.0",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "vite",
+    "serve": "vite",
+    "build": "vite build"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Rasyidannas/motion_editor.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/Rasyidannas/motion_editor/issues"
-  },
-  "homepage": "https://github.com/Rasyidannas/motion_editor#readme",
   "dependencies": {
-    "animejs": "^4.5.0",
-    "ccapture.js": "^2.0.0"
+    "@motion-canvas/core": "^3.17.2",
+    "@motion-canvas/2d": "^3.17.2",
+    "@motion-canvas/ffmpeg": "^1.1.0"
   },
   "devDependencies": {
-    "vite": "^8.3.1"
+    "@motion-canvas/ui": "^3.17.2",
+    "@motion-canvas/vite-plugin": "^3.17.2",
+    "vite": "^4.0.0"
   }
 }
