@@ -13,3 +13,6 @@ dist
 *.njsproj
 *.sln
 *.sw?
+
+# Environment
+.env
