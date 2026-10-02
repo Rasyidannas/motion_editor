@@ -3,48 +3,47 @@ import { Txt } from '@motion-canvas/2d/lib/components';
 import { createSignal } from '@motion-canvas/core/lib/signals';
 import { createRef } from '@motion-canvas/core/lib/utils';
 import { waitFor } from '@motion-canvas/core/lib/flow';
-import bgShader from '../shaders/bg_purple_1.glsl';
+import { useScene } from '@motion-canvas/core';
+import { purpleGradientRect } from '../components/backgrounds/purple_2';
 
 export default makeScene2D(function* (view) {
-  const fullText = "Hello World! Welcome to Motion Canvas typing animation.";
+  const text = useScene().variables.get('text', 'Enter your prompt here');
 
   const progress = createSignal(0);
 
   const textRef = createRef<Txt>();
 
-  const bg = new Rect({
-    width: '100%',
-    height: '100%',
-    shaders: {
-      fragment: bgShader,
-      uniforms: {
-        u_scale: 1.4,
-        u_intensity: 0.72,
-        u_warp: 0.35,
-        u_detail: 3.4,
-        u_contrast: 0.95,
-        u_brightness: -0.04,
-        u_saturation: 1.15,
-        u_vignette: 0.75,
-        u_grain: 0.12,
-        u_drift: 0.08,
-      },
-    },
-  });
-
+  const bg = purpleGradientRect();
   view.add(bg);
 
   view.add(
-    <Txt
-      ref={textRef}
-      text={() => fullText.slice(0, Math.floor(progress()))}
-      fontSize={48}
-      fill={'#ffffff'}
-      fontFamily={'Consolas, monospace'}
-    />
+    <Rect
+      stroke='#ffffff'
+      lineWidth={4}
+      padding={24}
+      radius={9999}
+      width={640}
+      layout="true"
+    >
+      <Txt
+        ref={textRef}
+        text={() => text().slice(0, Math.floor(progress()))}
+        fontSize={48}
+        fill={'#ffffff'}
+        fontFamily={'Consolas, monospace'}
+      />
+    </Rect>
   );
 
-  yield* progress(fullText.length, 5);
+  // 1. Type the text in
+  yield* progress(text().length, 2.5);
 
+  // 2. Hold the full text
   yield* waitFor(1);
+
+  // 3. Delete the text (backspace effect)
+  yield* progress(0, 1.5);
+
+  // 4. Hold the empty screen before finishing
+  yield* waitFor(0.5);
 });
