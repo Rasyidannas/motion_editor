@@ -1,8 +1,8 @@
 import {makeProject} from '@motion-canvas/core';
 
-import example from './scenes/example?scene';
+import scene1 from './scenes/scene_1?scene';
 
 export default makeProject({
   experimentalFeatures: true,
-  scenes: [example],
+  scenes: [scene1],
 });
