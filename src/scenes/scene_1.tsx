@@ -16,9 +16,19 @@ export default makeScene2D(function* (view) {
   const bg = purpleGradientRect();
   view.add(bg);
 
-  const fontSize = 240;
+  const fontSize = 320;
   const font = 'Inter, system-ui, sans-serif';
   const sliced = () => text().slice(0, Math.floor(progress()));
+  
+  const verticalGradient = new Gradient({
+    type: 'linear',
+    from: [0, -5], // Top
+    to: [0, 40],    // Bottom
+    stops: [
+      { offset: 0, color: 'rgba(255, 255, 255, 0.025)' },
+      { offset: 1, color: 'rgba(255, 255, 255, 0.055)' },
+    ],
+  });
 
   view.add(
     <Txt
@@ -27,11 +37,11 @@ export default makeScene2D(function* (view) {
       fontWeight={700}
       fontFamily={font}
       lineWidth={2}
-      fill={'rgba(255, 255, 255, .05)'}
-      stroke={'rgba(255, 255, 255, .25)'}
+      fill={verticalGradient}
+      stroke={'rgba(255, 255, 255, .075)'}
       x={4}
       y={10}
-      innerColor={'rgba(255, 255, 255, 1)'}
+      shadowColor={'rgba(255, 255, 255, 1)'}
       shadowBlur={25}
       shadowOffsetY={0}
     />
