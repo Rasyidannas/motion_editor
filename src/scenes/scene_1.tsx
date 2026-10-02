@@ -7,7 +7,7 @@ import { useScene } from '@motion-canvas/core';
 import { purpleGradientRect } from '../components/backgrounds/purple_2';
 
 export default makeScene2D(function* (view) {
-  const text = useScene().variables.get('text', 'Create me a landing page');
+  const text = useScene().variables.get('text', 'Create me');
 
   const progress = createSignal(0);
 
@@ -50,12 +50,5 @@ export default makeScene2D(function* (view) {
   // 1. Type the text in
   yield* progress(text().length, 2.5);
 
-  // 2. Hold the full text
-  yield* waitFor(1);
-
-  // 3. Delete the text (backspace effect)
-  yield* progress(0, 1.5);
-
-  // 4. Hold the empty screen before finishing
   yield* waitFor(0.5);
 });
