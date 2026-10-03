@@ -1,9 +1,10 @@
-import { makeScene2D, Gradient, Img } from '@motion-canvas/2d';
+import { makeScene2D, Path, Gradient, Img } from '@motion-canvas/2d';
 import { Txt, Rect } from '@motion-canvas/2d/lib/components';
 import { createSignal } from '@motion-canvas/core/lib/signals';
 import { createRef } from '@motion-canvas/core/lib/utils';
-import { waitFor } from '@motion-canvas/core/lib/flow';
+import { waitFor, all } from '@motion-canvas/core/lib/flow';
 import { useScene } from '@motion-canvas/core';
+import { easeOutBack, easeOutCubic, easeInOutCubic } from '@motion-canvas/core/lib/tweening';
 import { purpleGradientRect } from '../components/backgrounds/purple_2';
 import arrowUp from "../../public/assets/images/arrow_up.svg"
 
@@ -19,6 +20,7 @@ export default makeScene2D(function* (view) {
   const placholder = createRef<Txt>();
   const btnInput = createRef<Rect>();
   const btnIcon = createRef<Img>();
+  const pathRef = createRef<Path>();
 
   const bg = purpleGradientRect();
   view.add(bg);
@@ -34,6 +36,16 @@ export default makeScene2D(function* (view) {
     stops: [
       { offset: 0, color: 'rgba(255, 255, 255, 0.025)' },
       { offset: 1, color: 'rgba(255, 255, 255, 0.055)' },
+    ],
+  });
+
+  const pathGradient = new Gradient({
+    type: 'linear',
+    from: [0, -70], // Top
+    to: [0, 70], // Bottom
+    stops: [
+      { offset: 0, color: '#8b5cf6' },
+      { offset: 1, color: '#7c3aed' },
     ],
   });
 
@@ -111,13 +123,30 @@ export default makeScene2D(function* (view) {
     </Rect>
   )
 
+  view.add(
+    <Path
+      ref={pathRef}
+      data={"M -464 -70 H 464 Q 480 -70 480 -54 V 54 Q 480 70 464 70 H -464 Q -480 70 -480 54 V -54 Q -480 -70 -464 -70 Z"}
+      stroke={pathGradient}
+      lineWidth={6}
+      end={0}
+      opacity={0}
+      shadowColor={'#8b5cf6'}
+      shadowBlur={20}
+    />
+  )
+
   yield* waitFor(0.5);
 
   yield* progress(text().length, 2.5);
 
   yield* textRef().opacity(0, 0.25);
 
-  yield* inputText().opacity(1, 0.25);
+  yield* all(
+    inputText().opacity(1, 0.25),
+    pathRef().opacity(1, 0.25),
+  );
+  yield* pathRef().end(1, 1.25, easeInOutCubic);
 
   yield* waitFor(0.5);
 });
