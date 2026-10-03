@@ -14,6 +14,7 @@ export default makeScene2D(function* (view) {
 
   const progress = createSignal(0);
 
+  const cursorText = createRef<Rect>();
   const textRef = createRef<Txt>();
 
   const inputText = createRef<Rect>();
@@ -53,22 +54,35 @@ export default makeScene2D(function* (view) {
   });
 
   view.add(
-    <Txt
-      ref={textRef}
-      text={sliced}
-      fontSize={fontSize}
-      fontWeight={700}
-      fontFamily={font}
-      lineWidth={2}
-      fill={verticalGradient}
-      stroke={'rgba(255, 255, 255, .075)'}
-      x={4}
-      y={10}
-      shadowColor={'rgba(255, 255, 255, 1)'}
-      shadowBlur={25}
-      shadowOffsetY={0}
+    <Rect
       opacity={1}
-    />
+    >
+      <Txt
+        ref={textRef}
+        text={sliced}
+        fontSize={fontSize}
+        fontWeight={700}
+        fontFamily={font}
+        lineWidth={2}
+        fill={verticalGradient}
+        stroke={'rgba(255, 255, 255, .075)'}
+        x={4}
+        y={10}
+        shadowColor={'rgba(255, 255, 255, 1)'}
+        shadowBlur={25}
+        shadowOffsetY={0}
+        opacity={1}
+      />
+      <Rect
+        ref={cursorText}
+        width={4}
+        height={260}
+        fill={'#cba6f7'} // Purple border color
+        x={() => textRef().x() + textRef().width() / 2 + 20}
+        y={10}
+        opacity={() => textRef().opacity()}
+      />
+    </Rect>
   );
 
   view.add(
