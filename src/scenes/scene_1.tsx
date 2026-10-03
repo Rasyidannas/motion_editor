@@ -2,7 +2,7 @@ import { makeScene2D, Path, Gradient, Img } from '@motion-canvas/2d';
 import { Txt, Rect } from '@motion-canvas/2d/lib/components';
 import { createSignal } from '@motion-canvas/core/lib/signals';
 import { createRef } from '@motion-canvas/core/lib/utils';
-import { waitFor, all } from '@motion-canvas/core/lib/flow';
+import { waitFor, all, loopFor } from '@motion-canvas/core/lib/flow';
 import { useScene } from '@motion-canvas/core';
 import { easeOutBack, easeOutCubic, easeInOutCubic } from '@motion-canvas/core/lib/tweening';
 import { purpleGradientRect } from '../components/backgrounds/purple_2';
@@ -80,7 +80,7 @@ export default makeScene2D(function* (view) {
         fill={'#cba6f7'} // Purple border color
         x={() => textRef().x() + textRef().width() / 2 + 20}
         y={10}
-        opacity={() => textRef().opacity()}
+        opacity={1}
       />
     </Rect>
   );
@@ -165,11 +165,20 @@ export default makeScene2D(function* (view) {
   
   yield* waitFor(0.5);
 
-  yield* progress(text().length, 2.5);
+  yield* all(
+    progress(text().length, 2.5),
+    loopFor(2.5, function* () {
+      yield* cursorText().opacity(0, 0.25);
+      yield* cursorText().opacity(1, 0.25);
+    }),
+  );
 
   yield* waitFor(0.5);
 
-  yield* textRef().opacity(0, 0.25);
+  yield* all(
+    textRef().opacity(0, 0.25),
+    cursorText().opacity(0, 0.25),
+  );
 
   yield* all(
     inputText().opacity(1, 0.25),
