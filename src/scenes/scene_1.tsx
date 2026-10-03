@@ -7,6 +7,7 @@ import { useScene } from '@motion-canvas/core';
 import { easeOutBack, easeOutCubic, easeInOutCubic } from '@motion-canvas/core/lib/tweening';
 import { purpleGradientRect } from '../components/backgrounds/purple_2';
 import arrowUp from "../../public/assets/images/arrow_up.svg"
+import cursorSvg from "../../public/assets/images/cursor.svg"
 
 export default makeScene2D(function* (view) {
   const text = useScene().variables.get('text', 'Create me');
@@ -21,6 +22,8 @@ export default makeScene2D(function* (view) {
   const btnInput = createRef<Rect>();
   const btnIcon = createRef<Img>();
   const pathRef = createRef<Path>();
+
+  const cursorIcon = createRef<Img>();
 
   const bg = purpleGradientRect();
   view.add(bg);
@@ -136,9 +139,21 @@ export default makeScene2D(function* (view) {
     />
   )
 
+  view.add(
+    <Img
+      ref={cursorIcon}
+      src={cursorSvg}
+      width={48}
+      height={48}
+      x={1200}
+    />
+  )
+  
   yield* waitFor(0.5);
 
   yield* progress(text().length, 2.5);
+
+  yield* waitFor(0.5);
 
   yield* textRef().opacity(0, 0.25);
 
@@ -148,5 +163,18 @@ export default makeScene2D(function* (view) {
   );
   yield* pathRef().end(1, 1.25, easeInOutCubic);
 
+  yield* cursorIcon().x(400, 0.3, easeOutCubic); 
+  yield* all(
+    btnInput().width(58),
+    btnInput().height(58),
+  );
+
+  yield* waitFor(0.5);
+
+  yield* all(
+    btnInput().width(64),
+    btnInput().height(64),
+  );
+  
   yield* waitFor(0.5);
 });
