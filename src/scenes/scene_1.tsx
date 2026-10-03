@@ -34,14 +34,14 @@ const INPUT_RADIUS = 16;
 export default makeScene2D(function* (view) {
   // --- Scene state ---------------------------------------------------------
   // `text` comes from the scene variables (editable in the editor UI).
-  const text = useScene().variables.get('text', 'Create me');
+  const headline = useScene().variables.get('text', 'Create me');
 
   // Drives the typewriter effect: visible chars = text[0 .. floor(progress)].
   const progress = createSignal(0);
-  const sliced = () => text().slice(0, Math.floor(progress()));
+  const sliced = () => headline().slice(0, Math.floor(progress()));
 
   // --- Node refs (only the animated nodes need one) -------------------------
-  const textRef = createRef<Txt>();
+  const headlineRef = createRef<Txt>();
   const caretRef = createRef<Rect>();
   const inputRef = createRef<Rect>();
   const placeholderRef = createRef<Txt>();
@@ -80,7 +80,7 @@ export default makeScene2D(function* (view) {
   view.add(
     <Rect opacity={1}>
       <Txt
-        ref={textRef}
+        ref={headlineRef}
         text={sliced}
         fontSize={HEADLINE_FONT_SIZE}
         fontWeight={700}
@@ -100,7 +100,7 @@ export default makeScene2D(function* (view) {
         width={4}
         height={260}
         fill={'#cba6f7'}
-        x={() => textRef().x() + textRef().width() / 2 + CARET_GAP}
+        x={() => headlineRef().x() + headlineRef().width() / 2 + CARET_GAP}
         y={10}
         opacity={1}
       />
@@ -191,7 +191,7 @@ export default makeScene2D(function* (view) {
 
   // Beat 2: type the headline while the caret blinks (both run in parallel).
   yield* all(
-    progress(text().length, TYPE_DURATION),
+    progress(headline().length, TYPE_DURATION),
     loopFor(TYPE_DURATION, function* () {
       yield* caretRef().opacity(0, BLINK_HALF_PERIOD);
       yield* caretRef().opacity(1, BLINK_HALF_PERIOD);
@@ -203,7 +203,7 @@ export default makeScene2D(function* (view) {
 
   // Beat 4: fade the headline + caret out together.
   yield* all(
-    textRef().opacity(0, FADE_DURATION),
+    headlineRef().opacity(0, FADE_DURATION),
     caretRef().opacity(0, FADE_DURATION),
   );
 
