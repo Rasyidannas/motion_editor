@@ -30,7 +30,7 @@ export default makeScene2D(function* (view) {
       ref={userTextBox}
       layout
       x={400}
-      y={-300}
+      y={-340}
       direction="row"
       alignItems="center"
       justifyContent="center"
@@ -59,7 +59,7 @@ export default makeScene2D(function* (view) {
       width={0}
       height={0}
       x={-800}
-      y={-160}
+      y={-220}
       opacity={0}
     />
   );
@@ -71,7 +71,7 @@ export default makeScene2D(function* (view) {
       direction="column"
       alignItems="start"
       x={-200}
-      y={220}
+      y={180}
       gap={48}
       opacity={0}
     >
@@ -90,20 +90,22 @@ export default makeScene2D(function* (view) {
         width={1240}
         fill={'#ffffff'}
         radius={[TEXT_BOX_RADIUS, TEXT_BOX_RADIUS, TEXT_BOX_RADIUS, 4]}
-        padding={[24, 24]}
+        padding={48}
         opacity={0}
         shadowColor={'rgba(0, 0, 0, 0.1)'}
         shadowBlur={16}
         shadowOffsetY={4}
       >
-<Txt
-        ref={innerMevinText}
-        text={'I\'ve refined the NOVA landing page with a premium, dark mode aesthetic and structured sections to highlight your core AI features and pricing. Let me know if you\'d like to adjust the plan names or add specific feature details!'}
-        textWrap
-        fill={'rgba(0, 0, 0, 0.75)'}
-        fontSize={56}
-        opacity={0}
-      />
+        <Txt
+          ref={innerMevinText}
+          text={'I\'ve refined the NOVA landing page with a premium, dark mode aesthetic and structured sections to highlight your core AI features and pricing. Let me know if you\'d like to adjust the plan names or add specific feature details!'}
+          textWrap
+          width={1144}
+          lineHeight={80}
+          fill={'rgba(0, 0, 0, 0.75)'}
+          fontSize={56}
+          opacity={0}
+        />
       </Rect>
     </Rect>
   )
@@ -111,7 +113,7 @@ export default makeScene2D(function* (view) {
   // --- Timeline ---
   yield* fadeTransition(0.15);
   yield* all(
-    userTextBox().y(-320, 0.6),
+    userTextBox().y(-360, 0.6),
     userTextBox().opacity(1, 0.5),
     innerUserText().opacity(1, 0.2),
   );
@@ -128,7 +130,7 @@ export default makeScene2D(function* (view) {
   yield* waitFor(0.3);
   yield* all(
       onboardingBox().opacity(1, 0.4),
-      onboardingBox().y(180, 0.4),
+      onboardingBox().y(140, 0.4),
       onboardingText().opacity(1, 0.3),
     );
   yield* all(
