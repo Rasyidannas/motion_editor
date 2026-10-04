@@ -1,7 +1,8 @@
 import { makeScene2D } from '@motion-canvas/2d';
 import { Rect, Txt, Img } from '@motion-canvas/2d/lib/components';
 import { fadeTransition } from '@motion-canvas/core/lib/transitions';
-import { all, waitFor } from '@motion-canvas/core/lib/flow';
+import { all, sequence, waitFor } from '@motion-canvas/core/lib/flow';
+import { createSignal } from '@motion-canvas/core/lib/signals';
 import { createRef } from '@motion-canvas/core/lib/utils';
 import { whiteRadialRect } from '../components/backgrounds/white_1';
 import astroidSvg from '../../public/assets/images/astroid.svg';
@@ -10,6 +11,9 @@ import astroidSvg from '../../public/assets/images/astroid.svg';
 // Style constants
 // ----
 const TEXT_BOX_RADIUS = 32;
+const MEVIN_FULL_TEXT =
+  "I've refined the NOVA landing page with a premium, dark mode aesthetic and structured sections to highlight your core AI features and pricing. Let me know if you'd like to adjust the plan names or add specific feature details!";
+const MEVIN_TYPE_DURATION = 2.5;
 
 export default makeScene2D(function* (view) {
   // --- Node refs (must live inside the scene function) ---
@@ -19,7 +23,11 @@ export default makeScene2D(function* (view) {
   const onboardingBox = createRef<Rect>();
   const onboardingText = createRef<Txt>();
   const mevinTextBox = createRef<Rect>();
+  const mevinTextStack = createRef<Rect>();
   const innerMevinText = createRef<Txt>();
+  const innerMevinTextPurple = createRef<Txt>();
+  const mevinProgressPurple = createSignal(0);
+  const mevinProgressBlack = createSignal(0);
 
   // --- Background ---
   view.add(whiteRadialRect());
@@ -88,6 +96,7 @@ export default makeScene2D(function* (view) {
         layout
         direction="column"
         width={1240}
+        height={480}
         fill={'#ffffff'}
         radius={[TEXT_BOX_RADIUS, TEXT_BOX_RADIUS, TEXT_BOX_RADIUS, 4]}
         padding={48}
@@ -96,16 +105,49 @@ export default makeScene2D(function* (view) {
         shadowBlur={16}
         shadowOffsetY={4}
       >
-        <Txt
-          ref={innerMevinText}
-          text={'I\'ve refined the NOVA landing page with a premium, dark mode aesthetic and structured sections to highlight your core AI features and pricing. Let me know if you\'d like to adjust the plan names or add specific feature details!'}
-          textWrap
+        {/* Relative container (= position: relative). Height tracks the
+            leading purple layer so the white card hugs the text instead
+            of sitting at a fixed 500px. Children are absolute
+            (= position: absolute; top: 0; left: 0) and overlap exactly. */}
+        <Rect
+          ref={mevinTextStack}
           width={1144}
-          lineHeight={80}
-          fill={'rgba(0, 0, 0, 0.75)'}
-          fontSize={56}
-          opacity={0}
-        />
+          height={() => Math.max(innerMevinTextPurple().height(), 80)}
+          layout={false}
+        >
+          <Txt
+            ref={innerMevinTextPurple}
+            text={() =>
+              MEVIN_FULL_TEXT.slice(0, Math.floor(mevinProgressPurple()))
+            }
+            textWrap
+            width={1144}
+            lineHeight={80}
+            textAlign={'left'}
+            fill={'#7c3aed'}
+            fontSize={56}
+            opacity={0}
+            offset={[-1, -1]}
+            x={-572}
+            y={() => -mevinTextStack().height() / 2}
+          />
+          <Txt
+            ref={innerMevinText}
+            text={() =>
+              MEVIN_FULL_TEXT.slice(0, Math.floor(mevinProgressBlack()))
+            }
+            textWrap
+            width={1144}
+            lineHeight={80}
+            textAlign={'left'}
+            fill={'rgba(0, 0, 0, 0.75)'}
+            fontSize={56}
+            opacity={0}
+            offset={[-1, -1]}
+            x={-572}
+            y={() => -mevinTextStack().height() / 2}
+          />
+        </Rect>
       </Rect>
     </Rect>
   )
@@ -135,7 +177,14 @@ export default makeScene2D(function* (view) {
     );
   yield* all(
     mevinTextBox().opacity(1, 0.5),
+    innerMevinTextPurple().opacity(1, 0.4),
     innerMevinText().opacity(1, 0.4),
+    // purple leads, black chases the same text ~350ms later
+    mevinProgressPurple(MEVIN_FULL_TEXT.length, MEVIN_TYPE_DURATION),
+    sequence(
+      0.35,
+      mevinProgressBlack(MEVIN_FULL_TEXT.length, MEVIN_TYPE_DURATION),
+    ),
   );
 
   yield* waitFor(1);
