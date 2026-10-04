@@ -30,7 +30,7 @@ export default makeScene2D(function* (view) {
       ref={userTextBox}
       layout
       x={400}
-      y={-200}
+      y={-300}
       direction="row"
       alignItems="center"
       justifyContent="center"
@@ -48,8 +48,6 @@ export default makeScene2D(function* (view) {
         fill={'rgba(0, 0, 0, 0.75)'}
         fontSize={56}
         opacity={0}
-        padding={8}
-        offset={[0, 20]}
       />
     </Rect>,
   );
@@ -61,6 +59,7 @@ export default makeScene2D(function* (view) {
       width={0}
       height={0}
       x={-800}
+      y={-160}
       opacity={0}
     />
   );
@@ -72,8 +71,8 @@ export default makeScene2D(function* (view) {
       direction="column"
       alignItems="start"
       x={-200}
-      y={320}
-      gap={16}
+      y={220}
+      gap={48}
       opacity={0}
     >
       <Txt
@@ -90,7 +89,7 @@ export default makeScene2D(function* (view) {
         direction="column"
         width={1240}
         fill={'#ffffff'}
-        radius={16}
+        radius={[TEXT_BOX_RADIUS, TEXT_BOX_RADIUS, TEXT_BOX_RADIUS, 4]}
         padding={[24, 24]}
         opacity={0}
         shadowColor={'rgba(0, 0, 0, 0.1)'}
@@ -100,13 +99,10 @@ export default makeScene2D(function* (view) {
 <Txt
         ref={innerMevinText}
         text={'I\'ve refined the NOVA landing page with a premium, dark mode aesthetic and structured sections to highlight your core AI features and pricing. Let me know if you\'d like to adjust the plan names or add specific feature details!'}
-        layout
         textWrap
         fill={'rgba(0, 0, 0, 0.75)'}
         fontSize={56}
         opacity={0}
-        offset={[0, 20]}
-        padding={8}
       />
       </Rect>
     </Rect>
@@ -115,11 +111,8 @@ export default makeScene2D(function* (view) {
   // --- Timeline ---
   yield* fadeTransition(0.15);
   yield* all(
-    userTextBox().y(-220, 0.6),
+    userTextBox().y(-320, 0.6),
     userTextBox().opacity(1, 0.5),
-  );
-  yield* all(
-    innerUserText().offset([0, 0], 0.5),
     innerUserText().opacity(1, 0.2),
   );
   yield* all(
@@ -129,15 +122,17 @@ export default makeScene2D(function* (view) {
   );
   yield* astroidIcon().rotation(180, 0.5);
 
-  // Beat: onboarding panel fades in
+  // Beat: onboarding panel fades up (slide + fade together
+  // so the motion is visible — children must fade WITH the box,
+  // not after, since effective opacity = parent * child)
   yield* waitFor(0.3);
-yield* all(
-    onboardingBox().opacity(1, 0.4),
-  );
-  yield* onboardingText().opacity(1, 0.3);
+  yield* all(
+      onboardingBox().opacity(1, 0.4),
+      onboardingBox().y(180, 0.4),
+      onboardingText().opacity(1, 0.3),
+    );
   yield* all(
     mevinTextBox().opacity(1, 0.5),
-    innerMevinText().offset([0, 0], 0.5),
     innerMevinText().opacity(1, 0.4),
   );
 
