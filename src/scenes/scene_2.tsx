@@ -95,6 +95,8 @@ export default makeScene2D(function* (view) {
         ref={mevinTextBox}
         layout
         direction="column"
+        justifyContent={'start'}
+        alignItems={'center'}
         width={1240}
         height={480}
         fill={'#ffffff'}
@@ -105,16 +107,12 @@ export default makeScene2D(function* (view) {
         shadowBlur={16}
         shadowOffsetY={4}
       >
-        {/* Relative container (= position: relative). Height tracks the
-            leading purple layer so the white card hugs the text instead
-            of sitting at a fixed 500px. Children are absolute
-            (= position: absolute; top: 0; left: 0) and overlap exactly. */}
-        <Rect
-          ref={mevinTextStack}
-          width={1144}
-          height={() => Math.max(innerMevinTextPurple().height(), 80)}
-          layout={false}
-        >
+        {/* Relative container (= position: relative), static size =
+            card content area (480 - 2*48 padding). Children are absolute
+            (= position: absolute), both pinned to the TOP-LEFT corner so
+            typing starts at the top and grows downward. No reactive
+            size bindings, so layout can't thrash. */}
+        <Rect ref={mevinTextStack} width={1144} height={384} layout={false}>
           <Txt
             ref={innerMevinTextPurple}
             text={() =>
@@ -129,7 +127,7 @@ export default makeScene2D(function* (view) {
             opacity={0}
             offset={[-1, -1]}
             x={-572}
-            y={() => -mevinTextStack().height() / 2}
+            y={-192}
           />
           <Txt
             ref={innerMevinText}
@@ -145,7 +143,7 @@ export default makeScene2D(function* (view) {
             opacity={0}
             offset={[-1, -1]}
             x={-572}
-            y={() => -mevinTextStack().height() / 2}
+            y={-192}
           />
         </Rect>
       </Rect>
