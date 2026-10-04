@@ -13,7 +13,9 @@ import astroidSvg from '../../public/assets/images/astroid.svg';
 const TEXT_BOX_RADIUS = 32;
 const MEVIN_FULL_TEXT =
   "I've refined the NOVA landing page with a premium, dark mode aesthetic and structured sections to highlight your core AI features and pricing. Let me know if you'd like to adjust the plan names or add specific feature details!";
-const MEVIN_TYPE_DURATION = 2.5;
+const MEVIN_PURPLE_DURATION = 2.0;
+const MEVIN_BLACK_DURATION = 3.0;
+const MEVIN_CHASE_DELAY = 0.5;
 
 export default makeScene2D(function* (view) {
   // --- Node refs (must live inside the scene function) ---
@@ -177,11 +179,12 @@ export default makeScene2D(function* (view) {
     mevinTextBox().opacity(1, 0.5),
     innerMevinTextPurple().opacity(1, 0.4),
     innerMevinText().opacity(1, 0.4),
-    // purple leads, black chases the same text ~350ms later
-    mevinProgressPurple(MEVIN_FULL_TEXT.length, MEVIN_TYPE_DURATION),
+    // purple types faster (2s) so it runs ahead; black chases slower (3s)
+    // after a 0.5s delay — gap widens as they type
+    mevinProgressPurple(MEVIN_FULL_TEXT.length, MEVIN_PURPLE_DURATION),
     sequence(
-      0.35,
-      mevinProgressBlack(MEVIN_FULL_TEXT.length, MEVIN_TYPE_DURATION),
+      MEVIN_CHASE_DELAY,
+      mevinProgressBlack(MEVIN_FULL_TEXT.length, MEVIN_BLACK_DURATION),
     ),
   );
 
