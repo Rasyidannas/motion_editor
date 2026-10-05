@@ -1,6 +1,7 @@
-import {Gradient, makeScene2D, Camera} from '@motion-canvas/2d';
+import {Gradient, makeScene2D, blur} from '@motion-canvas/2d';
 import {Rect, Txt, Img} from '@motion-canvas/2d/lib/components';
 import {waitFor} from '@motion-canvas/core/lib/flow';
+import { linear, easeInOutCubic } from '@motion-canvas/core/lib/tweening';
 import {createRef} from '@motion-canvas/core/lib/utils';
 import hamburgerSvg from '../../public/assets/images/hamburger.svg';
 import houseSvg from '../../public/assets/images/house.svg';
@@ -42,7 +43,6 @@ const cardRainbowGradient = new Gradient({
 
 export default makeScene2D(function* (view) {
   // --- Node refs (must live inside the scene function) ---
-  const camera = createRef<Camera>();
   const colorPaletteBox = createRef<Rect>();
   const colorPaletteTitle = createRef<Txt>();
   const typographyBox = createRef<Rect>();
@@ -53,15 +53,19 @@ export default makeScene2D(function* (view) {
   const navigationBox = createRef<Rect>();
   const footerBox = createRef<Rect>();
   const IconsBox = createRef<Rect>();
+  const worldBox = createRef<Rect>();
 
   // --- Pure white background (no import needed) ---
   view.add(<Rect width={'100%'} height={'100%'} fill={'#ffffff'} />);
 
   view.add(
-    <Camera 
-      ref={camera}
-      zoom={2}
-    >
+    // world wrapper (no layout, so cards keep their x/y) — scale animates
+    // the zoomout, filters carry the blur. Everything lives in view space
+    // (no Camera), so the blur cache math stays in one coordinate space.
+    // NOTE: camera zoom z about screen center === wrapper scale z about its
+    // center, and the camera sat at default (0,0), so 2 -> 0.65 matches the
+    // old zoom exactly.
+    <Rect ref={worldBox} scale={2} filters={[blur(0)]}>
       // Color Palette
       <Rect
         ref={colorPaletteBox}
@@ -643,13 +647,29 @@ export default makeScene2D(function* (view) {
           <Img src={plusSvg} width={32} height={32} />
         </Rect>
       </Rect>
-    </Camera>
+    </Rect>
   )
+
+  // --- Frosted-glass veil (fullscreen — added last so it stays on top) ---
+  const veil = createRef<Rect>();
+  view.add(
+    <Rect
+      ref={veil}
+      width={'100%'}
+      height={'100%'}
+      fill={'#ffffff'}
+      opacity={0}
+    />,
+  );
 
   // ===========================================================================
   // Timeline
   // ===========================================================================
   yield* waitFor(HOLD_DURATION);
 
-  yield* camera().zoom(0.65, 2);
+  yield* worldBox().scale(0.65, 2, easeInOutCubic);
+  // veil fades in only after the zoomout is 100% done
+  yield* veil().opacity(0.4, 1);
+  // blur ramps in last (same wrapper, so zoom + blur share one transform)
+  yield* worldBox().filters.blur(12, 1, easeInOutCubic);
 })
