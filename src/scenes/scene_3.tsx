@@ -75,6 +75,7 @@ export default makeScene2D(function* (view) {
       <Rect
         ref={colorPaletteBox}
         layout
+        opacity={0}
         direction="column"
         gap={32}
         width={800}
@@ -182,6 +183,7 @@ export default makeScene2D(function* (view) {
       <Rect
         ref={typographyBox}
         layout
+        opacity={0}
         direction="column"
         gap={32}
         // width={800}
@@ -276,6 +278,7 @@ export default makeScene2D(function* (view) {
       <Rect
         ref={buttonBox}
         layout
+        opacity={0}
         direction="column"
         gap={32}
         // width={800}
@@ -408,6 +411,7 @@ export default makeScene2D(function* (view) {
       <Rect
         ref={textFieldBox}
         layout
+        opacity={0}
         direction="column"
         gap={24}
         // width={800}
@@ -449,6 +453,7 @@ export default makeScene2D(function* (view) {
       <Rect
         ref={submitFormBox}
         layout
+        opacity={0}
         direction="column"
         gap={24}
         // width={800}
@@ -509,6 +514,7 @@ export default makeScene2D(function* (view) {
       <Rect
         ref={navigationBox}
         layout
+        opacity={0}
         direction="column"
         gap={24}
         // width={800}
@@ -576,6 +582,7 @@ export default makeScene2D(function* (view) {
       <Rect
         ref={footerBox}
         layout
+        opacity={0}
         direction="column"
         gap={24}
         padding={48}
@@ -628,6 +635,7 @@ export default makeScene2D(function* (view) {
       <Rect
         ref={IconsBox}
         layout
+        opacity={0}
         direction="column"
         gap={32}
         scale={1.25}
@@ -713,6 +721,18 @@ export default makeScene2D(function* (view) {
   // Timeline
   // ===========================================================================
   yield* fadeTransition(0.15);
+  // all cards fade in together (children ride along: effective opacity =
+  // parent x child, same as scene_2's onboarding beat)
+  yield* all(
+    colorPaletteBox().opacity(1, 0.4),
+    typographyBox().opacity(1, 0.4),
+    buttonBox().opacity(1, 0.4),
+    textFieldBox().opacity(1, 0.4),
+    submitFormBox().opacity(1, 0.4),
+    navigationBox().opacity(1, 0.4),
+    footerBox().opacity(1, 0.4),
+    IconsBox().opacity(1, 0.4),
+  );
   yield* waitFor(HOLD_DURATION);
 
   yield* worldBox().scale(0.65, 2, easeInOutCubic);
@@ -730,5 +750,6 @@ export default makeScene2D(function* (view) {
     sequence(0.3, wordInstant().opacity(1, 0.3)),
   );
 
+  yield* waitFor(HOLD_DURATION);
   yield* waitFor(HOLD_DURATION);
 })
