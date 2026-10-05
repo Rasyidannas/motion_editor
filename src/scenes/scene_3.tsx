@@ -1,4 +1,4 @@
-import {Gradient, makeScene2D} from '@motion-canvas/2d';
+import {Gradient, makeScene2D, Camera} from '@motion-canvas/2d';
 import {Rect, Txt} from '@motion-canvas/2d/lib/components';
 import {waitFor} from '@motion-canvas/core/lib/flow';
 import {createRef} from '@motion-canvas/core/lib/utils';
@@ -35,118 +35,218 @@ const cardRainbowGradient = new Gradient({
 
 export default makeScene2D(function* (view) {
   // --- Node refs (must live inside the scene function) ---
+  const camera = createRef<Camera>();
   const colorPaletteBox = createRef<Rect>();
   const colorPaletteTitle = createRef<Txt>();
+  const typographyBox = createRef<Rect>();
+  const typographyTitle = createRef<Txt>();
 
   // --- Pure white background (no import needed) ---
   view.add(<Rect width={'100%'} height={'100%'} fill={'#ffffff'} />);
 
   view.add(
-    <Rect
-      ref={colorPaletteBox}
-      layout
-      direction="column"
-      gap={32}
-      width={800}
-      padding={48}
-      radius={BOX_RADIUS}
-      fill={cardRainbowGradient}
-    >
-      <Txt
-        ref={colorPaletteTitle}
-        text={"Color Palette"}
-        fontSize={BOX_TITLE_SIZE}
-        fontWeight={BOX_TITLE_WEIGHT}
-        fill={BOX_TITLE_COLOR}
-      />
+    <Camera ref={camera}>
+      // Color Palette
       <Rect
+        ref={colorPaletteBox}
         layout
-        direction="row"
-        radius={16}
-        clip
+        direction="column"
+        gap={32}
+        width={800}
+        padding={48}
+        radius={BOX_RADIUS}
+        fill={cardRainbowGradient}
       >
-        <Rect 
-          height={320}
-          width={200}
-          fill={'#000000'}
-          padding={16}
+        <Txt
+          ref={colorPaletteTitle}
+          text={"Color Palette"}
+          fontSize={BOX_TITLE_SIZE}
+          fontWeight={BOX_TITLE_WEIGHT}
+          fill={BOX_TITLE_COLOR}
+        />
+        <Rect
           layout
-          direction="column"
-          justifyContent="space-between"
+          direction="row"
+          radius={16}
+          clip
         >
-          <Txt
-            text={'Background'}
-            fill={'rgba(255, 255, 255, 0.5)'}
-            fontSize={24}
-          />
-          <Txt
-            text={'#000000'}
-            fill={'rgba(255, 255, 255, 0.5)'}
-            fontSize={24}
-          />
-        </Rect>
-        <Rect 
-          height={320}
-          width={200}
-          fill={'#ffffff'}
-          padding={16}
-          layout
-          direction="column"
-          justifyContent="space-between"
-        >
-          <Txt
-            text={'Neutral'}
-            fill={'rgba(0, 0, 0, 0.5)'}
-            fontSize={24}
-          />
-          <Txt
-            text={'#ffffff'}
-            fill={'rgba(0, 0, 0, 0.5)'}
-            fontSize={24}
-          />
-        </Rect>
-        <Rect 
-          height={320}
-          width={200}
-          fill={'#9B7EBD'}
-          padding={16}
-          layout
-          direction="column"
-          justifyContent="space-between"
-        >
-          <Txt
-            text={'Primary'}
-            fill={'rgba(255, 255, 255, 0.5)'}
-            fontSize={24}
-          />
-          <Txt
-            text={'#9B7EBD'}
-            fill={'rgba(255, 255, 255, 0.5)'}
-            fontSize={24}
-          />
-        </Rect>
-        <Rect 
-          height={320}
-          width={200}
-          fill={'#3E54AC'}
-          padding={16}
-          layout
-          direction="column"
-          justifyContent="space-between"
-        >
-          <Txt
-            text={'Primary'}
-            fill={'rgba(255, 255, 255, 0.5)'}
-            fontSize={24}
-          />
-          <Txt
-            text={'#3E54AC'}
-            fill={'rgba(255, 255, 255, 0.5)'}
-            fontSize={24}
-          />
+          <Rect 
+            height={320}
+            width={200}
+            fill={'#000000'}
+            padding={16}
+            layout
+            direction="column"
+            justifyContent="space-between"
+          >
+            <Txt
+              text={'Background'}
+              fill={'rgba(255, 255, 255, 0.5)'}
+              fontSize={24}
+            />
+            <Txt
+              text={'#000000'}
+              fill={'rgba(255, 255, 255, 0.5)'}
+              fontSize={24}
+            />
+          </Rect>
+          <Rect 
+            height={320}
+            width={200}
+            fill={'#ffffff'}
+            padding={16}
+            layout
+            direction="column"
+            justifyContent="space-between"
+          >
+            <Txt
+              text={'Neutral'}
+              fill={'rgba(0, 0, 0, 0.5)'}
+              fontSize={24}
+            />
+            <Txt
+              text={'#ffffff'}
+              fill={'rgba(0, 0, 0, 0.5)'}
+              fontSize={24}
+            />
+          </Rect>
+          <Rect 
+            height={320}
+            width={200}
+            fill={'#9B7EBD'}
+            padding={16}
+            layout
+            direction="column"
+            justifyContent="space-between"
+          >
+            <Txt
+              text={'Primary'}
+              fill={'rgba(255, 255, 255, 0.5)'}
+              fontSize={24}
+            />
+            <Txt
+              text={'#9B7EBD'}
+              fill={'rgba(255, 255, 255, 0.5)'}
+              fontSize={24}
+            />
+          </Rect>
+          <Rect 
+            height={320}
+            width={200}
+            fill={'#3E54AC'}
+            padding={16}
+            layout
+            direction="column"
+            justifyContent="space-between"
+          >
+            <Txt
+              text={'Primary'}
+              fill={'rgba(255, 255, 255, 0.5)'}
+              fontSize={24}
+            />
+            <Txt
+              text={'#3E54AC'}
+              fill={'rgba(255, 255, 255, 0.5)'}
+              fontSize={24}
+            />
+          </Rect>
         </Rect>
       </Rect>
-    </Rect>
+
+      // --- Typography
+      <Rect
+        ref={typographyBox}
+        layout
+        direction="column"
+        gap={32}
+        // width={800}
+        scale={1.5}
+        padding={48}
+        radius={BOX_RADIUS}
+        fill={cardRainbowGradient}
+        x={900}
+        y={200}
+      >
+        <Txt
+          ref={typographyTitle}
+          text={"Typography"}
+          fontSize={BOX_TITLE_SIZE}
+          fontWeight={BOX_TITLE_WEIGHT}
+          fill={BOX_TITLE_COLOR}
+        />
+        <Rect
+          layout
+          direction="row"
+          justifyContent="space-between"
+          gap={48}
+          clip
+        >
+          <Rect
+            layout
+            direction='column'
+            gap={8}
+          >
+            <Txt 
+              text={'For Headline'}
+              fontSize={16}
+              fill={BOX_TITLE_COLOR}
+            />
+            <Txt 
+              text={'Aa'}
+              fontSize={48}
+              fill={BOX_TITLE_COLOR}
+            />
+            <Txt 
+              text={'Aa Bb Cc Dd Ee Ff Gg Hh Jj Kk Ll Mm Nn'}
+              fontSize={12}
+              fill={BOX_TITLE_COLOR}
+            />
+            <Txt 
+              text={'Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz'}
+              fontSize={12}
+              fill={BOX_TITLE_COLOR}
+            />
+            <Txt 
+              text={'1234567890!@#$%^&*()'}
+              fontSize={12}
+              fill={BOX_TITLE_COLOR}
+            />
+          </Rect>
+
+          <Rect
+            layout
+            direction='column'
+            gap={8}
+          >
+            <Txt 
+              text={'For Body'}
+              fontSize={16}
+              fill={BOX_TITLE_COLOR}
+            />
+            <Txt 
+              text={'Aa'}
+              fontSize={48}
+              fill={BOX_TITLE_COLOR}
+            />
+            <Txt 
+              text={'Aa Bb Cc Dd Ee Ff Gg Hh Jj Kk Ll Mm Nn'}
+              fontSize={12}
+              fill={BOX_TITLE_COLOR}
+            />
+            <Txt 
+              text={'Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz'}
+              fontSize={12}
+              fill={BOX_TITLE_COLOR}
+            />
+            <Txt 
+              text={'1234567890!@#$%^&*()'}
+              fontSize={12}
+              fill={BOX_TITLE_COLOR}
+            />
+          </Rect>
+        </Rect>
+      </Rect>
+    </Camera>
   )
 
   // ===========================================================================
