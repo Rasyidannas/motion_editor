@@ -143,7 +143,7 @@ export default makeScene2D(function* (view) {
         fontFamily={FONT_FAMILY}
         x={-160}
         y={0}
-        fill={'rgba(255, 255, 255, 0.25)'}
+        fill={'rgba(255, 255, 255, 0.65)'}
       />
       <Rect
         ref={sendButtonRef}
