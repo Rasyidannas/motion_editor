@@ -2,6 +2,7 @@ import {Gradient, makeScene2D, blur} from '@motion-canvas/2d';
 import {Rect, Txt, Img} from '@motion-canvas/2d/lib/components';
 import {all, sequence, waitFor} from '@motion-canvas/core/lib/flow';
 import {linear, easeInOutCubic, easeOutCubic} from '@motion-canvas/core/lib/tweening';
+import { fadeTransition } from '@motion-canvas/core/lib/transitions';
 import {createRef} from '@motion-canvas/core/lib/utils';
 import hamburgerSvg from '../../public/assets/images/hamburger.svg';
 import houseSvg from '../../public/assets/images/house.svg';
@@ -710,6 +711,7 @@ export default makeScene2D(function* (view) {
   // ===========================================================================
   // Timeline
   // ===========================================================================
+  yield* fadeTransition(0.15);
   yield* waitFor(HOLD_DURATION);
 
   yield* worldBox().scale(0.65, 2, easeInOutCubic);
