@@ -1,7 +1,8 @@
 import {Gradient, makeScene2D, Camera} from '@motion-canvas/2d';
-import {Rect, Txt} from '@motion-canvas/2d/lib/components';
+import {Rect, Txt, Img} from '@motion-canvas/2d/lib/components';
 import {waitFor} from '@motion-canvas/core/lib/flow';
 import {createRef} from '@motion-canvas/core/lib/utils';
+import hamburgerSvg from '../../public/assets/images/hamburger.svg';
 
 // ---------------------------------------------------------------------------
 // Timeline tuning (all values in seconds unless noted)
@@ -43,12 +44,17 @@ export default makeScene2D(function* (view) {
   const buttonBox = createRef<Rect>();
   const textFieldBox = createRef<Rect>();
   const submitFormBox = createRef<Rect>();
+  const navigationBox = createRef<Rect>();
+  const footerBox = createRef<Rect>();
 
   // --- Pure white background (no import needed) ---
   view.add(<Rect width={'100%'} height={'100%'} fill={'#ffffff'} />);
 
   view.add(
-    <Camera ref={camera}>
+    <Camera 
+      ref={camera}
+      zoom={2}
+    >
       // Color Palette
       <Rect
         ref={colorPaletteBox}
@@ -482,6 +488,73 @@ export default makeScene2D(function* (view) {
           </Rect>
         </Rect>
       </Rect>
+
+      // --- Navigation
+      <Rect
+        ref={navigationBox}
+        layout
+        direction="column"
+        gap={24}
+        // width={800}
+        scale={1.25}
+        padding={48}
+        radius={BOX_RADIUS}
+        fill={cardRainbowGradient}
+        x={-1000}
+        y={-750}
+      >
+        <Txt
+          ref={typographyTitle}
+          text={"Navigation"}
+          fontSize={BOX_TITLE_SIZE}
+          fontWeight={BOX_TITLE_WEIGHT}
+          fill={BOX_TITLE_COLOR}
+        />
+        <Rect
+          layout
+          direction="row"
+          justifyContent="space-between"
+          gap={124}
+        >
+          <Txt 
+            text={"LOGO"}
+            fontSize={24}
+            fontWeight={700}
+            fill={BOX_TITLE_COLOR}
+          />
+          <Rect
+            layout
+            direction="row"
+            gap={16}
+          >
+            <Txt 
+              text={"Home"}
+              fontSize={20}
+              fontWeight={500}
+              fill={BOX_TITLE_COLOR}
+            />
+            <Txt 
+              text={"Pricing"}
+              fontSize={20}
+              fontWeight={500}
+              fill={BOX_TITLE_COLOR}
+            />
+            <Txt 
+              text={"About"}
+              fontSize={20}
+              fontWeight={500}
+              fill={BOX_TITLE_COLOR}
+            />
+            <Txt 
+              text={"Contact"}
+              fontSize={20}
+              fontWeight={500}
+              fill={BOX_TITLE_COLOR}
+            />
+          </Rect>
+          <Img src={hamburgerSvg} width={24} height={24} />
+        </Rect>
+      </Rect>
     </Camera>
   )
 
@@ -490,5 +563,5 @@ export default makeScene2D(function* (view) {
   // ===========================================================================
   yield* waitFor(HOLD_DURATION);
 
-
+  yield* camera().zoom(0.55, 2);
 })
