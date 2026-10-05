@@ -40,6 +40,9 @@ export default makeScene2D(function* (view) {
   const colorPaletteTitle = createRef<Txt>();
   const typographyBox = createRef<Rect>();
   const typographyTitle = createRef<Txt>();
+  const buttonBox = createRef<Rect>();
+  const textFieldBox = createRef<Rect>();
+  const submitFormBox = createRef<Rect>();
 
   // --- Pure white background (no import needed) ---
   view.add(<Rect width={'100%'} height={'100%'} fill={'#ffffff'} />);
@@ -140,7 +143,7 @@ export default makeScene2D(function* (view) {
             justifyContent="space-between"
           >
             <Txt
-              text={'Primary'}
+              text={'Secondary'}
               fill={'rgba(255, 255, 255, 0.5)'}
               fontSize={24}
             />
@@ -164,7 +167,7 @@ export default makeScene2D(function* (view) {
         padding={48}
         radius={BOX_RADIUS}
         fill={cardRainbowGradient}
-        x={900}
+        x={1200}
         y={200}
       >
         <Txt
@@ -242,6 +245,239 @@ export default makeScene2D(function* (view) {
               text={'1234567890!@#$%^&*()'}
               fontSize={12}
               fill={BOX_TITLE_COLOR}
+            />
+          </Rect>
+        </Rect>
+      </Rect>
+
+      // --- Buttons
+      <Rect
+        ref={buttonBox}
+        layout
+        direction="column"
+        gap={32}
+        // width={800}
+        scale={1.25}
+        padding={48}
+        radius={BOX_RADIUS}
+        fill={cardRainbowGradient}
+        x={-1000}
+        y={-250}
+      >
+        <Txt
+          ref={typographyTitle}
+          text={"Buttons"}
+          fontSize={BOX_TITLE_SIZE}
+          fontWeight={BOX_TITLE_WEIGHT}
+          fill={BOX_TITLE_COLOR}
+        />
+        <Rect
+          layout
+          direction="row"
+          justifyContent="space-between"
+          gap={48}
+          clip
+        >
+          <Rect
+            layout
+            direction='column'
+            gap={12}
+          >
+            <Rect
+              padding={[12, 16]}
+              radius={8}
+              fill={'#9B7EBD'}
+              layout
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Txt
+                text={'Primary Button'}
+                fontSize={16}
+                fill={'#ffffff'}
+              />
+            </Rect>
+            <Rect
+              padding={[16, 24]}
+              radius={8}
+              fill={'#9B7EBD'}
+              layout
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Txt
+                text={'Primary Button'}
+                fontSize={16}
+                fill={'#ffffff'}
+              />
+            </Rect>
+            <Rect
+              padding={[20, 32]}
+              radius={8}
+              fill={'#9B7EBD'}
+              layout
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Txt
+                text={'Primary Button'}
+                fontSize={16}
+                fill={'#ffffff'}
+              />
+            </Rect>
+          </Rect>
+
+
+          <Rect
+            layout
+            direction='column'
+            gap={12}
+          >
+            <Rect
+              padding={[12, 16]}
+              radius={8}
+              lineWidth={2}
+              stroke={'#9B7EBD'}
+              layout
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Txt
+                text={'Secondary Button'}
+                fontSize={16}
+                fill={'#9B7EBD'}
+              />
+            </Rect>
+            <Rect
+              padding={[16, 20]}
+              radius={8}
+              lineWidth={2}
+              stroke={'#9B7EBD'}
+              layout
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Txt
+                text={'Secondary Button'}
+                fontSize={16}
+                fill={'#9B7EBD'}
+              />
+            </Rect>
+            <Rect
+              padding={[20, 32]}
+              radius={8}
+              lineWidth={2}
+              stroke={'#9B7EBD'}
+              layout
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Txt
+                text={'Secondary Button'}
+                fontSize={16}
+                fill={'#9B7EBD'}
+              />
+            </Rect>
+          </Rect>
+        </Rect>
+      </Rect>
+      
+      // --- Text Field
+      <Rect
+        ref={textFieldBox}
+        layout
+        direction="column"
+        gap={24}
+        // width={800}
+        scale={0.9}
+        padding={48}
+        radius={BOX_RADIUS}
+        fill={cardRainbowGradient}
+        x={-950}
+        y={200}
+      >
+        <Txt
+          ref={typographyTitle}
+          text={"Text Field"}
+          fontSize={BOX_TITLE_SIZE}
+          fontWeight={BOX_TITLE_WEIGHT}
+          fill={BOX_TITLE_COLOR}
+        />
+        <Rect
+          layout
+          direction="row"
+          justifyContent="space-between"
+          gap={24}
+          padding={12}
+          width={320}
+          lineWidth={2}
+          stroke={'rgba(0, 0, 0, 0.25)'}
+          radius={8}
+          clip
+        >
+          <Txt
+            text="Enter your name here"
+            fontSize={16}
+            fill={'rgba(0, 0, 0, 0.45)'}
+          />
+        </Rect>
+      </Rect>
+
+      // --- Submit Form
+      <Rect
+        ref={submitFormBox}
+        layout
+        direction="column"
+        gap={24}
+        // width={800}
+        scale={1.25}
+        padding={48}
+        radius={BOX_RADIUS}
+        fill={cardRainbowGradient}
+        x={450}
+        y={-750}
+      >
+        <Txt
+          ref={typographyTitle}
+          text={"Submit Form"}
+          fontSize={BOX_TITLE_SIZE}
+          fontWeight={BOX_TITLE_WEIGHT}
+          fill={BOX_TITLE_COLOR}
+        />
+        <Rect
+          layout
+          direction="row"
+          justifyContent="space-between"
+          gap={16}
+        >
+          <Rect
+            layout
+            direction="row"
+            justifyContent="space-between"
+            gap={24}
+            padding={12}
+            width={320}
+            lineWidth={2}
+            stroke={'rgba(0, 0, 0, 0.25)'}
+            radius={8}
+            clip
+          >
+            <Txt
+              text="Enter your name here"
+              fontSize={16}
+              fill={'rgba(0, 0, 0, 0.45)'}
+            />
+          </Rect>
+
+          <Rect
+            padding={[8, 16]}
+            radius={8}
+            fill={'#9B7EBD'}
+          >
+            <Txt 
+              text={"Submit"}
+              fontSize={20}
+              fill={'#ffffff'}
             />
           </Rect>
         </Rect>
