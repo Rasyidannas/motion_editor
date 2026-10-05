@@ -58,6 +58,7 @@ export default makeScene2D(function* (view) {
   const wordFast = createRef<Txt>();
   const wordEasy = createRef<Txt>();
   const wordInstant = createRef<Txt>();
+  const headlineBox = createRef<Rect>();
 
   // --- Pure white background (no import needed) ---
   view.add(<Rect width={'100%'} height={'100%'} fill={'#ffffff'} />);
@@ -667,15 +668,19 @@ export default makeScene2D(function* (view) {
   );
 
   // --- Closing headline (screen space, above veil) ---
-  // Words are inside a row layout for positioning, but each word tracks its
-  // own opacity/y so they can stagger: Fast → Easy → Instant.
+  // The ROW rises as one unit (it is a layout root, so its y tween applies —
+  // y tweens on flex children are silently ignored, see Layout.getY).
+  // Stagger comes from per-word opacity: Fast → Easy → Instant.
   view.add(
     <Rect
+      ref={headlineBox}
       layout
       direction="row"
       alignItems="center"
       justifyContent="center"
       gap={40}
+      opacity={0}
+      y={40}
     >
       <Txt
         ref={wordFast}
@@ -684,7 +689,6 @@ export default makeScene2D(function* (view) {
         fontWeight={700}
         fill={'rgba(0, 0, 0, 0.85)'}
         opacity={0}
-        y={40}
       />
       <Txt
         ref={wordEasy}
@@ -693,7 +697,6 @@ export default makeScene2D(function* (view) {
         fontWeight={700}
         fill={'rgba(0, 0, 0, 0.85)'}
         opacity={0}
-        y={40}
       />
       <Txt
         ref={wordInstant}
@@ -702,7 +705,6 @@ export default makeScene2D(function* (view) {
         fontWeight={700}
         fill={'rgba(0, 0, 0, 0.85)'}
         opacity={0}
-        y={40}
       />
     </Rect>,
   );
@@ -718,17 +720,14 @@ export default makeScene2D(function* (view) {
   yield* veil().opacity(0.7, 1);
   // blur ramps in last (same wrapper, so zoom + blur share one transform)
   yield* worldBox().filters.blur(12, 1, easeInOutCubic);
-  // closing headline: words stagger in — Fast first, then Easy, then Instant
+  // closing headline: row rises like "onboarding steps" in scene_2, words
+  // pop in order — Fast → Easy → Instant
   yield* all(
-    all(wordFast().opacity(1, 0.4), wordFast().y(0, 0.4)),
-    sequence(
-      0.35,
-      all(wordEasy().opacity(1, 0.4), wordEasy().y(0, 0.4)),
-    ),
-    sequence(
-      0.7,
-      all(wordInstant().opacity(1, 0.4), wordInstant().y(0, 0.4)),
-    ),
+    headlineBox().opacity(1, 0.4),
+    headlineBox().y(0, 0.4),
+    wordFast().opacity(1, 0.3),
+    sequence(0.15, wordEasy().opacity(1, 0.3)),
+    sequence(0.3, wordInstant().opacity(1, 0.3)),
   );
 
   yield* waitFor(HOLD_DURATION);
