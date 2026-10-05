@@ -1,7 +1,7 @@
 import {Gradient, makeScene2D, blur} from '@motion-canvas/2d';
 import {Rect, Txt, Img} from '@motion-canvas/2d/lib/components';
 import {all, sequence, waitFor} from '@motion-canvas/core/lib/flow';
-import {linear, easeInOutCubic, easeOutCubic} from '@motion-canvas/core/lib/tweening';
+import {easeInOutCubic} from '@motion-canvas/core/lib/tweening';
 import { fadeTransition } from '@motion-canvas/core/lib/transitions';
 import {createRef} from '@motion-canvas/core/lib/utils';
 import hamburgerSvg from '../../public/assets/images/hamburger.svg';
@@ -55,9 +55,9 @@ export default makeScene2D(function* (view) {
   const footerBox = createRef<Rect>();
   const IconsBox = createRef<Rect>();
   const worldBox = createRef<Rect>();
-  const headlineFast = createRef<Txt>();
-  const headlineEasy = createRef<Txt>();
-  const headlineInstant = createRef<Txt>();
+  const wordFast = createRef<Txt>();
+  const wordEasy = createRef<Txt>();
+  const wordInstant = createRef<Txt>();
 
   // --- Pure white background (no import needed) ---
   view.add(<Rect width={'100%'} height={'100%'} fill={'#ffffff'} />);
@@ -666,8 +666,9 @@ export default makeScene2D(function* (view) {
     />,
   );
 
-  // --- Closing headline (screen space, added last so it sits above the
-  // veil — each word starts 60px low and transparent, then fades up) ---
+  // --- Closing headline (screen space, above veil) ---
+  // Words are inside a row layout for positioning, but each word tracks its
+  // own opacity/y so they can stagger: Fast → Easy → Instant.
   view.add(
     <Rect
       layout
@@ -675,35 +676,33 @@ export default makeScene2D(function* (view) {
       alignItems="center"
       justifyContent="center"
       gap={40}
-      width={'100%'}
-      height={'100%'}
     >
       <Txt
-        ref={headlineFast}
+        ref={wordFast}
         text={'Fast.'}
         fontSize={120}
         fontWeight={700}
         fill={'rgba(0, 0, 0, 0.85)'}
         opacity={0}
-        y={60}
+        y={40}
       />
       <Txt
-        ref={headlineEasy}
+        ref={wordEasy}
         text={'Easy.'}
         fontSize={120}
         fontWeight={700}
         fill={'rgba(0, 0, 0, 0.85)'}
         opacity={0}
-        y={60}
+        y={40}
       />
       <Txt
-        ref={headlineInstant}
+        ref={wordInstant}
         text={'Instant.'}
         fontSize={120}
         fontWeight={700}
         fill={'rgba(0, 0, 0, 0.85)'}
         opacity={0}
-        y={60}
+        y={40}
       />
     </Rect>,
   );
@@ -719,19 +718,16 @@ export default makeScene2D(function* (view) {
   yield* veil().opacity(0.7, 1);
   // blur ramps in last (same wrapper, so zoom + blur share one transform)
   yield* worldBox().filters.blur(12, 1, easeInOutCubic);
-  // closing headline: words fade up one by one over the frosted backdrop
+  // closing headline: words stagger in — Fast first, then Easy, then Instant
   yield* all(
-    all(headlineFast().opacity(1, 0.5), headlineFast().y(0, 0.5, easeOutCubic)),
+    all(wordFast().opacity(1, 0.4), wordFast().y(0, 0.4)),
     sequence(
-      0.15,
-      all(headlineEasy().opacity(1, 0.5), headlineEasy().y(0, 0.5, easeOutCubic)),
+      0.35,
+      all(wordEasy().opacity(1, 0.4), wordEasy().y(0, 0.4)),
     ),
     sequence(
-      0.3,
-      all(
-        headlineInstant().opacity(1, 0.5),
-        headlineInstant().y(0, 0.5, easeOutCubic),
-      ),
+      0.7,
+      all(wordInstant().opacity(1, 0.4), wordInstant().y(0, 0.4)),
     ),
   );
 
