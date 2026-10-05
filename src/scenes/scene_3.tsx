@@ -3,6 +3,12 @@ import {Rect, Txt, Img} from '@motion-canvas/2d/lib/components';
 import {waitFor} from '@motion-canvas/core/lib/flow';
 import {createRef} from '@motion-canvas/core/lib/utils';
 import hamburgerSvg from '../../public/assets/images/hamburger.svg';
+import houseSvg from '../../public/assets/images/house.svg';
+import trashSvg from '../../public/assets/images/trash.svg';
+import phoneSvg from '../../public/assets/images/phone.svg';
+import mapPinSvg from '../../public/assets/images/map-pin.svg';
+import mailSvg from '../../public/assets/images/mail.svg';
+import plusSvg from '../../public/assets/images/plus.svg';
 
 // ---------------------------------------------------------------------------
 // Timeline tuning (all values in seconds unless noted)
@@ -46,6 +52,7 @@ export default makeScene2D(function* (view) {
   const submitFormBox = createRef<Rect>();
   const navigationBox = createRef<Rect>();
   const footerBox = createRef<Rect>();
+  const IconsBox = createRef<Rect>();
 
   // --- Pure white background (no import needed) ---
   view.add(<Rect width={'100%'} height={'100%'} fill={'#ffffff'} />);
@@ -605,6 +612,35 @@ export default makeScene2D(function* (view) {
             fontSize={16}
             fill={BOX_TITLE_COLOR}
           />
+        </Rect>
+      </Rect>
+
+      // Icons
+      <Rect
+        ref={IconsBox}
+        layout
+        direction="column"
+        gap={32}
+        scale={1.25}
+        padding={48}
+        radius={BOX_RADIUS}
+        fill={cardRainbowGradient}
+        x={900}
+        y={-350}
+      >
+        <Txt
+          text={'Icons'}
+          fontSize={BOX_TITLE_SIZE}
+          fontWeight={BOX_TITLE_WEIGHT}
+          fill={BOX_TITLE_COLOR}
+        />
+        <Rect layout direction="row" gap={24} alignItems="center">
+          <Img src={houseSvg} width={32} height={32} />
+          <Img src={trashSvg} width={32} height={32} />
+          <Img src={phoneSvg} width={32} height={32} />
+          <Img src={mapPinSvg} width={32} height={32} />
+          <Img src={mailSvg} width={32} height={32} />
+          <Img src={plusSvg} width={32} height={32} />
         </Rect>
       </Rect>
     </Camera>
