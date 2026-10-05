@@ -555,6 +555,58 @@ export default makeScene2D(function* (view) {
           <Img src={hamburgerSvg} width={24} height={24} />
         </Rect>
       </Rect>
+
+      // --- Footer
+      <Rect
+        ref={footerBox}
+        layout
+        direction="column"
+        gap={24}
+        padding={48}
+        radius={BOX_RADIUS}
+        fill={cardRainbowGradient}
+        x={-350}
+        y={625}
+        scale={1.5}
+      >
+        {/* top: 3 columns */}
+        <Rect layout direction="row" gap={64} justifyContent="space-between">
+          {/* brand */}
+          <Rect layout direction="column" gap={12}>
+            <Txt text={'LOGO'} fontSize={24} fontWeight={700} fill={BOX_TITLE_COLOR} />
+            <Txt
+              text={'Dummy description of the product in one short line.'}
+              fontSize={16}
+              fill={BOX_TITLE_COLOR}
+              width={280}
+              textWrap
+            />
+          </Rect>
+          {/* links */}
+          <Rect layout direction="column" gap={12}>
+            <Txt text={'Links'} fontSize={20} fontWeight={600} fill={BOX_TITLE_COLOR} />
+            <Txt text={'Home'} fontSize={16} fill={BOX_TITLE_COLOR} />
+            <Txt text={'About'} fontSize={16} fill={BOX_TITLE_COLOR} />
+            <Txt text={'Contact'} fontSize={16} fill={BOX_TITLE_COLOR} />
+          </Rect>
+          {/* legal */}
+          <Rect layout direction="column" gap={12}>
+            <Txt text={'Legal'} fontSize={20} fontWeight={600} fill={BOX_TITLE_COLOR} />
+            <Txt text={'Privacy Policy'} fontSize={16} fill={BOX_TITLE_COLOR} />
+            <Txt text={'Terms & Conditions'} fontSize={16} fill={BOX_TITLE_COLOR} />
+          </Rect>
+        </Rect>
+        {/* divider */}
+        <Rect height={2} width={'100%'} fill={'rgba(0, 0, 0, 0.15)'} radius={1} />
+        {/* copyright, centered */}
+        <Rect layout direction="row" width={'100%'} justifyContent="center">
+          <Txt
+            text={'Copyright Mevin. All rights reserved.'}
+            fontSize={16}
+            fill={BOX_TITLE_COLOR}
+          />
+        </Rect>
+      </Rect>
     </Camera>
   )
 
@@ -563,5 +615,5 @@ export default makeScene2D(function* (view) {
   // ===========================================================================
   yield* waitFor(HOLD_DURATION);
 
-  yield* camera().zoom(0.55, 2);
+  yield* camera().zoom(0.65, 2);
 })
