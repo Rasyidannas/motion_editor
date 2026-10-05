@@ -18,8 +18,7 @@ const MEVIN_PURPLE_DURATION = 2.0;
 const MEVIN_BLACK_DURATION = 3.0;
 const MEVIN_CHASE_DELAY = 0.5;
 const TRACE_WINDOW = 0.14; // visible segment length (fraction of perimeter)
-const TRACE_LAP_DURATION = 1.5; // seconds per lap around the card
-const TRACE_LAPS = 2;
+const TRACE_DURATION = MEVIN_CHASE_DELAY + MEVIN_BLACK_DURATION; // single lap follows black typing
 
 export default makeScene2D(function* (view) {
   // --- Node refs (must live inside the scene function) ---
@@ -63,25 +62,7 @@ export default makeScene2D(function* (view) {
       fill={'#ffffff'}
       radius={[TEXT_BOX_RADIUS, TEXT_BOX_RADIUS, 4, TEXT_BOX_RADIUS]}
       padding={32}
-      opacity={0}
-      shadowColor={'rgba(0, 0, 0, 0.15)'}
-      shadowBlur={24}
-      shadowOffsetY={8}
-    >
-      <Txt
-        ref={innerUserText}
-        text={'Create me a landing page'}
-        fill={'rgba(0, 0, 0, 0.75)'}
-        fontSize={56}
-        opacity={0}
-      />
-    </Rect>,
-  );
-
-  view.add(
-    <Img
-      ref={astroidIcon}
-      src={astroidSvg}
+      opacity={0} shadowColor={'rgba(0, 0, 0, 0.15)'} shadowBlur={24} shadowOffsetY={8} > <Txt ref={innerUserText} text={'Create me a landing page'} fill={'rgba(0, 0, 0, 0.75)'} fontSize={56} opacity={0} /> </Rect>,); view.add( <Img ref={astroidIcon} src={astroidSvg}
       width={0}
       height={0}
       x={-800}
@@ -232,15 +213,14 @@ export default makeScene2D(function* (view) {
       mevinProgressBlack(MEVIN_FULL_TEXT.length, MEVIN_BLACK_DURATION),
     ),
     (function* () {
-      for (let i = 0; i < TRACE_LAPS; i++) {
-        // snap a short window to the path start, then slide it once around
-        mevinTrace().start(0);
-        mevinTrace().end(TRACE_WINDOW);
-        yield* all(
-          mevinTrace().start(1 - TRACE_WINDOW, TRACE_LAP_DURATION, linear),
-          mevinTrace().end(1, TRACE_LAP_DURATION, linear),
-        );
-      }
+      // single lap: snap a short window to the path start, then slide it
+      // once around for exactly as long as the black typing takes
+      mevinTrace().start(0);
+      mevinTrace().end(TRACE_WINDOW);
+      yield* all(
+        mevinTrace().start(1 - TRACE_WINDOW, TRACE_DURATION, easeInOutCubic),
+        mevinTrace().end(1, TRACE_DURATION, easeInOutCubic),
+      );
     })(),
   );
 
