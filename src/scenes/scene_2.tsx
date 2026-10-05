@@ -1,7 +1,8 @@
-import { makeScene2D } from '@motion-canvas/2d';
+import { Gradient, Path, makeScene2D } from '@motion-canvas/2d';
 import { Rect, Txt, Img } from '@motion-canvas/2d/lib/components';
 import { fadeTransition } from '@motion-canvas/core/lib/transitions';
 import { all, sequence, waitFor } from '@motion-canvas/core/lib/flow';
+import { linear, easeInOutCubic } from '@motion-canvas/core/lib/tweening';
 import { createSignal } from '@motion-canvas/core/lib/signals';
 import { createRef } from '@motion-canvas/core/lib/utils';
 import { whiteRadialRect } from '../components/backgrounds/white_1';
@@ -16,6 +17,9 @@ const MEVIN_FULL_TEXT =
 const MEVIN_PURPLE_DURATION = 2.0;
 const MEVIN_BLACK_DURATION = 3.0;
 const MEVIN_CHASE_DELAY = 0.5;
+const TRACE_WINDOW = 0.14; // visible segment length (fraction of perimeter)
+const TRACE_LAP_DURATION = 1.5; // seconds per lap around the card
+const TRACE_LAPS = 2;
 
 export default makeScene2D(function* (view) {
   // --- Node refs (must live inside the scene function) ---
@@ -30,6 +34,18 @@ export default makeScene2D(function* (view) {
   const innerMevinTextPurple = createRef<Txt>();
   const mevinProgressPurple = createSignal(0);
   const mevinProgressBlack = createSignal(0);
+  const mevinTrace = createRef<Path>();
+
+  // Purple glow stroke for the walking border segment (same trick as scene_1).
+  const traceGradient = new Gradient({
+    type: 'linear',
+    from: [0, -240],
+    to: [0, 240],
+    stops: [
+      { offset: 0, color: '#8b5cf6' },
+      { offset: 1, color: '#7c3aed' },
+    ],
+  });
 
   // --- Background ---
   view.add(whiteRadialRect());
@@ -152,6 +168,31 @@ export default makeScene2D(function* (view) {
     </Rect>
   )
 
+  // --- Walking border trace (view-level sibling, NOT inside any layout) ---
+  // Tracks the card's world position with live signals (same caret-tracking
+  // pattern as scene_1): onboardingBox is a layout root so its x/y stay live
+  // signals that follow the slide tween; the card's offset never changes.
+  // NOTE: never wrap these in layout={false} — that detaches the subtree
+  // from the DOM-mirrored flex layout and breaks stacking (that's what hid
+  // the title: the card fell back to (0,0) and covered it).
+  view.add(
+    <Path
+      ref={mevinTrace}
+      data={
+        'M -588 -240 H 588 Q 620 -240 620 -208 V 208 Q 620 240 588 240 H -616 Q -620 240 -620 236 V -208 Q -620 -240 -588 -240 Z'
+      }
+      stroke={traceGradient}
+      lineWidth={4}
+      start={0}
+      end={0}
+      opacity={0}
+      x={() => onboardingBox().x() + mevinTextBox().x()}
+      y={() => onboardingBox().y() + mevinTextBox().y()}
+      shadowColor={'#8b5cf6'}
+      shadowBlur={20}
+    />,
+  );
+
   // --- Timeline ---
   yield* fadeTransition(0.15);
   yield* all(
@@ -177,8 +218,12 @@ export default makeScene2D(function* (view) {
     );
   yield* all(
     mevinTextBox().opacity(1, 0.5),
+    mevinTrace().opacity(1, 0.4),
     innerMevinTextPurple().opacity(1, 0.4),
     innerMevinText().opacity(1, 0.4),
+  );
+  // typing + glowing segment walking around the card border together
+  yield* all(
     // purple types faster (2s) so it runs ahead; black chases slower (3s)
     // after a 0.5s delay — gap widens as they type
     mevinProgressPurple(MEVIN_FULL_TEXT.length, MEVIN_PURPLE_DURATION),
@@ -186,7 +231,18 @@ export default makeScene2D(function* (view) {
       MEVIN_CHASE_DELAY,
       mevinProgressBlack(MEVIN_FULL_TEXT.length, MEVIN_BLACK_DURATION),
     ),
+    (function* () {
+      for (let i = 0; i < TRACE_LAPS; i++) {
+        // snap a short window to the path start, then slide it once around
+        mevinTrace().start(0);
+        mevinTrace().end(TRACE_WINDOW);
+        yield* all(
+          mevinTrace().start(1 - TRACE_WINDOW, TRACE_LAP_DURATION, linear),
+          mevinTrace().end(1, TRACE_LAP_DURATION, linear),
+        );
+      }
+    })(),
   );
 
-  yield* waitFor(1);
+  yield* waitFor(0.5);
 });

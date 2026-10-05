@@ -169,7 +169,7 @@ export default makeScene2D(function* (view) {
         'M -464 -70 H 464 Q 480 -70 480 -54 V 54 Q 480 70 464 70 H -464 Q -480 70 -480 54 V -54 Q -480 -70 -464 -70 Z'
       }
       stroke={traceGradient}
-      lineWidth={6}
+      lineWidth={4}
       end={0} // hidden until the draw-on animation runs
       opacity={0}
       shadowColor={'#8b5cf6'}
