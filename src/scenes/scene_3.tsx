@@ -1,7 +1,7 @@
 import {Gradient, makeScene2D, blur} from '@motion-canvas/2d';
 import {Rect, Txt, Img} from '@motion-canvas/2d/lib/components';
-import {waitFor} from '@motion-canvas/core/lib/flow';
-import { linear, easeInOutCubic } from '@motion-canvas/core/lib/tweening';
+import {all, sequence, waitFor} from '@motion-canvas/core/lib/flow';
+import {linear, easeInOutCubic, easeOutCubic} from '@motion-canvas/core/lib/tweening';
 import {createRef} from '@motion-canvas/core/lib/utils';
 import hamburgerSvg from '../../public/assets/images/hamburger.svg';
 import houseSvg from '../../public/assets/images/house.svg';
@@ -54,6 +54,9 @@ export default makeScene2D(function* (view) {
   const footerBox = createRef<Rect>();
   const IconsBox = createRef<Rect>();
   const worldBox = createRef<Rect>();
+  const headlineFast = createRef<Txt>();
+  const headlineEasy = createRef<Txt>();
+  const headlineInstant = createRef<Txt>();
 
   // --- Pure white background (no import needed) ---
   view.add(<Rect width={'100%'} height={'100%'} fill={'#ffffff'} />);
@@ -662,6 +665,48 @@ export default makeScene2D(function* (view) {
     />,
   );
 
+  // --- Closing headline (screen space, added last so it sits above the
+  // veil — each word starts 60px low and transparent, then fades up) ---
+  view.add(
+    <Rect
+      layout
+      direction="row"
+      alignItems="center"
+      justifyContent="center"
+      gap={40}
+      width={'100%'}
+      height={'100%'}
+    >
+      <Txt
+        ref={headlineFast}
+        text={'Fast.'}
+        fontSize={120}
+        fontWeight={700}
+        fill={'rgba(0, 0, 0, 0.85)'}
+        opacity={0}
+        y={60}
+      />
+      <Txt
+        ref={headlineEasy}
+        text={'Easy.'}
+        fontSize={120}
+        fontWeight={700}
+        fill={'rgba(0, 0, 0, 0.85)'}
+        opacity={0}
+        y={60}
+      />
+      <Txt
+        ref={headlineInstant}
+        text={'Instant.'}
+        fontSize={120}
+        fontWeight={700}
+        fill={'rgba(0, 0, 0, 0.85)'}
+        opacity={0}
+        y={60}
+      />
+    </Rect>,
+  );
+
   // ===========================================================================
   // Timeline
   // ===========================================================================
@@ -669,7 +714,24 @@ export default makeScene2D(function* (view) {
 
   yield* worldBox().scale(0.65, 2, easeInOutCubic);
   // veil fades in only after the zoomout is 100% done
-  yield* veil().opacity(0.4, 1);
+  yield* veil().opacity(0.7, 1);
   // blur ramps in last (same wrapper, so zoom + blur share one transform)
   yield* worldBox().filters.blur(12, 1, easeInOutCubic);
+  // closing headline: words fade up one by one over the frosted backdrop
+  yield* all(
+    all(headlineFast().opacity(1, 0.5), headlineFast().y(0, 0.5, easeOutCubic)),
+    sequence(
+      0.15,
+      all(headlineEasy().opacity(1, 0.5), headlineEasy().y(0, 0.5, easeOutCubic)),
+    ),
+    sequence(
+      0.3,
+      all(
+        headlineInstant().opacity(1, 0.5),
+        headlineInstant().y(0, 0.5, easeOutCubic),
+      ),
+    ),
+  );
+
+  yield* waitFor(HOLD_DURATION);
 })
