@@ -47,7 +47,19 @@ export default makeScene2D(function* (view) {
   const ADDR_TEXT = "nova .mevin.site";
   const TAGLINE_TEXT = "The AI-powered command center for your professional life.";
   const DESC_TEXT = "NOVA is an AI-driven productivity platform designed to streamline workflows and boost team efficiency.";
-  const cardBorder = createRef<Path>();
+const HEADING_TEXT = "Space Grotesk";
+const BODY_TEXT = "Inter";
+const cardBorder = createRef<Path>();
+const colorsLabelText = createRef<Txt>();
+const colorsRowBox = createRef<Rect>();
+const headingLabelText = createRef<Txt>();
+const headingValueBox = createRef<Rect>();
+const headingValueText = createRef<Txt>();
+const bodyLabelText = createRef<Txt>();
+const bodyValueBox = createRef<Rect>();
+const bodyValueText = createRef<Txt>();
+const headingProgress = createSignal(0);
+const bodyProgress = createSignal(0);
 
   view.add(purpleDarkGlowRect());
 
@@ -279,15 +291,20 @@ export default makeScene2D(function* (view) {
         gap={8}
       >
         <Txt
+          ref={colorsLabelText}
           text={"Colors"}
           fill={'rgba(255, 255, 255, 0.6)'}
           fontSize={20}
+          opacity={0}
         />
         <Rect
+          ref={colorsRowBox}
           layout
           direction="rows"
           padding={4}
-          width={720}
+          width={0}
+          height={0}
+          opacity={0}
           gap={24}
         >
           <Rect
@@ -364,6 +381,78 @@ export default makeScene2D(function* (view) {
           </Rect>
         </Rect>
       </Rect>
+
+      <Rect
+        layout
+        direction="row"
+        gap={24}
+      >
+        <Rect
+          layout
+          direction="column"
+          gap={8}
+        >
+          <Txt
+            ref={headingLabelText}
+            text={"Description"}
+            fill={'rgba(255, 255, 255, 0.6)'}
+            fontSize={20}
+            opacity={0}
+          />
+          <Rect
+            ref={headingValueBox}
+            lineWidth={1}
+            stroke={'rgba(255, 255, 255, 0.5)'}
+            padding={[16, 24]}
+            radius={8}
+            width={0}
+            height={0}
+            opacity={0}
+            fill={'rgba(255, 255, 255, 0.05)'}
+          >
+            <Txt
+              ref={headingValueText}
+              text={() => HEADING_TEXT.slice(0, Math.floor(headingProgress()))}
+              fill={'rgba(255, 255, 255, 1)'}
+              fontSize={24}
+              textWrap
+            />
+          </Rect>
+        </Rect>
+
+        <Rect
+          layout
+          direction="column"
+          gap={8}
+        >
+          <Txt
+            ref={bodyLabelText}
+            text={"Body font"}
+            fill={'rgba(255, 255, 255, 0.6)'}
+            fontSize={20}
+            opacity={0}
+          />
+          <Rect
+            ref={bodyValueBox}
+            lineWidth={1}
+            stroke={'rgba(255, 255, 255, 0.5)'}
+            padding={[16, 24]}
+            radius={8}
+            width={0}
+            height={0}
+            opacity={0}
+            fill={'rgba(255, 255, 255, 0.05)'}
+          >
+            <Txt
+              ref={bodyValueText}
+              text={() => BODY_TEXT.slice(0, Math.floor(bodyProgress()))}
+              fill={'rgba(255, 255, 255, 1)'}
+              fontSize={24}
+              textWrap
+            />
+          </Rect>
+        </Rect>
+      </Rect>
     </Rect>
   );
 
@@ -430,8 +519,8 @@ export default makeScene2D(function* (view) {
   // all content walks upward together once the border is drawn
   yield* all(
     titleText().y(-960, 0.8),
-    websiteDetailBox().y(-640, 0.8),
-    cardBorder().y(-640, 0.8),
+    websiteDetailBox().y(-720, 0.8),
+    cardBorder().y(-720, 0.8),
     styleGuideBox().y(-160, 0.8),
   );
   // "Style Guide" badge types in after website detail finishes
@@ -440,6 +529,35 @@ export default makeScene2D(function* (view) {
     all(
       styleGuideProgress(STYLE_GUIDE_TEXT.length, 0.5),
       styleGuideTitle().padding([4, 12], 0.5),
+    ),
+);
+  // style guide content reveals — badge types first, then colors fade + grow in
+  yield* sequence(
+    0.2,
+    all(
+      colorsLabelText().opacity(1, 0.4),
+      colorsRowBox().opacity(1, 0.4),
+      colorsRowBox().width(720, 0.4),
+      colorsRowBox().height(124, 0.4),
+    ),
+);
+  // heading + body font fields reveal after colors
+  yield* sequence(0.1,
+    all(
+      headingLabelText().opacity(1, 0.4),
+      headingValueBox().width(340, 0.2),
+      headingValueBox().height(56, 0.2),
+      headingValueBox().opacity(1, 0.4),
+      sequence(0.15, headingProgress(HEADING_TEXT.length, 0.4)),
+    ),
+  );
+  yield* sequence(0.05,
+    all(
+      bodyLabelText().opacity(1, 0.4),
+      bodyValueBox().width(340, 0.2),
+      bodyValueBox().height(56, 0.2),
+      bodyValueBox().opacity(1, 0.4),
+      sequence(0.15, bodyProgress(BODY_TEXT.length, 0.4)),
     ),
   );
   yield* waitFor(HOLD_DURATION);
