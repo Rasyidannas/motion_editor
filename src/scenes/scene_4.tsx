@@ -532,6 +532,7 @@ const styleBorder = createRef<Path>();
     cardBorder().opacity(1, 0.3),
     cardBorder().end(1, 1),
   );
+  yield* waitFor(HOLD_DURATION);
   // all content walks upward together once the border is drawn
   yield* all(
     titleText().y(-960, 0.8),
