@@ -35,6 +35,18 @@ export default makeScene2D(function* (view) {
   const addressLabelText = createRef<Txt>();
   const taglineLabelText = createRef<Txt>();
   const descLabelText = createRef<Txt>();
+  const nameValueText = createRef<Txt>();
+  const addrValueText = createRef<Txt>();
+  const taglineValueText = createRef<Txt>();
+  const descValueText = createRef<Txt>();
+  const nameProgress = createSignal(0);
+  const addrProgress = createSignal(0);
+  const taglineProgress = createSignal(0);
+  const descProgress = createSignal(0);
+  const NAME_TEXT = "NOVA";
+  const ADDR_TEXT = "nova .mevin.site";
+  const TAGLINE_TEXT = "The AI-powered command center for your professional life.";
+  const DESC_TEXT = "NOVA is an AI-driven productivity platform designed to streamline workflows and boost team efficiency.";
 
   view.add(purpleDarkGlowRect());
 
@@ -104,7 +116,8 @@ export default makeScene2D(function* (view) {
           opacity={0}
           fill={'rgba(255, 255, 255, 0.05)'}>
           <Txt
-            text="NOVA"
+            ref={nameValueText}
+            text={() => NAME_TEXT.slice(0, Math.floor(nameProgress()))}
             fill={'rgba(255, 255, 255, 1)'}
             fontSize={24}
           />
@@ -138,13 +151,9 @@ export default makeScene2D(function* (view) {
           fill={'rgba(255, 255, 255, 0.05)'}
         >
           <Txt
-            text="nova"
+            ref={addrValueText}
+            text={() => ADDR_TEXT.slice(0, Math.floor(addrProgress()))}
             fill={'rgba(255, 255, 255, 1)'}
-            fontSize={24}
-          />
-          <Txt
-            text=".mevin.site"
-            fill={'rgba(255, 255, 255, .5)'}
             fontSize={24}
           />
         </Rect>
@@ -174,7 +183,8 @@ export default makeScene2D(function* (view) {
           fill={'rgba(255, 255, 255, 0.05)'}
         >
           <Txt
-            text="The AI-powered command center for your professional life."
+            ref={taglineValueText}
+            text={() => TAGLINE_TEXT.slice(0, Math.floor(taglineProgress()))}
             fill={'rgba(255, 255, 255, 1)'}
             fontSize={24}
           />
@@ -205,7 +215,8 @@ export default makeScene2D(function* (view) {
           fill={'rgba(255, 255, 255, 0.05)'}
         >
           <Txt
-            text="NOVA is an AI-driven productivity platform designed to streamline workflows and boost team efficiency."
+            ref={descValueText}
+            text={() => DESC_TEXT.slice(0, Math.floor(descProgress()))}
             fill={'rgba(255, 255, 255, 1)'}
             fontSize={24}
             textWrap
@@ -362,33 +373,37 @@ export default makeScene2D(function* (view) {
   yield* sequence(0.1,
     all(
       nameLabelText().opacity(1, 0.4),
-      nameValueBox().width(720, 0.4),
-      nameValueBox().height(64, 0.4),
+      nameValueBox().width(720, 0.2),
+      nameValueBox().height(64, 0.2),
       nameValueBox().opacity(1, 0.4),
+      sequence(1, nameProgress(NAME_TEXT.length, 0.4)),
     ),
   );
   yield* sequence(0.05,
     all(
       addressLabelText().opacity(1, 0.4),
-      addressValueBox().width(720, 0.4),
-      addressValueBox().height(64, 0.4),
+      addressValueBox().width(720, 0.2),
+      addressValueBox().height(64, 0.2),
       addressValueBox().opacity(1, 0.4),
+      sequence(1, addrProgress(ADDR_TEXT.length, 0.4)),
     ),
   );
   yield* sequence(0.05,
     all(
       taglineLabelText().opacity(1, 0.4),
-      taglineValueBox().width(720, 0.4),
-      taglineValueBox().height(64, 0.4),
+      taglineValueBox().width(720, 0.2),
+      taglineValueBox().height(64, 0.2),
       taglineValueBox().opacity(1, 0.4),
+      sequence(1, taglineProgress(TAGLINE_TEXT.length, 0.5)),
     ),
   );
   yield* sequence(0.05,
     all(
       descLabelText().opacity(1, 0.4),
-      descValueBox().width(720, 0.4),
-      descValueBox().height(96, 0.4),
+      descValueBox().width(720, 0.2),
+      descValueBox().height(96, 0.2),
       descValueBox().opacity(1, 0.4),
+      sequence(1, descProgress(DESC_TEXT.length, 0.6)),
     ),
   );
   // "Style Guide" badge types in after website detail finishes
