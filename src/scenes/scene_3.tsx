@@ -11,6 +11,7 @@ import phoneSvg from '../../public/assets/images/phone.svg';
 import mapPinSvg from '../../public/assets/images/map-pin.svg';
 import mailSvg from '../../public/assets/images/mail.svg';
 import plusSvg from '../../public/assets/images/plus.svg';
+import cardImageJpg from '../../public/assets/images/image.jpg';
 
 // ---------------------------------------------------------------------------
 // Timeline tuning (all values in seconds unless noted)
@@ -54,6 +55,7 @@ export default makeScene2D(function* (view) {
   const navigationBox = createRef<Rect>();
   const footerBox = createRef<Rect>();
   const IconsBox = createRef<Rect>();
+  const cardBox = createRef<Rect>();
   const worldBox = createRef<Rect>();
   const wordFast = createRef<Txt>();
   const wordEasy = createRef<Txt>();
@@ -660,6 +662,48 @@ export default makeScene2D(function* (view) {
           <Img src={plusSvg} width={32} height={32} />
         </Rect>
       </Rect>
+
+      // --- Card
+      <Rect
+        ref={cardBox}
+        layout
+        opacity={0}
+        direction="column"
+        gap={24}
+        width={800}
+        padding={48}
+        radius={BOX_RADIUS}
+        fill={cardRainbowGradient}
+        x={1000}
+        y={1050}
+      >
+        <Txt
+          text={'Card'}
+          fontSize={BOX_TITLE_SIZE}
+          fontWeight={BOX_TITLE_WEIGHT}
+          fill={BOX_TITLE_COLOR}
+        />
+        <Txt
+          text={'Title Card'}
+          fontSize={48}
+          fontWeight={700}
+          fill={'rgba(0, 0, 0, 0.85)'}
+        />
+        <Txt
+          text={'Dummy description of the card in one short line.'}
+          fontSize={20}
+          fill={BOX_TITLE_COLOR}
+          width={640}
+          textWrap
+        />
+        <Img
+          src={cardImageJpg}
+          width={704}
+          height={470}
+          radius={16}
+          clip
+        />
+      </Rect>
     </Rect>
   )
 
@@ -732,6 +776,7 @@ export default makeScene2D(function* (view) {
     navigationBox().opacity(1, 0.4),
     footerBox().opacity(1, 0.4),
     IconsBox().opacity(1, 0.4),
+    cardBox().opacity(1, 0.4),
   );
   yield* waitFor(HOLD_DURATION);
 

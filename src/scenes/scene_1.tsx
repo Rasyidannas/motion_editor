@@ -56,8 +56,8 @@ export default makeScene2D(function* (view) {
     from: [0, -5], // top
     to: [0, 40], // bottom
     stops: [
-      { offset: 0, color: 'rgba(255, 255, 255, 0.025)' },
-      { offset: 1, color: 'rgba(255, 255, 255, 0.055)' },
+      { offset: 0, color: 'rgba(255, 255, 255, 0.075)' },
+      { offset: 1, color: 'rgba(255, 255, 255, 0.15)' },
     ],
   });
 
@@ -87,7 +87,7 @@ export default makeScene2D(function* (view) {
         fontFamily={FONT_FAMILY}
         lineWidth={2}
         fill={glassGradient}
-        stroke={'rgba(255, 255, 255, .075)'}
+        stroke={'rgba(255, 255, 255, .15)'}
         x={4}
         y={10}
         shadowColor={'rgba(255, 255, 255, 1)'}
