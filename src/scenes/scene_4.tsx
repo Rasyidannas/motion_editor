@@ -427,5 +427,20 @@ export default makeScene2D(function* (view) {
     cardBorder().opacity(1, 0.3),
     cardBorder().end(1, 0.6),
   );
+  // all content walks upward together once the border is drawn
+  yield* all(
+    titleText().y(-960, 0.8),
+    websiteDetailBox().y(-640, 0.8),
+    cardBorder().y(-640, 0.8),
+    styleGuideBox().y(-160, 0.8),
+  );
+  // "Style Guide" badge types in after website detail finishes
+  yield* sequence(
+    0.15,
+    all(
+      styleGuideProgress(STYLE_GUIDE_TEXT.length, 0.5),
+      styleGuideTitle().padding([4, 12], 0.5),
+    ),
+  );
   yield* waitFor(HOLD_DURATION);
 })
