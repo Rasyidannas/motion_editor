@@ -72,7 +72,7 @@ export default makeScene2D(function* (view) {
     // NOTE: camera zoom z about screen center === wrapper scale z about its
     // center, and the camera sat at default (0,0), so 2 -> 0.65 matches the
     // old zoom exactly.
-    <Rect ref={worldBox} scale={2} filters={[blur(0)]}>
+    <Rect ref={worldBox} scale={2} filters={[blur(0)]} y={-75}>
       // Color Palette
       <Rect
         ref={colorPaletteBox}
@@ -193,7 +193,7 @@ export default makeScene2D(function* (view) {
         padding={48}
         radius={BOX_RADIUS}
         fill={cardRainbowGradient}
-        x={1200}
+        x={900}
         y={200}
       >
         <Txt
@@ -288,8 +288,8 @@ export default makeScene2D(function* (view) {
         padding={48}
         radius={BOX_RADIUS}
         fill={cardRainbowGradient}
-        x={-1000}
-        y={-250}
+        x={-800}
+        y={-75}
       >
         <Txt
           ref={typographyTitle}
@@ -422,7 +422,7 @@ export default makeScene2D(function* (view) {
         radius={BOX_RADIUS}
         fill={cardRainbowGradient}
         x={-950}
-        y={200}
+        y={275}
       >
         <Txt
           ref={typographyTitle}
@@ -464,7 +464,7 @@ export default makeScene2D(function* (view) {
         radius={BOX_RADIUS}
         fill={cardRainbowGradient}
         x={450}
-        y={-750}
+        y={-450}
       >
         <Txt
           ref={typographyTitle}
@@ -524,8 +524,8 @@ export default makeScene2D(function* (view) {
         padding={48}
         radius={BOX_RADIUS}
         fill={cardRainbowGradient}
-        x={-1000}
-        y={-750}
+        x={-500}
+        y={-450}
       >
         <Txt
           ref={typographyTitle}
@@ -590,7 +590,7 @@ export default makeScene2D(function* (view) {
         padding={48}
         radius={BOX_RADIUS}
         fill={cardRainbowGradient}
-        x={-350}
+        x={-650}
         y={625}
         scale={1.5}
       >
@@ -645,7 +645,7 @@ export default makeScene2D(function* (view) {
         radius={BOX_RADIUS}
         fill={cardRainbowGradient}
         x={900}
-        y={-350}
+        y={-175}
       >
         <Txt
           text={'Icons'}
@@ -674,8 +674,8 @@ export default makeScene2D(function* (view) {
         padding={48}
         radius={BOX_RADIUS}
         fill={cardRainbowGradient}
-        x={1000}
-        y={1050}
+        x={500}
+        y={850}
       >
         <Txt
           text={'Card'}
@@ -780,7 +780,7 @@ export default makeScene2D(function* (view) {
   );
   yield* waitFor(HOLD_DURATION);
 
-  yield* worldBox().scale(0.65, 2, easeInOutCubic);
+  yield* worldBox().scale(0.75, 2, easeInOutCubic);
   // veil fades in only after the zoomout is 100% done
   yield* veil().opacity(0.7, 1);
   // blur ramps in last (same wrapper, so zoom + blur share one transform)
