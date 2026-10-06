@@ -1,4 +1,4 @@
-import {Gradient, makeScene2D, Circle} from '@motion-canvas/2d';
+import {Gradient, makeScene2D, Circle, Path} from '@motion-canvas/2d';
 import {Rect, Txt, Img} from '@motion-canvas/2d/lib/components';
 import {all, sequence, waitFor} from '@motion-canvas/core/lib/flow';
 import { fadeTransition } from '@motion-canvas/core/lib/transitions';
@@ -47,6 +47,7 @@ export default makeScene2D(function* (view) {
   const ADDR_TEXT = "nova .mevin.site";
   const TAGLINE_TEXT = "The AI-powered command center for your professional life.";
   const DESC_TEXT = "NOVA is an AI-driven productivity platform designed to streamline workflows and boost team efficiency.";
+  const cardBorder = createRef<Path>();
 
   view.add(purpleDarkGlowRect());
 
@@ -71,8 +72,6 @@ export default makeScene2D(function* (view) {
       alignItems="left"
       gap={24}
       y={-24}
-      lineWidth={1}
-      stroke={'rgba(255, 255, 255, 0.35)'}
       padding={24}
       radius={16}
       width={768}
@@ -224,6 +223,23 @@ export default makeScene2D(function* (view) {
         </Rect>
       </Rect>
     </Rect>
+  );
+
+  // Card border: draws on after the description animation finishes
+  view.add(
+    <Path
+      ref={cardBorder}
+      stroke={'rgba(139, 92, 246, 0.8)'}
+      data={
+        'M -368 -300 H 368 Q 384 -300 384 -284 V 284 Q 384 300 368 300 H -368 Q -384 300 -384 284 V -284 Q -384 -300 -368 -300 Z'
+      }      
+      lineWidth={2}
+      start={0}
+      end={0}
+      opacity={0}
+      x={0}
+      y={-24}
+    />,
   );
 
   // Style Guide Box
@@ -406,13 +422,10 @@ export default makeScene2D(function* (view) {
       sequence(1, descProgress(DESC_TEXT.length, 0.6)),
     ),
   );
-  // "Style Guide" badge types in after website detail finishes
-  yield* sequence(
-    0.15,
-    all(
-      styleGuideProgress(STYLE_GUIDE_TEXT.length, 0.5),
-      styleGuideTitle().padding([4, 12], 0.5),
-    ),
+  // card border draws on after all content is revealed
+  yield* all(
+    cardBorder().opacity(1, 0.3),
+    cardBorder().end(1, 0.6),
   );
   yield* waitFor(HOLD_DURATION);
 })
