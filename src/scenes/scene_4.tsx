@@ -1,7 +1,8 @@
 import {Gradient, makeScene2D, Circle} from '@motion-canvas/2d';
 import {Rect, Txt, Img} from '@motion-canvas/2d/lib/components';
-import {all, waitFor} from '@motion-canvas/core/lib/flow';
+import {all, sequence, waitFor} from '@motion-canvas/core/lib/flow';
 import { fadeTransition } from '@motion-canvas/core/lib/transitions';
+import { createSignal } from '@motion-canvas/core/lib/signals';
 import {createRef} from '@motion-canvas/core/lib/utils';
 import {purpleDarkGlowRect} from '../components/backgrounds/purple_3';
 import checkSvg from '../../public/assets/images/check.svg';
@@ -19,7 +20,21 @@ export default makeScene2D(function* (view) {
   // --- Node refs (must live inside the scene function) ---
   const titleText = createRef<Txt>();
   const websiteDetailBox = createRef<Rect>();
+  const websiteDetailTitle = createRef<Rect>();
   const styleGuideBox = createRef<Rect>();
+  const styleGuideTitle = createRef<Rect>();
+  const detailProgress = createSignal(0);
+  const WEBSITE_DETAIL_TEXT = "Website detail";
+  const styleGuideProgress = createSignal(0);
+  const STYLE_GUIDE_TEXT = "Style Guide";
+  const nameValueBox = createRef<Rect>();
+  const addressValueBox = createRef<Rect>();
+  const taglineValueBox = createRef<Rect>();
+  const descValueBox = createRef<Rect>();
+  const nameLabelText = createRef<Txt>();
+  const addressLabelText = createRef<Txt>();
+  const taglineLabelText = createRef<Txt>();
+  const descLabelText = createRef<Txt>();
 
   view.add(purpleDarkGlowRect());
 
@@ -37,7 +52,6 @@ export default makeScene2D(function* (view) {
 
   // Detail box also a direct view child, positioned below the title.
   view.add(
-    
     <Rect
       ref={websiteDetailBox}
       layout
@@ -52,13 +66,14 @@ export default makeScene2D(function* (view) {
       width={768}
     >
       <Rect
-        padding={[4, 12]}
+        ref={websiteDetailTitle}
+        padding={0}
         fill={'rgba(139, 92, 246, 0.5)'}
         radius={4}
         alignSelf="start"
       >
         <Txt 
-          text={"Website detail"}
+          text={() => WEBSITE_DETAIL_TEXT.slice(0, Math.floor(detailProgress()))}
           fontSize={20}
           fontWeight={700}
           letterSpacing={1}
@@ -72,18 +87,22 @@ export default makeScene2D(function* (view) {
         gap={8}
       >
         <Txt
+          ref={nameLabelText}
           text={"Website name"}
           fill={'rgba(255, 255, 255, 0.6)'}
           fontSize={20}
+          opacity={0}
         />
         <Rect
+          ref={nameValueBox}
           lineWidth={1}
           stroke={'rgba(255, 255, 255, 0.5)'}
           padding={[16, 24]}
           radius={8}
-          width={720}
-          fill={'rgba(255, 255, 255, 0.05)'}
-        >
+          width={0}
+          height={0}
+          opacity={0}
+          fill={'rgba(255, 255, 255, 0.05)'}>
           <Txt
             text="NOVA"
             fill={'rgba(255, 255, 255, 1)'}
@@ -98,11 +117,14 @@ export default makeScene2D(function* (view) {
         gap={8}
       >
         <Txt
+          ref={addressLabelText}
           text={"Website address"}
           fill={'rgba(255, 255, 255, 0.6)'}
           fontSize={20}
+          opacity={0}
         />
         <Rect
+          ref={addressValueBox}
           layout
           direction="row"
           justifyContent="space-between"
@@ -110,7 +132,9 @@ export default makeScene2D(function* (view) {
           stroke={'rgba(255, 255, 255, 0.5)'}
           padding={[16, 24]}
           radius={8}
-          width={720}
+          width={0}
+          height={0}
+          opacity={0}
           fill={'rgba(255, 255, 255, 0.05)'}
         >
           <Txt
@@ -132,16 +156,21 @@ export default makeScene2D(function* (view) {
         gap={8}
       >
         <Txt
+          ref={taglineLabelText}
           text={"Tagline"}
           fill={'rgba(255, 255, 255, 0.6)'}
           fontSize={20}
+          opacity={0}
         />
         <Rect
+          ref={taglineValueBox}
           lineWidth={1}
           stroke={'rgba(255, 255, 255, 0.5)'}
           padding={[16, 24]}
           radius={8}
-          width={720}
+          width={0}
+          height={0}
+          opacity={0}
           fill={'rgba(255, 255, 255, 0.05)'}
         >
           <Txt
@@ -158,16 +187,21 @@ export default makeScene2D(function* (view) {
         gap={8}
       >
         <Txt
+          ref={descLabelText}
           text={"Description"}
           fill={'rgba(255, 255, 255, 0.6)'}
           fontSize={20}
+          opacity={0}
         />
         <Rect
+          ref={descValueBox}
           lineWidth={1}
           stroke={'rgba(255, 255, 255, 0.5)'}
           padding={[16, 24]}
           radius={8}
-          width={720}
+          width={0}
+          height={0}
+          opacity={0}
           fill={'rgba(255, 255, 255, 0.05)'}
         >
           <Txt
@@ -197,13 +231,14 @@ export default makeScene2D(function* (view) {
       width={768}
     >
       <Rect
-        padding={[4, 12]}
+        ref={styleGuideTitle}
+        padding={[0, 0]}
         fill={'rgba(139, 92, 246, 0.5)'}
         radius={4}
         alignSelf="start"
       >
         <Txt 
-          text={"Style Guide"}
+          text={() => STYLE_GUIDE_TEXT.slice(0, Math.floor(styleGuideProgress()))}
           fontSize={20}
           fontWeight={700}
           letterSpacing={1}
@@ -315,4 +350,54 @@ export default makeScene2D(function* (view) {
     titleText().opacity(1, 0.4),
     titleText().y(-380, 0.4),
   );
+  // badge types in while the pill grows — same beat, same duration/easing
+  yield* sequence(
+    0.2,
+    all(
+      detailProgress(WEBSITE_DETAIL_TEXT.length, 0.5),
+      websiteDetailTitle().padding([4, 12], 0.5),
+    ),
+  );
+  // value boxes grow from 0 to full width, staggered — label + box reveal together
+  yield* sequence(0.1,
+    all(
+      nameLabelText().opacity(1, 0.4),
+      nameValueBox().width(720, 0.4),
+      nameValueBox().height(64, 0.4),
+      nameValueBox().opacity(1, 0.4),
+    ),
+  );
+  yield* sequence(0.05,
+    all(
+      addressLabelText().opacity(1, 0.4),
+      addressValueBox().width(720, 0.4),
+      addressValueBox().height(64, 0.4),
+      addressValueBox().opacity(1, 0.4),
+    ),
+  );
+  yield* sequence(0.05,
+    all(
+      taglineLabelText().opacity(1, 0.4),
+      taglineValueBox().width(720, 0.4),
+      taglineValueBox().height(64, 0.4),
+      taglineValueBox().opacity(1, 0.4),
+    ),
+  );
+  yield* sequence(0.05,
+    all(
+      descLabelText().opacity(1, 0.4),
+      descValueBox().width(720, 0.4),
+      descValueBox().height(96, 0.4),
+      descValueBox().opacity(1, 0.4),
+    ),
+  );
+  // "Style Guide" badge types in after website detail finishes
+  yield* sequence(
+    0.15,
+    all(
+      styleGuideProgress(STYLE_GUIDE_TEXT.length, 0.5),
+      styleGuideTitle().padding([4, 12], 0.5),
+    ),
+  );
+  yield* waitFor(HOLD_DURATION);
 })
