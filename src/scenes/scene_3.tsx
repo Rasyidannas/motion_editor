@@ -1,4 +1,4 @@
-import {Gradient, makeScene2D, blur} from '@motion-canvas/2d';
+import {Gradient, makeScene2D, blur, Circle} from '@motion-canvas/2d';
 import {Rect, Txt, Img} from '@motion-canvas/2d/lib/components';
 import {all, sequence, waitFor} from '@motion-canvas/core/lib/flow';
 import {easeInOutCubic} from '@motion-canvas/core/lib/tweening';
@@ -61,6 +61,7 @@ export default makeScene2D(function* (view) {
   const wordEasy = createRef<Txt>();
   const wordInstant = createRef<Txt>();
   const headlineBox = createRef<Rect>();
+  const dotCircle = createRef<Circle>();
 
   // --- Pure white background (no import needed) ---
   view.add(<Rect width={'100%'} height={'100%'} fill={'#ffffff'} />);
@@ -761,6 +762,19 @@ export default makeScene2D(function* (view) {
     </Rect>,
   );
 
+  // --- Dot for transition
+  view.add(
+    <Circle
+      ref={dotCircle}
+      size={20}
+      x={48}
+      y={33}
+      fill={'rgba(0, 0, 0, 1)'}
+      scale={1}
+      opacity={0}
+    />
+  )
+
   // ===========================================================================
   // Timeline
   // ===========================================================================
@@ -796,5 +810,8 @@ export default makeScene2D(function* (view) {
   );
 
   yield* waitFor(HOLD_DURATION);
+  yield* veil().opacity(1, 0.5);
   yield* waitFor(HOLD_DURATION);
+  yield* dotCircle().opacity(1, .5);
+  yield* dotCircle().scale(200, .25);
 })
