@@ -688,7 +688,7 @@ export default makeScene2D(function* (view) {
           text={'Title Card'}
           fontSize={48}
           fontWeight={700}
-          fill={'rgba(0, 0, 0, 0.85)'}
+fill={'rgba(0, 0, 0, 0.5)'}
         />
         <Txt
           text={'Dummy description of the card in one short line.'}
