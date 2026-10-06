@@ -29,15 +29,6 @@ export function purpleGradientRect() {
         spacing: [60, 60],
         opacity: 0.2,
       }),
-      new Grid({
-        width: '100%',
-        height: '100%',
-        stroke: 'rgba(255, 255, 255, 0.1)',
-        lineWidth: 1,
-        spacing: [40, 40],
-        rotation: 45,
-        opacity: 0.1,
-      }),
     ],
   });
 }

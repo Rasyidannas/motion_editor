@@ -1,4 +1,4 @@
-import {Gradient, Layout, Rect} from '@motion-canvas/2d';
+import {Gradient, Grid, Layout, Rect} from '@motion-canvas/2d';
 
 // ---------------------------------------------------------------------------
 // Dark radial glow background.
@@ -50,6 +50,15 @@ export function purpleDarkGlowRect() {
             {offset: 1, color: '#6633ee'},
           ],
         }),
+      }),
+      // Pattern: subtle grid overlay (same as purple_2).
+      new Grid({
+        width: '100%',
+        height: '100%',
+        stroke: 'rgba(255, 255, 255, 0.1)',
+        lineWidth: 1,
+        spacing: [60, 60],
+        opacity: 0.2,
       }),
     ],
   });
