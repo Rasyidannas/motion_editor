@@ -493,37 +493,37 @@ const styleBorder = createRef<Path>();
   // value boxes grow from 0 to full width, staggered — label + box reveal together
   yield* sequence(0.1,
     all(
-      nameLabelText().opacity(1, 0.4),
-      nameValueBox().width(720, 0.2),
-      nameValueBox().height(64, 0.2),
-      nameValueBox().opacity(1, 0.4),
+      nameLabelText().opacity(1, 0.75),
+      nameValueBox().width(720, 0.4),
+      nameValueBox().height(64, 0.4),
+      nameValueBox().opacity(1, 0.75),
       sequence(1, nameProgress(NAME_TEXT.length, 0.4)),
     ),
   );
   yield* sequence(0.05,
     all(
-      addressLabelText().opacity(1, 0.4),
-      addressValueBox().width(720, 0.2),
-      addressValueBox().height(64, 0.2),
-      addressValueBox().opacity(1, 0.4),
+      addressLabelText().opacity(1, 0.75),
+      addressValueBox().width(720, 0.4),
+      addressValueBox().height(64, 0.4),
+      addressValueBox().opacity(1, 0.75),
       sequence(1, addrProgress(ADDR_TEXT.length, 0.4)),
     ),
   );
   yield* sequence(0.05,
     all(
-      taglineLabelText().opacity(1, 0.4),
-      taglineValueBox().width(720, 0.2),
-      taglineValueBox().height(64, 0.2),
-      taglineValueBox().opacity(1, 0.4),
+      taglineLabelText().opacity(1, 0.75),
+      taglineValueBox().width(720, 0.4),
+      taglineValueBox().height(64, 0.4),
+      taglineValueBox().opacity(1, 0.75),
       sequence(1, taglineProgress(TAGLINE_TEXT.length, 0.5)),
     ),
   );
   yield* sequence(0.05,
     all(
-      descLabelText().opacity(1, 0.4),
-      descValueBox().width(720, 0.2),
-      descValueBox().height(96, 0.2),
-      descValueBox().opacity(1, 0.4),
+      descLabelText().opacity(1, 0.75),
+      descValueBox().width(720, 0.4),
+      descValueBox().height(96, 0.4),
+      descValueBox().opacity(1, 0.75),
       sequence(1, descProgress(DESC_TEXT.length, 0.6)),
     ),
   );
@@ -552,28 +552,28 @@ const styleBorder = createRef<Path>();
   yield* sequence(
     0.2,
     all(
-      colorsLabelText().opacity(1, 0.4),
-      colorsRowBox().opacity(1, 0.4),
+      colorsLabelText().opacity(1, 0.75),
       colorsRowBox().width(720, 0.4),
       colorsRowBox().height(124, 0.4),
+      colorsRowBox().opacity(1, 0.75),
     ),
 );
   // heading + body font fields reveal after colors
   yield* sequence(0.1,
     all(
-      headingLabelText().opacity(1, 0.4),
-      headingValueBox().width(340, 0.2),
-      headingValueBox().height(56, 0.2),
-      headingValueBox().opacity(1, 0.4),
+      headingLabelText().opacity(1, 0.75),
+      headingValueBox().width(340, 0.4),
+      headingValueBox().height(56, 0.4),
+      headingValueBox().opacity(1, 0.75),
       sequence(0.15, headingProgress(HEADING_TEXT.length, 0.4)),
     ),
   );
   yield* sequence(0.05,
     all(
-      bodyLabelText().opacity(1, 0.4),
-      bodyValueBox().width(340, 0.2),
-      bodyValueBox().height(56, 0.2),
-      bodyValueBox().opacity(1, 0.4),
+      bodyLabelText().opacity(1, 0.75),
+      bodyValueBox().width(340, 0.4),
+      bodyValueBox().height(56, 0.4),
+      bodyValueBox().opacity(1, 0.75),
       sequence(0.15, bodyProgress(BODY_TEXT.length, 0.4)),
     ),
   );
