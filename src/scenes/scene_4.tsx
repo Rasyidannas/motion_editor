@@ -60,6 +60,7 @@ const bodyValueBox = createRef<Rect>();
 const bodyValueText = createRef<Txt>();
 const headingProgress = createSignal(0);
 const bodyProgress = createSignal(0);
+const styleBorder = createRef<Path>();
 
   view.add(purpleDarkGlowRect());
 
@@ -263,8 +264,6 @@ const bodyProgress = createSignal(0);
       alignItems="left"
       gap={24}
       y={420}
-      lineWidth={1}
-      stroke={'rgba(255, 255, 255, 0.35)'}
       padding={24}
       radius={16}
       width={768}
@@ -456,6 +455,23 @@ const bodyProgress = createSignal(0);
     </Rect>
   );
 
+  // Style Guide border: draws on after style guide content is revealed
+  view.add(
+    <Path
+      ref={styleBorder}
+      stroke={'rgba(139, 92, 246, 0.8)'}
+      data={
+        'M -368 -210 H 368 Q 384 -210 384 -194 V 194 Q 384 210 368 210 H -368 Q -384 210 -384 194 V -194 Q -384 -210 -368 -210 Z'
+      }
+      lineWidth={2}
+      start={0}
+      end={0}
+      opacity={0}
+      x={0}
+      y={420}
+    />,
+  );
+
   // ==============
   // Timeline
   // ==============
@@ -514,7 +530,7 @@ const bodyProgress = createSignal(0);
   // card border draws on after all content is revealed
   yield* all(
     cardBorder().opacity(1, 0.3),
-    cardBorder().end(1, 0.6),
+    cardBorder().end(1, 1),
   );
   // all content walks upward together once the border is drawn
   yield* all(
@@ -522,6 +538,7 @@ const bodyProgress = createSignal(0);
     websiteDetailBox().y(-720, 0.8),
     cardBorder().y(-720, 0.8),
     styleGuideBox().y(-160, 0.8),
+    styleBorder().y(-160, 0.8),
   );
   // "Style Guide" badge types in after website detail finishes
   yield* sequence(
@@ -559,6 +576,11 @@ const bodyProgress = createSignal(0);
       bodyValueBox().opacity(1, 0.4),
       sequence(0.15, bodyProgress(BODY_TEXT.length, 0.4)),
     ),
+  );
+  // style guide border draws on after all content is revealed
+  yield* all(
+    styleBorder().opacity(1, 0.3),
+    styleBorder().end(1, 1),
   );
   yield* waitFor(HOLD_DURATION);
 })
