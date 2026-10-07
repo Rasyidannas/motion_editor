@@ -482,6 +482,8 @@ const dotsProgress = createSignal(0);
       ref={generatingRow}
       layout
       direction="row"
+      justifyContent="start"
+      width={240}
       gap={4}
       y={140}
       opacity={0}
@@ -615,7 +617,7 @@ const dotsProgress = createSignal(0);
     generatingProgress(GENERATING_TEXT.length, 1.5),
   );
 // dots loop 3 times
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 2; i++) {
     yield* dotsProgress(3, 1.5);
     if (i < 2) {
       yield* waitFor(0.1);
@@ -623,10 +625,5 @@ const dotsProgress = createSignal(0);
     }
   }
   yield* waitFor(0.3);
-  // generating fades out
-  yield* all(
-    generatingRow().opacity(0, 0.3),
-    generatingProgress(0, 1.5),
-    dotsProgress(0, 1.5),
-  );
+  yield* waitFor(HOLD_DURATION);
 })
