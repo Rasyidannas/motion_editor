@@ -68,7 +68,7 @@ const styleBorder = createRef<Path>();
   view.add(
     <Txt 
       ref={titleText}
-      text={"See how MevinAI builds your website"}
+      text={"How Mevinai creates a website in seconds."}
       fontSize={48}
       fill={'rgba(255, 255, 255, .75)'}
       opacity={0}
