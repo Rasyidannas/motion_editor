@@ -61,6 +61,9 @@ const bodyValueText = createRef<Txt>();
 const headingProgress = createSignal(0);
 const bodyProgress = createSignal(0);
 const styleBorder = createRef<Path>();
+const generatingProgress = createSignal(0);
+const GENERATING_TEXT = "Generating";
+const dotsProgress = createSignal(0);
 
   view.add(purpleDarkGlowRect());
 
@@ -473,8 +476,10 @@ const styleBorder = createRef<Path>();
   );
 
   // Generating...
+  const generatingRow = createRef<Rect>();
   view.add(
     <Rect
+      ref={generatingRow}
       layout
       direction="row"
       gap={4}
@@ -482,12 +487,11 @@ const styleBorder = createRef<Path>();
       opacity={0}
     >
       <Txt
-        text={"Generating"}
+        text={() => GENERATING_TEXT.slice(0, Math.floor(generatingProgress()))}
         fill={'rgba(255, 255, 255, 0.65)'}
       />
       <Txt
-        text={"..."}
-        y={120}
+        text={() => '.'.repeat(Math.floor(dotsProgress()))}
         fill={'rgba(255, 255, 255, 0.65)'}
       />
     </Rect>
@@ -605,4 +609,24 @@ const styleBorder = createRef<Path>();
     styleBorder().end(1, 1),
   );
   yield* waitFor(HOLD_DURATION);
+  // generating types in after all content is revealed
+  yield* all(
+    generatingRow().opacity(1, 0.3),
+    generatingProgress(GENERATING_TEXT.length, 1.5),
+  );
+// dots loop 3 times
+  for (let i = 0; i < 3; i++) {
+    yield* dotsProgress(3, 1.5);
+    if (i < 2) {
+      yield* waitFor(0.1);
+      yield* dotsProgress(0, 0);
+    }
+  }
+  yield* waitFor(0.3);
+  // generating fades out
+  yield* all(
+    generatingRow().opacity(0, 0.3),
+    generatingProgress(0, 1.5),
+    dotsProgress(0, 1.5),
+  );
 })
