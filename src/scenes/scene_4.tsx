@@ -354,7 +354,7 @@ const dotsProgress = createSignal(0);
             <Rect 
               width={64}
               height={64}
-              fill={'#9B7EBD'}
+              fill={'#E4D329'}
               radius={4}
             />
             <Txt
@@ -483,7 +483,7 @@ const dotsProgress = createSignal(0);
       layout
       direction="row"
       justifyContent="start"
-      width={240}
+      width={120}
       gap={4}
       y={140}
       opacity={0}
@@ -491,10 +491,12 @@ const dotsProgress = createSignal(0);
       <Txt
         text={() => GENERATING_TEXT.slice(0, Math.floor(generatingProgress()))}
         fill={'rgba(255, 255, 255, 0.65)'}
+        fontSize={32}
       />
       <Txt
         text={() => '.'.repeat(Math.floor(dotsProgress()))}
         fill={'rgba(255, 255, 255, 0.65)'}
+        fontSize={32}
       />
     </Rect>
   )

@@ -142,7 +142,7 @@ export default makeScene2D(function* (view) {
           <Rect 
             height={320}
             width={200}
-            fill={'#9B7EBD'}
+            fill={'#E4D329'}
             padding={16}
             layout
             direction="column"
@@ -150,12 +150,12 @@ export default makeScene2D(function* (view) {
           >
             <Txt
               text={'Primary'}
-              fill={'rgba(255, 255, 255, 0.5)'}
+              fill={'rgba(0, 0, 0, 0.5)'}
               fontSize={24}
             />
             <Txt
-              text={'#9B7EBD'}
-              fill={'rgba(255, 255, 255, 0.5)'}
+              text={'#E4D329'}
+              fill={'rgba(0, 0, 0, 0.5)'}
               fontSize={24}
             />
           </Rect>
@@ -314,7 +314,7 @@ export default makeScene2D(function* (view) {
             <Rect
               padding={[12, 16]}
               radius={8}
-              fill={'#9B7EBD'}
+              fill={'#E4D329'}
               layout
               alignItems="center"
               justifyContent="center"
@@ -322,13 +322,13 @@ export default makeScene2D(function* (view) {
               <Txt
                 text={'Primary Button'}
                 fontSize={16}
-                fill={'#ffffff'}
+                fill={'rgba(0, 0, 0, 0.5)'}
               />
             </Rect>
             <Rect
               padding={[16, 24]}
               radius={8}
-              fill={'#9B7EBD'}
+              fill={'#E4D329'}
               layout
               alignItems="center"
               justifyContent="center"
@@ -336,13 +336,13 @@ export default makeScene2D(function* (view) {
               <Txt
                 text={'Primary Button'}
                 fontSize={16}
-                fill={'#ffffff'}
+                fill={'rgba(0, 0, 0, 0.5)'}
               />
             </Rect>
             <Rect
               padding={[20, 32]}
               radius={8}
-              fill={'#9B7EBD'}
+              fill={'#E4D329'}
               layout
               alignItems="center"
               justifyContent="center"
@@ -350,7 +350,7 @@ export default makeScene2D(function* (view) {
               <Txt
                 text={'Primary Button'}
                 fontSize={16}
-                fill={'#ffffff'}
+                fill={'rgba(0, 0, 0, 0.5)'}
               />
             </Rect>
           </Rect>
@@ -365,7 +365,7 @@ export default makeScene2D(function* (view) {
               padding={[12, 16]}
               radius={8}
               lineWidth={2}
-              stroke={'#9B7EBD'}
+              stroke={'#E4D329'}
               layout
               alignItems="center"
               justifyContent="center"
@@ -373,14 +373,14 @@ export default makeScene2D(function* (view) {
               <Txt
                 text={'Secondary Button'}
                 fontSize={16}
-                fill={'#9B7EBD'}
+                fill={'#E4D329'}
               />
             </Rect>
             <Rect
               padding={[16, 20]}
               radius={8}
               lineWidth={2}
-              stroke={'#9B7EBD'}
+              stroke={'#E4D329'}
               layout
               alignItems="center"
               justifyContent="center"
@@ -388,14 +388,14 @@ export default makeScene2D(function* (view) {
               <Txt
                 text={'Secondary Button'}
                 fontSize={16}
-                fill={'#9B7EBD'}
+                fill={'#E4D329'}
               />
             </Rect>
             <Rect
               padding={[20, 32]}
               radius={8}
               lineWidth={2}
-              stroke={'#9B7EBD'}
+              stroke={'#E4D329'}
               layout
               alignItems="center"
               justifyContent="center"
@@ -403,7 +403,7 @@ export default makeScene2D(function* (view) {
               <Txt
                 text={'Secondary Button'}
                 fontSize={16}
-                fill={'#9B7EBD'}
+                fill={'#E4D329'}
               />
             </Rect>
           </Rect>
@@ -502,12 +502,12 @@ export default makeScene2D(function* (view) {
           <Rect
             padding={[8, 16]}
             radius={8}
-            fill={'#9B7EBD'}
+            fill={'#E4D329'}
           >
             <Txt 
               text={"Submit"}
               fontSize={20}
-              fill={'#ffffff'}
+              fill={'rgba(0, 0, 0, 0.5)'}
             />
           </Rect>
         </Rect>
