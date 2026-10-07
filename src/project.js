@@ -4,6 +4,7 @@ import scene1 from './scenes/scene_1?scene';
 import scene2 from './scenes/scene_2?scene';
 import scene3 from './scenes/scene_3?scene';
 import scene4 from './scenes/scene_4?scene';
+import scene5 from './scenes/scene_5?scene';
 
 export default makeProject({
   experimentalFeatures: true,
@@ -11,6 +12,7 @@ export default makeProject({
     scene1, 
     scene2, 
     scene3, 
-    scene4
+    scene4,
+    scene5,
   ],
 });
