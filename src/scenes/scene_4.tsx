@@ -472,6 +472,27 @@ const styleBorder = createRef<Path>();
     />,
   );
 
+  // Generating...
+  view.add(
+    <Rect
+      layout
+      direction="row"
+      gap={4}
+      y={140}
+      opacity={0}
+    >
+      <Txt
+        text={"Generating"}
+        fill={'rgba(255, 255, 255, 0.65)'}
+      />
+      <Txt
+        text={"..."}
+        y={120}
+        fill={'rgba(255, 255, 255, 0.65)'}
+      />
+    </Rect>
+  )
+
   // ==============
   // Timeline
   // ==============
