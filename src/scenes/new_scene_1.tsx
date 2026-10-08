@@ -280,5 +280,16 @@ export default makeScene2D(function* (view) {
   )
   // yield* secondBreak().rotation(15, 0.25)
   yield* secondBreak().rotation(15, 0.9, createEaseOutElastic())
+  // Fadeout FIFTH_SENTENCES
+  yield* all(
+    ...fifthSentencesRefs.map(ref => all(
+      ref().scale(1.5, 0.25),
+      ref().opacity(0, 0.15),
+    )),
+    all(
+      fifthBox().scale(1.2, 0.25),
+      fifthBox().opacity(0, 0.15),
+    ),
+  );
   yield* waitFor(HOLD_DURATION);
 })
