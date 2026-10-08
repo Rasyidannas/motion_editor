@@ -41,6 +41,7 @@ export default makeScene2D(function* (view) {
   const detailProgress = createSignal(0);
   const oneClipRef = createRef<Rect>();
   const smallClipRef = createRef<Rect>();
+  const detailClipRef = createRef<Rect>();
 
   // Background
   view.add(purpleDarkGlowRect());
@@ -104,7 +105,7 @@ fontSize={120}
   const fourthWords = FOURTH_SENTENCES.split(' ');
 
   view.add([
-    <Rect layout direction="column" gap={8} x={-180} alignItems="start">
+    <Rect layout direction="column" gap={8} x={-160} alignItems="start">
       <Rect
         ref={oneClipRef}
         layout
@@ -136,7 +137,6 @@ fontSize={120}
         <Txt
           ref={fourthSentencesRefs[1]}
           text={fourthWords[1]}
-          width={100}
           fill={'#8b5cf6'}
           fontSize={48}
           fontWeight={600}
@@ -144,15 +144,25 @@ fontSize={120}
         />
       </Rect>
     </Rect>,
-    <Txt
-      ref={fourthSentencesRefs[2]}
-      text={() => fourthWords[2].slice(0, Math.floor(detailProgress()))}
-      fill={whiteToPurpleGradient}
-      fontSize={120}
-      fontWeight={600}
-      x={60}
-      opacity={0}
-    />
+    <Rect
+      ref={detailClipRef}
+      layout
+      height={150}
+      clip
+      justifyContent="start"
+      alignItems="center"
+      x={150}
+    >
+      <Txt
+        ref={fourthSentencesRefs[2]}
+        text={() => fourthWords[2].slice(0, Math.floor(detailProgress()))}
+        width={460}
+        fill={whiteToPurpleGradient}
+        fontSize={120}
+        fontWeight={600}
+        opacity={0}
+      />
+    </Rect>
   ])
 
   // =============
@@ -184,8 +194,8 @@ fontSize={120}
   // Fadeout THIRD_SENTENCES
   for (let i = 0; i < thirdSentencesRefs.length; i++) {
     yield* all (
-      thirdSentencesRefs[i]().y(1, 0.25),
-      thirdSentencesRefs[i]().opacity(0, 0.2),
+      thirdSentencesRefs[i]().y(1, 0.15),
+      thirdSentencesRefs[i]().opacity(0, 0.15),
     )
   }
   // Window-slide reveal for "one" then "small" (left to right),
@@ -194,5 +204,14 @@ fontSize={120}
   yield* smallClipRef().width(160, 0.4);
   yield* fourthSentencesRefs[2]().opacity(1, 0.5);
   yield* detailProgress(fourthWords[2].length, 0.8);
+  yield* waitFor(HOLD_DURATION);
+  // Fadeout FOURTH_SENTENCES (windows close, width -> 0)
+  yield* oneClipRef().width(0, 0.3);
+  yield* smallClipRef().width(0, 0.3);
+  yield* all(
+    detailClipRef().width(0, 0.15),
+    detailClipRef().x(-170, 0.15),
+    fourthSentencesRefs[2]().opacity(0, 0.15),
+  );
   yield* waitFor(HOLD_DURATION);
 })
