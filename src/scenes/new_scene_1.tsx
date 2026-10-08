@@ -3,7 +3,7 @@ import { Txt, Rect, Img } from '@motion-canvas/2d/lib/components';
 import { useScene } from '@motion-canvas/core';
 import { all, loopFor, waitFor } from '@motion-canvas/core/lib/flow';
 import { createSignal } from '@motion-canvas/core/lib/signals';
-import { easeInOutCubic, easeOutCubic } from '@motion-canvas/core/lib/tweening';
+import { easeInOutCubic, easeOutCubic, createEaseOutElastic } from '@motion-canvas/core/lib/tweening';
 import { createRef } from '@motion-canvas/core/lib/utils';
 import {purpleDarkGlowRect} from '../components/backgrounds/purple_3';
 import break1 from '../../public/assets/images/break_1.png';
@@ -278,6 +278,7 @@ export default makeScene2D(function* (view) {
       fifthBox().opacity(1, 0.5),
       fifthBox().y(1, 0.25)
   )
-  yield* secondBreak().rotation(15, 0.25)
+  // yield* secondBreak().rotation(15, 0.25)
+  yield* secondBreak().rotation(15, 0.9, createEaseOutElastic())
   yield* waitFor(HOLD_DURATION);
 })
