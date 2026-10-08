@@ -1,11 +1,13 @@
 import { Gradient, makeScene2D, Path } from '@motion-canvas/2d';
-import { Txt, Rect } from '@motion-canvas/2d/lib/components';
+import { Txt, Rect, Img } from '@motion-canvas/2d/lib/components';
 import { useScene } from '@motion-canvas/core';
 import { all, loopFor, waitFor } from '@motion-canvas/core/lib/flow';
 import { createSignal } from '@motion-canvas/core/lib/signals';
 import { easeInOutCubic, easeOutCubic } from '@motion-canvas/core/lib/tweening';
 import { createRef } from '@motion-canvas/core/lib/utils';
 import {purpleDarkGlowRect} from '../components/backgrounds/purple_3';
+import break1 from '../../public/assets/images/break_1.png';
+import break2 from '../../public/assets/images/break_2.png';
 
 // ---------------------------------------------------------------------------
 // Style
@@ -31,7 +33,7 @@ export default makeScene2D(function* (view) {
   const SECOND_SENTENCES = "build for you ..."
   const THRID_SENTENCES = "until you want to change"
   const FOURTH_SENTENCES = "one small detail"
-  const FIFTH_SENTENCES = "the whole thing breaks."
+  const FIFTH_SENTENCES = "the whole thing"
 
   // --- Node refs (must live inside the scene function) ---
   const firstSentencesProgress = createSignal(0);
@@ -176,7 +178,7 @@ export default makeScene2D(function* (view) {
   }
 
   view.add([
-    ...fifthWords.slice(0, fifthWords.length - 1).map((word, i) => (
+    ...fifthWords.slice(0, fifthWords.length).map((word, i) => (
       <Txt
         ref={fifthSentencesRefs[i]}
         text={word}
@@ -187,19 +189,24 @@ export default makeScene2D(function* (view) {
       />
     )),
     <Rect
-      padding={24}
+      // layout
+      // direction={"row"}
+      // padding={24}
       height={120}
       width={430}
-      fill={whiteToPurpleGradient}
+      // fill={whiteToPurpleGradient}
       radius={12}
       x={xFifth[3]}
     >
-      <Txt
-        ref={fifthSentencesRefs[3]}
-        text={fifthWords[3]}
-        fill={'#000000'}
-        fontSize={120}
-        fontWeight={600}
+      <Img
+        src={break1}
+        height={120}
+        x={-90}
+      />
+      <Img
+        src={break2}
+        height={120}
+        x={94}
       />
     </Rect>
   ])
