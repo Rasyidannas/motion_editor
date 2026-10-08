@@ -46,6 +46,9 @@ export default makeScene2D(function* (view) {
   const smallClipRef = createRef<Rect>();
   const detailClipRef = createRef<Rect>();
   const fifthSentencesRefs = FIFTH_SENTENCES.split(' ').map(() => createRef<Txt>());
+  const fifthBox = createRef<Rect>();
+  const firstBreak = createRef<Img>();
+  const secondBreak = createRef<Img>();
 
   // Background
   view.add(purpleDarkGlowRect());
@@ -186,27 +189,32 @@ export default makeScene2D(function* (view) {
         fontSize={120}
         fontWeight={600}
         x={xFifth[i]}
+        y={-100}
+        opacity={0}
       />
     )),
     <Rect
-      // layout
-      // direction={"row"}
-      // padding={24}
+      ref={fifthBox}
       height={120}
       width={430}
-      // fill={whiteToPurpleGradient}
       radius={12}
       x={xFifth[3]}
+      y={-100}
+      opacity={0}
     >
       <Img
+        ref={firstBreak}
         src={break1}
         height={120}
         x={-90}
       />
       <Img
+        ref={secondBreak}
         src={break2}
         height={120}
-        x={94}
+        x={-28}
+        y={60}
+        offset={[-1, 1]}
       />
     </Rect>
   ])
@@ -259,5 +267,17 @@ export default makeScene2D(function* (view) {
     detailClipRef().x(-170, 0.15),
     fourthSentencesRefs[2]().opacity(0, 0.15),
   );
+  // Fadein FIFTH_SENTENCES
+  for (let i = 0; i < fifthSentencesRefs.length; i++){
+    yield* all (
+      fifthSentencesRefs[i]().opacity(1, 0.5),
+      fifthSentencesRefs[i]().y(1, 0.25),
+    )
+  }
+  yield* all(
+      fifthBox().opacity(1, 0.5),
+      fifthBox().y(1, 0.25)
+  )
+  yield* secondBreak().rotation(15, 0.25)
   yield* waitFor(HOLD_DURATION);
 })
