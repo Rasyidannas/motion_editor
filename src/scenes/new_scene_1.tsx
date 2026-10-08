@@ -31,6 +31,7 @@ export default makeScene2D(function* (view) {
   const SECOND_SENTENCES = "build for you ..."
   const THRID_SENTENCES = "until you want to change"
   const FOURTH_SENTENCES = "one small detail"
+  const FIFTH_SENTENCES = "the whole thing breaks."
 
   // --- Node refs (must live inside the scene function) ---
   const firstSentencesProgress = createSignal(0);
@@ -42,6 +43,7 @@ export default makeScene2D(function* (view) {
   const oneClipRef = createRef<Rect>();
   const smallClipRef = createRef<Rect>();
   const detailClipRef = createRef<Rect>();
+  const fifthSentencesRefs = FIFTH_SENTENCES.split(' ').map(() => createRef<Txt>());
 
   // Background
   view.add(purpleDarkGlowRect());
@@ -70,7 +72,7 @@ export default makeScene2D(function* (view) {
         ref={secondSentencesRefs[i]}
         text={word}
         fill={whiteToPurpleGradient}
-fontSize={120}
+        fontSize={120}
         fontWeight={600}
         x={2000} // offset each word
         opacity={0}  // start invisible
@@ -161,6 +163,43 @@ fontSize={120}
         fontSize={120}
         fontWeight={600}
         opacity={0}
+      />
+    </Rect>
+  ])
+
+  const fifthWords = FIFTH_SENTENCES.split(' ');
+  const xFifth = {
+    0: -500,
+    1: -230,
+    2: 90,
+    3: 480
+  }
+
+  view.add([
+    ...fifthWords.slice(0, fifthWords.length - 1).map((word, i) => (
+      <Txt
+        ref={fifthSentencesRefs[i]}
+        text={word}
+        fill={whiteToPurpleGradient}
+        fontSize={120}
+        fontWeight={600}
+        x={xFifth[i]}
+      />
+    )),
+    <Rect
+      padding={24}
+      height={120}
+      width={430}
+      fill={whiteToPurpleGradient}
+      radius={12}
+      x={xFifth[3]}
+    >
+      <Txt
+        ref={fifthSentencesRefs[3]}
+        text={fifthWords[3]}
+        fill={'#000000'}
+        fontSize={120}
+        fontWeight={600}
       />
     </Rect>
   ])
