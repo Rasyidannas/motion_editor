@@ -38,6 +38,9 @@ export default makeScene2D(function* (view) {
   const secondSentencesRefs = SECOND_SENTENCES.split(' ').map(() => createRef<Txt>());
   const thirdSentencesRefs = THRID_SENTENCES.split(' ').map(() => createRef<Txt>());
   const fourthSentencesRefs = FOURTH_SENTENCES.split(' ').map(() => createRef<Txt>());
+  const detailProgress = createSignal(0);
+  const oneClipRef = createRef<Rect>();
+  const smallClipRef = createRef<Rect>();
 
   // Background
   view.add(purpleDarkGlowRect());
@@ -99,47 +102,55 @@ fontSize={120}
   )
 
   const fourthWords = FOURTH_SENTENCES.split(' ');
-  const widthFourthWords = {
-    0: 100,
-    1: 150,
-    2: 20,
-  }
 
   view.add([
-    <Rect
-      layout
-      direction="column"
-      x={-180}
-    >
-      <Txt
-        ref={fourthSentencesRefs[0]}
-        text={fourthWords[0]}
-        fill={'#8b5cf6'}
-        fontSize={48}
-        fontWeight={600}
-        fontStyle={'italic'}
+    <Rect layout direction="column" gap={8} x={-180} alignItems="start">
+      <Rect
+        ref={oneClipRef}
+        layout
         width={0}
-        opacity={0}
-      />
-      <Txt
-        ref={fourthSentencesRefs[1]}
-        text={fourthWords[1]}
-        fill={'#8b5cf6'}
-        fontSize={48}
-        fontWeight={600}
-        fontStyle={'italic'}
+        height={64}
+        clip
+        justifyContent="start"
+        alignItems="center"
+      >
+        <Txt
+          ref={fourthSentencesRefs[0]}
+          text={fourthWords[0]}
+          width={100}
+          fill={'#8b5cf6'}
+          fontSize={48}
+          fontWeight={600}
+          fontStyle={'italic'}
+        />
+      </Rect>
+      <Rect
+        ref={smallClipRef}
+        layout
         width={0}
-        opacity={0}
-      />
+        height={64}
+        clip
+        justifyContent="start"
+        alignItems="center"
+      >
+        <Txt
+          ref={fourthSentencesRefs[1]}
+          text={fourthWords[1]}
+          width={100}
+          fill={'#8b5cf6'}
+          fontSize={48}
+          fontWeight={600}
+          fontStyle={'italic'}
+        />
+      </Rect>
     </Rect>,
     <Txt
       ref={fourthSentencesRefs[2]}
-      text={fourthWords[2]}
+      text={() => fourthWords[2].slice(0, Math.floor(detailProgress()))}
       fill={whiteToPurpleGradient}
       fontSize={120}
       fontWeight={600}
       x={60}
-      width={0}
       opacity={0}
     />
   ])
@@ -177,12 +188,11 @@ fontSize={120}
       thirdSentencesRefs[i]().opacity(0, 0.2),
     )
   }
-  // Fadein FOURTH_SENTENCES
-  for (let i = 0; i < fourthSentencesRefs.length; i++) {
-    yield* all (
-      fourthSentencesRefs[i]().opacity(1, 0.5),
-      fourthSentencesRefs[i]().width(widthFourthWords[i], 0.8)
-    )
-  }
+  // Window-slide reveal for "one" then "small" (left to right),
+  // then fade + typewriter for "detail"
+  yield* oneClipRef().width(100, 0.4);
+  yield* smallClipRef().width(160, 0.4);
+  yield* fourthSentencesRefs[2]().opacity(1, 0.5);
+  yield* detailProgress(fourthWords[2].length, 0.8);
   yield* waitFor(HOLD_DURATION);
 })
