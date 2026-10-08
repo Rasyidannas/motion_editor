@@ -3,7 +3,7 @@ import { Txt, Rect, Img } from '@motion-canvas/2d/lib/components';
 import { useScene } from '@motion-canvas/core';
 import { all, loopFor, waitFor } from '@motion-canvas/core/lib/flow';
 import { createSignal } from '@motion-canvas/core/lib/signals';
-import { easeInOutCubic, easeOutCubic, createEaseOutElastic } from '@motion-canvas/core/lib/tweening';
+import { easeInOutCubic, easeOutCubic, createEaseOutElastic, spring, makeSpring } from '@motion-canvas/core/lib/tweening';
 import { createRef } from '@motion-canvas/core/lib/utils';
 import {purpleDarkGlowRect} from '../components/backgrounds/purple_3';
 import break1 from '../../public/assets/images/break_1.png';
@@ -20,6 +20,10 @@ const whiteToPurpleGradient = new Gradient({
     {offset: 1, color: '#ffffff'},
   ],
 });
+
+// Tight, fast spring for word entrances (stiff + well damped:
+// settles quickly with only a small overshoot wobble)
+const snapSpring = makeSpring(0.2, 90, 6.0);
 
 // ---------------------------------------------------------------------------
 // Timeline tuning (all values in seconds unless noted)
@@ -79,7 +83,7 @@ export default makeScene2D(function* (view) {
         fill={whiteToPurpleGradient}
         fontSize={120}
         fontWeight={600}
-        x={2000} // offset each word
+        x={x[i] + 350} // short runway: small slide, small shake
         opacity={0}  // start invisible
       />)
     )
@@ -233,16 +237,16 @@ export default makeScene2D(function* (view) {
   )
   // Fadein SECOND_SENTENCES
   for (let i = 0; i < secondSentencesRefs.length; i++ ) {
-    yield* secondSentencesRefs[i]().opacity(1, 0.2);
-    yield* secondSentencesRefs[i]().x(x[i], 0.25)
+    yield* secondSentencesRefs[i]().opacity(1, 0.2, easeInOutCubic);
+    yield* spring(snapSpring, secondSentencesRefs[i]().x(), x[i], value => secondSentencesRefs[i]().x(value));
   }
   // Fadeout SECOND_SENTENCES
   yield* all(...secondSentencesRefs.map(ref => ref().opacity(0, 0.3)));
   // Fadein THIRD_SENTENCES
   for (let i = 0; i < thirdSentencesRefs.length; i++) {
     yield* all (
-      thirdSentencesRefs[i]().opacity(1, 0.5),
-      thirdSentencesRefs[i]().y(1, 0.25)
+      thirdSentencesRefs[i]().opacity(1, 0.5, easeInOutCubic),
+      spring(snapSpring, thirdSentencesRefs[i]().y(), 1, value => thirdSentencesRefs[i]().y(value)),
     )
   }
   // Fadeout THIRD_SENTENCES
