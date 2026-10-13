@@ -97,7 +97,7 @@ export default makeScene2D(function* (view) {
       height={250}
       lineWidth={2}
       stroke={'rgba(0, 0, 0, 0.5)'}
-      fill={'rgba(0, 0, 0, 0.75)'}
+      fill={'#0a0a0a'}
       scale={1.2}
       radius={16}
       opacity={0}
@@ -162,15 +162,16 @@ export default makeScene2D(function* (view) {
     logoBoxRef().width(0, 0.75),
     logoBoxRef().height(0, 0.75),
     logoBoxRef().radius(0, 0.5),
+    bgDark.opacity(1, 0.5),
   );
   yield* all(
-    bgDark.opacity(1, 0.5),
     bg.width(1050, 0.5),
     bg.height(300, 0.5),
-    // bg is a Layout (no radius prop) — round its inner Rects instead
-    ...(bg.children() as Rect[]).map(child => child.radius(24, 0.5)),
-    // bg.fill('#0a0a0a')
+    bg.radius(24, 0.5),
   )
+  // bg is now a Rect, so radius/fill work on it directly.
+  // (Instant set — must run outside all(), which only takes generators.)
+  bg.fill('#0a0a0a');
   yield* all (
     bg.opacity(0, 0.5),
     textareaRef().opacity(1, 0.5),
