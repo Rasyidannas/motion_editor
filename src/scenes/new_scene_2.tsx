@@ -22,10 +22,33 @@ const purpleGradient = new Gradient({
   ],
 });
 
+// Same purples + direction as the Continue button (purpleGradient),
+// but spanning the textarea height (±125 local units) so the full
+// blend shows across the border instead of clamping to flat halves.
+const textareaTraceGradient = new Gradient({
+  type: 'linear',
+  from: [0, 125],
+  to:   [0, -125],
+  stops: [
+    {offset: 0, color: '#8b5cf6'},
+    {offset: 1, color: '#7C3AED'},
+  ],
+});
+
 // ---------------------------------------------------------------------------
 // Timeline tuning (all values in seconds unless noted)
 // ---------------------------------------------------------------------------
 const HOLD_DURATION = 0.5; // pauses between animation beats
+const TEXTAREA_RADIUS = 16; // must match textareaRef radius
+const TRACE_WINDOW = 0.14; // visible segment length (fraction of perimeter)
+const TRACE_DURATION = 1.6; // single walking lap around the textarea border
+
+// Rounded-rectangle SVG path centered at the origin (same pattern as scene_2).
+const roundedRectData = (hw: number, hh: number, r: number) =>
+  `M ${-hw + r} ${-hh} H ${hw - r} Q ${hw} ${-hh} ${hw} ${-hh + r} ` +
+  `V ${hh - r} Q ${hw} ${hh} ${hw - r} ${hh} ` +
+  `H ${-hw + r} Q ${-hw} ${hh} ${-hw} ${hh - r} ` +
+  `V ${-hh + r} Q ${-hw} ${-hh} ${-hw + r} ${-hh} Z`;
 
 export default makeScene2D(function* (view) {
   // --- Node refs (must live inside the scene function) ---
@@ -35,6 +58,7 @@ export default makeScene2D(function* (view) {
   const mevinRef = createRef<Txt>();
   const mevinProgress = createSignal(0);
   const textareaRef = createRef<Rect>();
+  const textareaTrace = createRef<Path>();
 
   // Background
   const bg = whiteRadialRect();
@@ -135,6 +159,33 @@ export default makeScene2D(function* (view) {
     </Rect>
   )
 
+  // --- Walking border trace for the textarea (view-level sibling,
+  // NOT inside any layout — same pattern as scene_2) ---
+  // Tracks the textarea's live size/position with signals, so the
+  // border fits even though the card width is content-driven (auto).
+  view.add(
+    <Path
+      ref={textareaTrace}
+      data={() =>
+        roundedRectData(
+          textareaRef().width() / 2,
+          textareaRef().height() / 2,
+          TEXTAREA_RADIUS,
+        )
+      }
+      stroke={textareaTraceGradient}
+      lineWidth={4}
+      start={0}
+      end={0}
+      opacity={0}
+      x={() => textareaRef().x()}
+      y={() => textareaRef().y()}
+      scale={1.2}
+      shadowColor={'#8b5cf6'}
+      shadowBlur={20}
+    />,
+  );
+
   // =============
   // Timeline
   // =============
@@ -175,5 +226,15 @@ export default makeScene2D(function* (view) {
   yield* all (
     bg.opacity(0, 0.5),
     textareaRef().opacity(1, 0.5),
+    textareaTrace().opacity(1, 0.5),
   )
+  // Glowing segment walks once around the textarea border (same trick as scene_2).
+  yield* (function* () {
+    textareaTrace().start(0);
+    textareaTrace().end(TRACE_WINDOW);
+    yield* all(
+      textareaTrace().start(1 - TRACE_WINDOW, TRACE_DURATION, easeInOutCubic),
+      textareaTrace().end(1, TRACE_DURATION, easeInOutCubic),
+    );
+  })();
 })
