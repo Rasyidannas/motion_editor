@@ -2,7 +2,7 @@ import { Gradient, makeScene2D, Path } from '@motion-canvas/2d';
 import { Txt, Rect, Img, Video } from '@motion-canvas/2d/lib/components';
 import { fadeTransition } from '@motion-canvas/core/lib/transitions';
 import { useScene } from '@motion-canvas/core';
-import { all, loopFor, waitFor } from '@motion-canvas/core/lib/flow';
+import { all, waitFor } from '@motion-canvas/core/lib/flow';
 import { createSignal } from '@motion-canvas/core/lib/signals';
 import { easeInOutCubic, easeOutCubic, createEaseOutElastic, spring, makeSpring } from '@motion-canvas/core/lib/tweening';
 import { createRef } from '@motion-canvas/core/lib/utils';
@@ -40,15 +40,61 @@ const textareaTraceGradient = new Gradient({
 // ---------------------------------------------------------------------------
 const HOLD_DURATION = 0.5; // pauses between animation beats
 const TEXTAREA_RADIUS = 16; // must match textareaRef radius
-const TRACE_WINDOW = 0.14; // visible segment length (fraction of perimeter)
-const TRACE_DURATION = 1.6; // single walking lap around the textarea border
+const TRACE_WINDOW = 0.75; // visible fraction; 25% gap walks around
+const TRACE_SEGMENTS = 200; // fine subdivisions for perfectly smooth motion
+const TRACE_LAPS = 1.5; // slow, visible circuits while the prompt types
+const TEXTAREA_TYPED_TEXT = 'Create me a landing page with premium dark theme';
+const TEXTAREA_TYPING_DURATION = 2.5; // char-by-char typing speed for the prompt
 
-// Rounded-rectangle SVG path centered at the origin (same pattern as scene_2).
-const roundedRectData = (hw: number, hh: number, r: number) =>
-  `M ${-hw + r} ${-hh} H ${hw - r} Q ${hw} ${-hh} ${hw} ${-hh + r} ` +
-  `V ${hh - r} Q ${hw} ${hh} ${hw - r} ${hh} ` +
-  `H ${-hw + r} Q ${-hw} ${hh} ${-hw} ${hh - r} ` +
-  `V ${-hh + r} Q ${-hw} ${-hh} ${-hw + r} ${-hh} Z`;
+// Point on a rounded-rect border at parameter t (0–1, clockwise from
+// top-left corner start).  Used to build a multi-segment SVG path so
+// phase steps are small enough to be invisible under the glow blur.
+const roundedRectPoint = (hw: number, hh: number, r: number, t: number) => {
+  const segLen = [
+    2 * hw - 2 * r,
+    Math.PI * r / 2,
+    2 * hh - 2 * r,
+    Math.PI * r / 2,
+    2 * hw - 2 * r,
+    Math.PI * r / 2,
+    2 * hh - 2 * r,
+    Math.PI * r / 2,
+  ];
+  const total = segLen.reduce((a, b) => a + b, 0);
+  const pos = ((t % 1) + 1) % 1 * total;
+  let cumul = 0;
+  for (let i = 0; i < 8; i++) {
+    if (pos < cumul + segLen[i] || i === 7) {
+      const f = (pos - cumul) / segLen[i];
+      switch (i) {
+        case 0: return { x: -hw + r + f * (2 * hw - 2 * r), y: -hh };
+        case 1: return { x: hw - r + r * Math.cos(-Math.PI / 2 + f * Math.PI / 2), y: -hh + r + r * Math.sin(-Math.PI / 2 + f * Math.PI / 2) };
+        case 2: return { x: hw, y: -hh + r + f * (2 * hh - 2 * r) };
+        case 3: return { x: hw - r + r * Math.cos(f * Math.PI / 2), y: hh - r + r * Math.sin(f * Math.PI / 2) };
+        case 4: return { x: hw - r - f * (2 * hw - 2 * r), y: hh };
+        case 5: return { x: -hw + r + r * Math.cos(Math.PI / 2 + f * Math.PI / 2), y: hh - r + r * Math.sin(Math.PI / 2 + f * Math.PI / 2) };
+        case 6: return { x: -hw, y: hh - r - f * (2 * hh - 2 * r) };
+        case 7: return { x: -hw + r + r * Math.cos(Math.PI + f * Math.PI / 2), y: -hh + r + r * Math.sin(Math.PI + f * Math.PI / 2) };
+      }
+    }
+    cumul += segLen[i];
+  }
+  return { x: -hw + r, y: -hh };
+};
+
+// `phase` sweeps across the *segment* index (0 … TRACE_SEGMENTS per lap),
+// keeping the 75 % window walking at a consistent pace.
+const roundedRectData = (hw: number, hh: number, r: number, phase: number) => {
+  const n = TRACE_SEGMENTS;
+  const idx = ((Math.floor(phase) % n) + n) % n;
+  const pts: string[] = [];
+  for (let i = 0; i < n; i++) {
+    const p = roundedRectPoint(hw, hh, r, (i + idx) / n);
+    pts.push(i === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`);
+  }
+  pts.push('Z');
+  return pts.join(' ');
+};
 
 export default makeScene2D(function* (view) {
   // --- Node refs (must live inside the scene function) ---
@@ -59,6 +105,9 @@ export default makeScene2D(function* (view) {
   const mevinProgress = createSignal(0);
   const textareaRef = createRef<Rect>();
   const textareaTrace = createRef<Path>();
+  const textareaPlaceholder = createRef<Txt>();
+  const textareaProgress = createSignal(0);
+  const tracePhase = createSignal(0);
 
   // Background
   const bg = whiteRadialRect();
@@ -127,6 +176,8 @@ export default makeScene2D(function* (view) {
       opacity={0}
     >
       <Txt
+        ref={textareaPlaceholder}
+        minWidth={840}
         text="A neighbourhood bakery in Lisbon that takes pre-orders..."
         fontSize="32"
         alignSelf={"flex-end"}
@@ -171,18 +222,19 @@ export default makeScene2D(function* (view) {
           textareaRef().width() / 2,
           textareaRef().height() / 2,
           TEXTAREA_RADIUS,
+          tracePhase(),
         )
       }
       stroke={textareaTraceGradient}
-      lineWidth={4}
+      lineWidth={3}
       start={0}
-      end={0}
+      end={TRACE_WINDOW}
       opacity={0}
       x={() => textareaRef().x()}
       y={() => textareaRef().y()}
       scale={1.2}
       shadowColor={'#8b5cf6'}
-      shadowBlur={20}
+      shadowBlur={45}
     />,
   );
 
@@ -228,13 +280,15 @@ export default makeScene2D(function* (view) {
     textareaRef().opacity(1, 0.5),
     textareaTrace().opacity(1, 0.5),
   )
-  // Glowing segment walks once around the textarea border (same trick as scene_2).
-  yield* (function* () {
-    textareaTrace().start(0);
-    textareaTrace().end(TRACE_WINDOW);
-    yield* all(
-      textareaTrace().start(1 - TRACE_WINDOW, TRACE_DURATION, easeInOutCubic),
-      textareaTrace().end(1, TRACE_DURATION, easeInOutCubic),
-    );
-  })();
+  // 1.5 slow continuous laps (200 fine segments per lap) while typing.
+  // The per-frame segment shift is tiny — perfectly smooth under the glow blur.
+  yield* all(
+    tracePhase(Math.ceil(TRACE_LAPS * TRACE_SEGMENTS), TEXTAREA_TYPING_DURATION),
+    (function* () {
+      textareaPlaceholder().text(() =>
+        TEXTAREA_TYPED_TEXT.slice(0, Math.floor(textareaProgress())),
+      );
+      yield* textareaProgress(TEXTAREA_TYPED_TEXT.length, TEXTAREA_TYPING_DURATION);
+    })(),
+  );
 })
