@@ -43,8 +43,8 @@ const TEXTAREA_RADIUS = 16; // must match textareaRef radius
 const TRACE_WINDOW = 0.75; // visible fraction; 25% gap walks around
 const TRACE_SEGMENTS = 200; // fine subdivisions for perfectly smooth motion
 const TRACE_LAPS = 1.5; // slow, visible circuits while the prompt types
-const TEXTAREA_TYPED_TEXT = 'Create me a landing page with premium dark theme';
-const TEXTAREA_TYPING_DURATION = 2.5; // char-by-char typing speed for the prompt
+const TEXTAREA_TYPED_TEXT = 'Create me a landing page with premium dark theme and my agency called Void.';
+const TEXTAREA_TYPING_DURATION = 2.75; // char-by-char typing speed for the prompt
 
 // Point on a rounded-rect border at parameter t (0–1, clockwise from
 // top-left corner start).  Used to build a multi-segment SVG path so
@@ -177,11 +177,13 @@ export default makeScene2D(function* (view) {
     >
       <Txt
         ref={textareaPlaceholder}
-        minWidth={840}
+        width={840}
         text="A neighbourhood bakery in Lisbon that takes pre-orders..."
         fontSize="32"
         alignSelf={"flex-end"}
-        fill={'rgba(255, 255, 255, 0.4)'}
+        fill={() => textareaProgress() > 0 ? '#ffffff' : 'rgba(255, 255, 255, 0.4)'}
+        lineHeight={'150%'}
+        textWrap 
       />
       <Rect
         layout
@@ -286,6 +288,7 @@ export default makeScene2D(function* (view) {
     tracePhase(Math.ceil(TRACE_LAPS * TRACE_SEGMENTS), TEXTAREA_TYPING_DURATION),
     (function* () {
       textareaPlaceholder().text(() =>
+        
         TEXTAREA_TYPED_TEXT.slice(0, Math.floor(textareaProgress())),
       );
       yield* textareaProgress(TEXTAREA_TYPED_TEXT.length, TEXTAREA_TYPING_DURATION);
