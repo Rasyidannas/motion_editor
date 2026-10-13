@@ -44,7 +44,7 @@ const TRACE_WINDOW = 0.75; // visible fraction; 25% gap walks around
 const TRACE_SEGMENTS = 200; // fine subdivisions for perfectly smooth motion
 const TRACE_LAPS = 1.5; // slow, visible circuits while the prompt types
 const TEXTAREA_TYPED_TEXT = 'Create me a landing page with premium dark theme and my agency called Void.';
-const TEXTAREA_TYPING_DURATION = 2.75; // char-by-char typing speed for the prompt
+const TEXTAREA_TYPING_DURATION = 4; // char-by-char typing speed for the prompt
 
 // Point on a rounded-rect border at parameter t (0–1, clockwise from
 // top-left corner start).  Used to build a multi-segment SVG path so
