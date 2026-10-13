@@ -7,6 +7,7 @@ import { createSignal } from '@motion-canvas/core/lib/signals';
 import { easeInOutCubic, easeOutCubic, createEaseOutElastic, spring, makeSpring } from '@motion-canvas/core/lib/tweening';
 import { createRef } from '@motion-canvas/core/lib/utils';
 import {whiteRadialRect} from '../components/backgrounds/white_1';
+import {blackRadialRect} from '../components/backgrounds/purple_4.tsx';
 import logo from '../../public/assets/images/Logo.png';
 
 // ---------------------------------------------------------------------------
@@ -33,11 +34,22 @@ export default makeScene2D(function* (view) {
   const logoRef = createRef<Rect>();
   const mevinRef = createRef<Txt>();
   const mevinProgress = createSignal(0);
+  const textareaRef = createRef<Rect>();
 
   // Background
   const bg = whiteRadialRect();
   bg.opacity(0);
   view.add(bg);
+  // Lock % -> px early so later width()/height() tweens are number->number.
+  // (Tweening directly from '100%' to a number is a no-op.)
+  bg.width(view.width());
+  bg.height(view.height());
+  bg.clip(true);
+
+  const bgDark = blackRadialRect();
+  bgDark.opacity(0);
+  view.add(bgDark);
+  bgDark.zIndex(-2);
 
   // Black background
   view.add(
@@ -74,10 +86,61 @@ export default makeScene2D(function* (view) {
   </Rect>
   )
 
+  // Textarea
+  view.add(
+    <Rect
+      ref={textareaRef}
+      layout
+      direction={"column"}
+      justifyContent={"space-between"}
+      padding={32}
+      height={250}
+      lineWidth={2}
+      stroke={'rgba(0, 0, 0, 0.5)'}
+      fill={'rgba(0, 0, 0, 0.75)'}
+      scale={1.2}
+      radius={16}
+      opacity={0}
+    >
+      <Txt
+        text="A neighbourhood bakery in Lisbon that takes pre-orders..."
+        fontSize="32"
+        alignSelf={"flex-end"}
+        fill={'rgba(255, 255, 255, 0.4)'}
+      />
+      <Rect
+        layout
+        direction={"row"}
+        justifyContent={"space-between"}
+        alignItems="end"
+      >
+        <Txt 
+          text="Business, portfolio, clinic, blog: anything works."
+          fontSize="20"
+          fill={'rgba(255, 255, 255, 0.75)'}
+        />
+        <Rect
+          fill={purpleGradient}
+          padding={[16, 32]}
+          radius={16}
+        >
+          <Txt
+            text="Continue"
+            fontSize="24"
+            fontWeight="600"
+            fill={'rgba(255, 255, 255, 1)'}
+          />
+        </Rect>
+      </Rect>
+    </Rect>
+  )
+
   // =============
   // Timeline
   // =============
   yield* fadeTransition(0.15);
+  
+  // Fadein Logo
   yield* logoRef().scale(1, 0.5);
   yield* all (
     bg.opacity(1, 0.1),
@@ -85,10 +148,31 @@ export default makeScene2D(function* (view) {
     logoBoxRef().height(164, 0.75),
     logoBoxRef().radius(24, 0.5),
   );
-
   yield* logoBoxRef().fill(purpleGradient, 0.75)
   yield* logoBoxRef().x(-196, 0.5);
   yield* mevinRef().opacity(1, 0.3);
   yield* mevinProgress('Mevin'.length, 1.0);
   yield* waitFor(HOLD_DURATION);
+  // Fadeout Logo
+  yield* waitFor(HOLD_DURATION);
+  yield* mevinProgress(0, 0.5);
+  yield* logoBoxRef().x(0, 0.5);
+  yield* logoRef().scale(0, 0.5);
+  yield* all(
+    logoBoxRef().width(0, 0.75),
+    logoBoxRef().height(0, 0.75),
+    logoBoxRef().radius(0, 0.5),
+  );
+  yield* all(
+    bgDark.opacity(1, 0.5),
+    bg.width(1050, 0.5),
+    bg.height(300, 0.5),
+    // bg is a Layout (no radius prop) — round its inner Rects instead
+    ...(bg.children() as Rect[]).map(child => child.radius(24, 0.5)),
+    // bg.fill('#0a0a0a')
+  )
+  yield* all (
+    bg.opacity(0, 0.5),
+    textareaRef().opacity(1, 0.5),
+  )
 })
