@@ -85,15 +85,16 @@ const roundedRectPoint = (hw: number, hh: number, r: number, t: number) => {
   return { x: -hw + r, y: -hh };
 };
 
-// `phase` sweeps across the *segment* index (0 … TRACE_SEGMENTS per lap),
-// keeping the 75 % window walking at a consistent pace.
+// `phase` is a *fractional* segment offset (0 … TRACE_SEGMENTS per lap).
+// Using the raw float (no Math.floor) moves the path start continuously,
+// so the 75 % window glides instead of stepping segment-to-segment.
 const roundedRectData = (hw: number, hh: number, r: number, phase: number) => {
   const n = TRACE_SEGMENTS;
-  const idx = ((Math.floor(phase) % n) + n) % n;
+  const offset = ((phase % n) + n) % n;
   const pts: string[] = [];
   for (let i = 0; i < n; i++) {
-    const p = roundedRectPoint(hw, hh, r, (i + idx) / n);
-    pts.push(i === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`);
+    const p = roundedRectPoint(hw, hh, r, (i + offset) / n);
+    pts.push(i === 0 ? `M ${p.x.toFixed(2)} ${p.y.toFixed(2)}` : `L ${p.x.toFixed(2)} ${p.y.toFixed(2)}`);
   }
   pts.push('Z');
   return pts.join(' ');
