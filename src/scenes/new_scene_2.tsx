@@ -9,6 +9,7 @@ import { createRef } from '@motion-canvas/core/lib/utils';
 import {whiteRadialRect} from '../components/backgrounds/white_1';
 import {blackRadialRect} from '../components/backgrounds/purple_4.tsx';
 import logo from '../../public/assets/images/Logo.png';
+import cursorSvg from '../../public/assets/images/new_cursor.svg';
 
 // ---------------------------------------------------------------------------
 // Style
@@ -111,6 +112,8 @@ export default makeScene2D(function* (view) {
   const textareaProgress = createSignal(0);
   const tracePhase = createSignal(0);
   const caretOn = createSignal(1);
+  const cursorRef = createRef<Img>();
+  const btnContinueRef = createRef<Rect>();
 
   // Background
   const bg = whiteRadialRect();
@@ -200,6 +203,7 @@ export default makeScene2D(function* (view) {
           fill={'rgba(255, 255, 255, 0.75)'}
         />
         <Rect
+          ref={btnContinueRef}
           fill={purpleGradient}
           padding={[16, 32]}
           radius={16}
@@ -242,6 +246,15 @@ export default makeScene2D(function* (view) {
       shadowBlur={45}
     />,
   );
+
+  view.add(
+    <Img
+      src={cursorSvg}
+      y={90}
+      x={1000}
+      ref={cursorRef}
+    />
+  )
 
   // =============
   // Timeline
@@ -303,4 +316,9 @@ export default makeScene2D(function* (view) {
       yield* waitFor(CARET_BLINK_HALF);
     }),
   );
+
+  yield* cursorRef().x(460, 0.5)
+  yield* btnContinueRef().scale(0.9, 0.5)
+  yield* btnContinueRef().scale(1, 0.5)
+  yield* cursorRef().opacity(0, 0.5)
 })
