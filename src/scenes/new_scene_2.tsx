@@ -2,7 +2,7 @@ import { Gradient, makeScene2D, Path } from '@motion-canvas/2d';
 import { Txt, Rect, Img, Video } from '@motion-canvas/2d/lib/components';
 import { fadeTransition } from '@motion-canvas/core/lib/transitions';
 import { useScene } from '@motion-canvas/core';
-import { all, waitFor } from '@motion-canvas/core/lib/flow';
+import { all, loopFor, waitFor } from '@motion-canvas/core/lib/flow';
 import { createSignal } from '@motion-canvas/core/lib/signals';
 import { easeInOutCubic, easeOutCubic, createEaseOutElastic, spring, makeSpring } from '@motion-canvas/core/lib/tweening';
 import { createRef } from '@motion-canvas/core/lib/utils';
@@ -45,6 +45,8 @@ const TRACE_SEGMENTS = 200; // fine subdivisions for perfectly smooth motion
 const TRACE_LAPS = 1.5; // slow, visible circuits while the prompt types
 const TEXTAREA_TYPED_TEXT = 'Create me a landing page with premium dark theme and my agency called Void.';
 const TEXTAREA_TYPING_DURATION = 4; // char-by-char typing speed for the prompt
+const CARET_BLINK_HALF = 0.2; // caret on/off half-period
+const CARET_CHAR = '|'; // block caret appended to the typed text
 
 // Point on a rounded-rect border at parameter t (0–1, clockwise from
 // top-left corner start).  Used to build a multi-segment SVG path so
@@ -108,6 +110,7 @@ export default makeScene2D(function* (view) {
   const textareaPlaceholder = createRef<Txt>();
   const textareaProgress = createSignal(0);
   const tracePhase = createSignal(0);
+  const caretOn = createSignal(1);
 
   // Background
   const bg = whiteRadialRect();
@@ -282,16 +285,22 @@ export default makeScene2D(function* (view) {
     textareaRef().opacity(1, 0.5),
     textareaTrace().opacity(1, 0.5),
   )
-  // 1.5 slow continuous laps (200 fine segments per lap) while typing.
-  // The per-frame segment shift is tiny — perfectly smooth under the glow blur.
+  // 1.5 slow continuous laps (200 fine segments per lap) while typing,
+  // with a blinking block caret appended to the typed text.
   yield* all(
     tracePhase(Math.ceil(TRACE_LAPS * TRACE_SEGMENTS), TEXTAREA_TYPING_DURATION),
     (function* () {
       textareaPlaceholder().text(() =>
-        
-        TEXTAREA_TYPED_TEXT.slice(0, Math.floor(textareaProgress())),
+        TEXTAREA_TYPED_TEXT.slice(0, Math.floor(textareaProgress())) +
+        (caretOn() ? CARET_CHAR : ''),
       );
       yield* textareaProgress(TEXTAREA_TYPED_TEXT.length, TEXTAREA_TYPING_DURATION);
     })(),
+    loopFor(TEXTAREA_TYPING_DURATION, function* () {
+      caretOn(0);
+      yield* waitFor(CARET_BLINK_HALF);
+      caretOn(1);
+      yield* waitFor(CARET_BLINK_HALF);
+    }),
   );
 })
