@@ -300,21 +300,21 @@ export default makeScene2D(function* (view) {
   // bg is now a Rect, so radius/fill work on it directly.
   // (Instant set — must run outside all(), which only takes generators.)
   bg.fill('#0a0a0a');
-  yield* all (
-    bg.opacity(0, 0.5),
-    textareaRef().opacity(1, 0.5),
-    textareaTrace().opacity(1, 0.5),
-  )
-  // Trace keeps walking until the very end: one tween spanning typing +
-  // cursor/button/shrink beats (same segment speed as before), while a
-  // sequential branch plays those beats. Caret blinks along throughout.
-  const TRACE_TOTAL_DURATION = TEXTAREA_TYPING_DURATION + 3.0; // 6x0.5s post-typing beats
+  // Trace starts walking DURING the fade-in (not after), so it's already
+  // in motion when the glow becomes visible — no abrupt "start" jolt.
+  const FADE = 0.5;
+  const TRACE_TOTAL_DURATION = TEXTAREA_TYPING_DURATION + 3.0 + FADE;
+  const TRACE_PHASE_TOTAL = Math.ceil(
+    TRACE_LAPS * TRACE_SEGMENTS * (TRACE_TOTAL_DURATION / TEXTAREA_TYPING_DURATION),
+  );
   yield* all(
-    tracePhase(
-      Math.ceil(TRACE_LAPS * TRACE_SEGMENTS * (TRACE_TOTAL_DURATION / TEXTAREA_TYPING_DURATION)),
-      TRACE_TOTAL_DURATION,
-    ),
+    tracePhase(TRACE_PHASE_TOTAL, TRACE_TOTAL_DURATION),
     (function* () {
+      yield* all(
+        bg.opacity(0, FADE),
+        textareaRef().opacity(1, FADE),
+        textareaTrace().opacity(1, FADE),
+      );
       textareaPlaceholder().text(() =>
         TEXTAREA_TYPED_TEXT.slice(0, Math.floor(textareaProgress())) +
         (caretOn() ? CARET_CHAR : ''),
