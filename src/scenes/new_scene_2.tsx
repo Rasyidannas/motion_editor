@@ -333,7 +333,10 @@ export default makeScene2D(function* (view) {
         textareaRef().width(96, 0.5),
         textareaRef().height(96, 0.5),
         textareaRef().radius(9999, 0.5),
-        traceRadius(48, 0.5),
+        traceRadius(9999, 0.5),
+        textareaRef().x(860, 0.5),
+        textareaRef().y(460, 0.5),
+        textareaRef().fill(purpleGradient, 0.5)
       )
     })(),
     loopFor(TRACE_TOTAL_DURATION, function* () {
