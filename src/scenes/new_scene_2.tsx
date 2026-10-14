@@ -305,38 +305,42 @@ export default makeScene2D(function* (view) {
     textareaRef().opacity(1, 0.5),
     textareaTrace().opacity(1, 0.5),
   )
-  // 1.5 slow continuous laps (200 fine segments per lap) while typing,
-  // with a blinking block caret appended to the typed text.
+  // Trace keeps walking until the very end: one tween spanning typing +
+  // cursor/button/shrink beats (same segment speed as before), while a
+  // sequential branch plays those beats. Caret blinks along throughout.
+  const TRACE_TOTAL_DURATION = TEXTAREA_TYPING_DURATION + 3.0; // 6x0.5s post-typing beats
   yield* all(
-    tracePhase(Math.ceil(TRACE_LAPS * TRACE_SEGMENTS), TEXTAREA_TYPING_DURATION),
+    tracePhase(
+      Math.ceil(TRACE_LAPS * TRACE_SEGMENTS * (TRACE_TOTAL_DURATION / TEXTAREA_TYPING_DURATION)),
+      TRACE_TOTAL_DURATION,
+    ),
     (function* () {
       textareaPlaceholder().text(() =>
         TEXTAREA_TYPED_TEXT.slice(0, Math.floor(textareaProgress())) +
         (caretOn() ? CARET_CHAR : ''),
       );
       yield* textareaProgress(TEXTAREA_TYPED_TEXT.length, TEXTAREA_TYPING_DURATION);
+      yield* cursorRef().x(460, 0.5)
+      yield* btnContinueRef().scale(0.9, 0.5)
+      yield* btnContinueRef().scale(1, 0.5)
+      yield* cursorRef().opacity(0, 0.5)
+      yield* all(
+        textareaRowRef().opacity(0, 0.5),
+        textareaPlaceholder().opacity(0, 0.5),
+      )
+      yield* all(
+        textareaRef().scale(1, 0.5),
+        textareaRef().width(96, 0.5),
+        textareaRef().height(96, 0.5),
+        textareaRef().radius(9999, 0.5),
+        traceRadius(48, 0.5),
+      )
     })(),
-    loopFor(TEXTAREA_TYPING_DURATION, function* () {
+    loopFor(TRACE_TOTAL_DURATION, function* () {
       caretOn(0);
       yield* waitFor(CARET_BLINK_HALF);
       caretOn(1);
       yield* waitFor(CARET_BLINK_HALF);
     }),
   );
-
-  yield* cursorRef().x(460, 0.5)
-  yield* btnContinueRef().scale(0.9, 0.5)
-  yield* btnContinueRef().scale(1, 0.5)
-  yield* cursorRef().opacity(0, 0.5)
-  yield* all(
-    textareaRowRef().opacity(0, 0.5),
-    textareaPlaceholder().opacity(0, 0.5),
-  )
-  yield* all(
-    textareaRef().scale(1, 0.5),
-    textareaRef().width(96, 0.5),
-    textareaRef().height(96, 0.5),
-    textareaRef().radius(9999, 0.5),
-    traceRadius(48, 0.5),
-  )
 })
