@@ -109,8 +109,10 @@ export default makeScene2D(function* (view) {
   const textareaRef = createRef<Rect>();
   const textareaTrace = createRef<Path>();
   const textareaPlaceholder = createRef<Txt>();
+  const textareaRowRef = createRef<Rect>();
   const textareaProgress = createSignal(0);
   const tracePhase = createSignal(0);
+  const traceRadius = createSignal(TEXTAREA_RADIUS);
   const caretOn = createSignal(1);
   const cursorRef = createRef<Img>();
   const btnContinueRef = createRef<Rect>();
@@ -192,6 +194,7 @@ export default makeScene2D(function* (view) {
         textWrap 
       />
       <Rect
+        ref={textareaRowRef}
         layout
         direction={"row"}
         justifyContent={"space-between"}
@@ -226,14 +229,18 @@ export default makeScene2D(function* (view) {
   view.add(
     <Path
       ref={textareaTrace}
-      data={() =>
-        roundedRectData(
-          textareaRef().width() / 2,
-          textareaRef().height() / 2,
-          TEXTAREA_RADIUS,
+      data={() => {
+        // Clamp: arc math breaks if r exceeds half the box; at 96x96,
+        // r = 48 is already a perfect circle.
+        const hw = textareaRef().width() / 2;
+        const hh = textareaRef().height() / 2;
+        return roundedRectData(
+          hw,
+          hh,
+          Math.min(traceRadius(), hw, hh),
           tracePhase(),
-        )
-      }
+        );
+      }}
       stroke={textareaTraceGradient}
       lineWidth={3}
       start={0}
@@ -321,4 +328,15 @@ export default makeScene2D(function* (view) {
   yield* btnContinueRef().scale(0.9, 0.5)
   yield* btnContinueRef().scale(1, 0.5)
   yield* cursorRef().opacity(0, 0.5)
+  yield* all(
+    textareaRowRef().opacity(0, 0.5),
+    textareaPlaceholder().opacity(0, 0.5),
+  )
+  yield* all(
+    textareaRef().scale(1, 0.5),
+    textareaRef().width(96, 0.5),
+    textareaRef().height(96, 0.5),
+    textareaRef().radius(9999, 0.5),
+    traceRadius(48, 0.5),
+  )
 })
