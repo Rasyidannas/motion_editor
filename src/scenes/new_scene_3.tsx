@@ -56,6 +56,10 @@ export default makeScene2D(function* (view) {
   const navContactSkeleton = createRef<Rect>();
   const navGetStarted = createRef<Txt>();
   const navGetStartedSkeleton = createRef<Rect>();
+  const headingContent = createRef<Txt>();
+  const headingContentSkeleton = createRef<Rect>();
+  const paragraphContent = createRef<Txt>();
+  const paragraphContentSkeleton = createRef<Rect>();
 
   const bgDark = blackRadialRect();
   bgDark.opacity(1);
@@ -224,6 +228,102 @@ export default makeScene2D(function* (view) {
             width={1860}
             height={956}
           />
+
+          // Content
+          <Rect
+            layout={false}
+            width={1200}
+            y={300}
+            x={0}
+          >
+            <Rect
+              layout
+              direction="row"
+              alignItems="center"
+              gap={48}
+            >
+              <Rect
+                layout
+                direction="column"
+                gap={24}
+              >
+                <Rect>
+                  <Txt
+                    ref={headingContent}
+                    text={"WE MAKE THE UNSEEN, UNIGNORABLE."}
+                    fontSize={64}
+                    fontWeight={600}
+                    fill="#ffffff"
+                    opacity={0}
+                  />
+
+                  // border skeleton (NOW PROPERLY OVERLAID)
+                  <Rect
+                    ref={headingContentSkeleton}
+                    {...skeleton}
+                    layout={false}
+                    width={1200}
+                    height={96}
+                  />
+                </Rect>
+
+                <Rect>
+                  <Txt
+                    ref={paragraphContent}
+                    text={"We build brands, digital experiences, and visual identities for those who refuse to blend in."}
+                    fontSize={32}
+                    fontWeight={500}
+                    fill="rgba(255, 255, 255, 0.75)"
+                    textWrap
+                    width={1100}
+                    opacity={0}
+                  />
+
+                  // border skeleton (NOW PROPERLY OVERLAID)
+                  <Rect
+                    ref={paragraphContentSkeleton}
+                    {...skeleton}
+                    layout={false}
+                    width={1100}
+                    height={80}
+                    x={-50}
+                  />
+                </Rect>
+              </Rect>
+
+              // Buttons
+              <Rect
+                layout
+                direction="row"
+                gap={24}
+              >
+                <Rect
+                  fill="#000000"
+                  padding={[24, 48]}
+                  radius={8}
+                >
+                  <Txt
+                    text={"Start Project"}
+                    fontSize={24}
+                    fontWeight={600}
+                    fill="#ffffff"
+                  />
+                </Rect>
+                <Rect
+                  fill="#000000"
+                  padding={[24, 48]}
+                  radius={8}
+                >
+                  <Txt
+                    text={"Explore Our Works"}
+                    fontSize={24}
+                    fontWeight={600}
+                    fill="#ffffff"
+                  />
+                </Rect>
+              </Rect>
+            </Rect>
+          </Rect>
       </Rect>
     </Rect>
   )
@@ -258,7 +358,11 @@ export default makeScene2D(function* (view) {
       yield* navContactSkeleton().opacity(0, 0.25);
       yield* navGetStarted().opacity(1, 0.25);
       yield* navGetStartedSkeleton().opacity(0, 0.25);
-      yield* navSkeleton().opacity(0, 0.25)
+      yield* navSkeleton().opacity(0, 0.25);
+      yield* headingContent().opacity(1, 0.25);
+      yield* headingContentSkeleton().opacity(0, 0.25);
+      yield* paragraphContent().opacity(1, 0.25);
+      yield* paragraphContentSkeleton().opacity(0, 0.25);
       yield* waitFor(HOLD_DURATION);
     })(),
   );
