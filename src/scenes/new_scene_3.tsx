@@ -56,6 +56,8 @@ export default makeScene2D(function* (view) {
   const navContactSkeleton = createRef<Rect>();
   const navGetStarted = createRef<Txt>();
   const navGetStartedSkeleton = createRef<Rect>();
+  const videoContent = createRef<Video>();
+  const videoContentSkeleton = createRef<Rect>();
   const headingContent = createRef<Txt>();
   const headingContentSkeleton = createRef<Rect>();
   const paragraphContent = createRef<Txt>();
@@ -146,7 +148,7 @@ export default makeScene2D(function* (view) {
           gap={48}
         >
           <Rect>
-            <Txt ref={navAbout} text="About" fontSize={28} fill={'rgba(255, 255, 255, 0.5)'} opacity={0} />
+            <Txt ref={navAbout} text="About" fontSize={24} fill={'rgba(255, 255, 255, 0.5)'} opacity={0} />
 
             // border skeleton (NOW PROPERLY OVERLAID)
             <Rect
@@ -158,7 +160,7 @@ export default makeScene2D(function* (view) {
             />
           </Rect>
           <Rect>
-            <Txt ref={navFeature} text="Feature" fontSize={28} fill={'rgba(255, 255, 255, 0.5)'}  opacity={0} />
+            <Txt ref={navFeature} text="Feature" fontSize={24} fill={'rgba(255, 255, 255, 0.5)'}  opacity={0} />
 
             // border skeleton (NOW PROPERLY OVERLAID)
             <Rect
@@ -170,7 +172,7 @@ export default makeScene2D(function* (view) {
             />
           </Rect>
           <Rect>
-            <Txt ref={navPricing} text="Pricing" fontSize={28} fill={'rgba(255, 255, 255, 0.5)'}  opacity={0} />
+            <Txt ref={navPricing} text="Pricing" fontSize={24} fill={'rgba(255, 255, 255, 0.5)'}  opacity={0} />
 
             // border skeleton (NOW PROPERLY OVERLAID)
             <Rect
@@ -182,7 +184,7 @@ export default makeScene2D(function* (view) {
             />
           </Rect>
           <Rect>
-            <Txt ref={navContact} text="Contact" fontSize={28} fill={'rgba(255, 255, 255, 0.5)'}  opacity={0} />
+            <Txt ref={navContact} text="Contact" fontSize={24} fill={'rgba(255, 255, 255, 0.5)'}  opacity={0} />
 
             // border skeleton (NOW PROPERLY OVERLAID)
             <Rect
@@ -194,7 +196,7 @@ export default makeScene2D(function* (view) {
             />
           </Rect>
           <Rect>
-            <Txt ref={navGetStarted} text="Get Started" fontSize={28} fontWeight={700} fill={'rgba(255, 255, 255, 1)'} opacity={0} />
+            <Txt ref={navGetStarted} text="Get Started" fontSize={24} fontWeight={700} fill={'rgba(255, 255, 255, 1)'} opacity={0} />
 
             // border skeleton (NOW PROPERLY OVERLAID)
             <Rect
@@ -214,15 +216,18 @@ export default makeScene2D(function* (view) {
         width={1836}
       >
         <Video
+          ref={videoContent}
           src={'/assets/videos/bg_hero.mp4'}
           width={'100%'}
           play
           loop
           radius={24}
+          opacity={0}
         />
 
           // border skeleton (NOW PROPERLY OVERLAID)
           <Rect
+            ref={videoContentSkeleton}
             {...skeleton}
             layout={false}
             width={1860}
@@ -253,6 +258,7 @@ export default makeScene2D(function* (view) {
                     text={"WE MAKE THE UNSEEN, UNIGNORABLE."}
                     fontSize={64}
                     fontWeight={600}
+                    letterSpacing={-1.25}
                     fill="#ffffff"
                     opacity={0}
                   />
@@ -310,7 +316,7 @@ export default makeScene2D(function* (view) {
                   />
                 </Rect>
                 <Rect
-                  fill="#000000"
+                  fill="#ffffff"
                   padding={[24, 48]}
                   radius={8}
                 >
@@ -318,7 +324,7 @@ export default makeScene2D(function* (view) {
                     text={"Explore Our Works"}
                     fontSize={24}
                     fontWeight={600}
-                    fill="#ffffff"
+                    fill="#000000"
                   />
                 </Rect>
               </Rect>
@@ -359,6 +365,8 @@ export default makeScene2D(function* (view) {
       yield* navGetStarted().opacity(1, 0.25);
       yield* navGetStartedSkeleton().opacity(0, 0.25);
       yield* navSkeleton().opacity(0, 0.25);
+      yield* videoContent().opacity(1, 0.5);
+      yield* videoContentSkeleton().opacity(0, 0.25);
       yield* headingContent().opacity(1, 0.25);
       yield* headingContentSkeleton().opacity(0, 0.25);
       yield* paragraphContent().opacity(1, 0.25);
