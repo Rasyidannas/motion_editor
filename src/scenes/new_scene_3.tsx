@@ -43,6 +43,7 @@ const HOLD_DURATION = 0.5; // pauses between animation beats
 export default makeScene2D(function* (view) {
   // --- Node refs (must live inside the scene function) ---
   const btnMevin = createRef<Rect>();
+  const page = createRef<Rect>();
   const navSkeleton = createRef<Rect>();
   const navLogo = createRef<Txt>();
   const navLogoSkeleton = createRef<Rect>();
@@ -99,6 +100,7 @@ export default makeScene2D(function* (view) {
     <Rect
       layout
       direction="column"
+      ref={page}
       y={12}  
       gap={24}
       width={1860}
@@ -272,7 +274,7 @@ export default makeScene2D(function* (view) {
                     ref={headingContentSkeleton}
                     {...skeleton}
                     layout={false}
-                    width={1200}
+                    width={1170}
                     height={96}
                   />
                 </Rect>
@@ -294,7 +296,7 @@ export default makeScene2D(function* (view) {
                     ref={paragraphContentSkeleton}
                     {...skeleton}
                     layout={false}
-                    width={1100}
+                    width={1070}
                     height={80}
                     x={-50}
                   />
@@ -406,6 +408,8 @@ export default makeScene2D(function* (view) {
       yield* firstBtnSkeleton().opacity(0, 0.25);
       yield* secondBtn().opacity(1, 0.25);
       yield* secondBtnSkeleton().opacity(0, 0.25);
+      yield* waitFor(HOLD_DURATION);
+      yield* page().y(-720, 0.75, easeOutCubic);
       yield* waitFor(HOLD_DURATION);
     })(),
   );
