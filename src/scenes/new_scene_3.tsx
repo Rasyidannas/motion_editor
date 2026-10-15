@@ -62,6 +62,10 @@ export default makeScene2D(function* (view) {
   const headingContentSkeleton = createRef<Rect>();
   const paragraphContent = createRef<Txt>();
   const paragraphContentSkeleton = createRef<Rect>();
+  const firstBtn = createRef<Rect>();
+  const firstBtnSkeleton = createRef<Rect>();
+  const secondBtn = createRef<Rect>();
+  const secondBtnSkeleton = createRef<Rect>();
 
   const bgDark = blackRadialRect();
   bgDark.opacity(1);
@@ -217,7 +221,7 @@ export default makeScene2D(function* (view) {
       >
         <Video
           ref={videoContent}
-          src={'/assets/videos/bg_hero.mp4'}
+          src={'/assets/videos/bg_hero2.mp4'}
           width={'100%'}
           play
           loop
@@ -303,28 +307,55 @@ export default makeScene2D(function* (view) {
                 direction="row"
                 gap={24}
               >
-                <Rect
-                  fill="#000000"
-                  padding={[24, 48]}
-                  radius={8}
-                >
-                  <Txt
-                    text={"Start Project"}
-                    fontSize={24}
-                    fontWeight={600}
+                <Rect>
+                  <Rect
+                    ref={firstBtn}
                     fill="#ffffff"
+                    padding={[24, 48]}
+                    radius={8}
+                    opacity={0}
+                  >
+                    <Txt
+                      text={"Start Project"}
+                      fontSize={24}
+                      fontWeight={600}
+                      fill="#000000"
+                    />
+                  </Rect>
+
+                  // border skeleton (NOW PROPERLY OVERLAID)
+                  <Rect
+                    ref={firstBtnSkeleton}
+                    {...skeleton}
+                    layout={false}
+                    width={256}
+                    height={96}
                   />
                 </Rect>
-                <Rect
-                  fill="#ffffff"
-                  padding={[24, 48]}
-                  radius={8}
-                >
-                  <Txt
-                    text={"Explore Our Works"}
-                    fontSize={24}
-                    fontWeight={600}
+
+                <Rect>
+                  <Rect
+                    ref={secondBtn}
                     fill="#000000"
+                    padding={[24, 48]}
+                    radius={8}
+                    opacity={0}
+                  >
+                    <Txt
+                      text={"Explore Our Works"}
+                      fontSize={24}
+                      fontWeight={600}
+                      fill="#ffffff"
+                    />
+                  </Rect>
+
+                  // border skeleton (NOW PROPERLY OVERLAID)
+                  <Rect
+                    ref={secondBtnSkeleton}
+                    {...skeleton}
+                    layout={false}
+                    width={310}
+                    height={96}
                   />
                 </Rect>
               </Rect>
@@ -371,6 +402,10 @@ export default makeScene2D(function* (view) {
       yield* headingContentSkeleton().opacity(0, 0.25);
       yield* paragraphContent().opacity(1, 0.25);
       yield* paragraphContentSkeleton().opacity(0, 0.25);
+      yield* firstBtn().opacity(1, 0.25);
+      yield* firstBtnSkeleton().opacity(0, 0.25);
+      yield* secondBtn().opacity(1, 0.25);
+      yield* secondBtnSkeleton().opacity(0, 0.25);
       yield* waitFor(HOLD_DURATION);
     })(),
   );
