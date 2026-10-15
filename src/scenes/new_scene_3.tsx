@@ -1,5 +1,5 @@
 import { Gradient, makeScene2D } from '@motion-canvas/2d';
-import { Txt, Rect, Img } from '@motion-canvas/2d/lib/components';
+import { Txt, Rect, Img, Video } from '@motion-canvas/2d/lib/components';
 import { fadeTransition } from '@motion-canvas/core/lib/transitions';
 import { useScene } from '@motion-canvas/core';
 import { all, loopFor, waitFor } from '@motion-canvas/core/lib/flow';
@@ -22,6 +22,13 @@ const purpleGradient = new Gradient({
   ],
 });
 
+const skeleton = {
+  padding:12,
+  stroke:'rgba(124, 58, 237, 0.2)',
+  lineWidth:2,
+  fill:'rgba(139, 92, 246, 0.1)'
+}
+
 // ---------------------------------------------------------------------------
 // Timeline tuning (all values in seconds unless noted)
 // ---------------------------------------------------------------------------
@@ -36,6 +43,7 @@ export default makeScene2D(function* (view) {
   view.add(bgDark);
   bgDark.zIndex(-2);
 
+  // btn mevinai
   view.add(
     <Rect
       layout
@@ -47,6 +55,7 @@ export default makeScene2D(function* (view) {
       radius={999}
       x={860}
       y={460}
+      zIndex={100}
     >
       <Img
         src={logo}
@@ -56,9 +65,87 @@ export default makeScene2D(function* (view) {
     </Rect>
   );
 
+  view.add(
+    <Rect
+      layout
+      direction="column"
+      gap={24}
+      {...skeleton}
+      width={1860}
+      minHeight={1040}
+      fill={null}
+    >
+      // Navigation
+      <Rect
+        layout
+        direction="row"
+        justifyContent="space-between"
+        {...skeleton}
+        height={64}
+        width={1836}
+      >
+        <Txt
+          text={"VOID"}
+          fontSize={40}
+          fontWeight={'700'}
+          fill={'#ffffff'}
+          letterSpacing={2}
+        />
+        
+        <Rect
+          layout
+          direction="row"
+          alignItems="center"
+          gap={24}
+        >
+          <Txt 
+            text="About" 
+            fontSize={28}
+            fill={'rgba(255, 255, 255, 0.5)'}
+          />
+          <Txt 
+            text="Feature" 
+            fontSize={28}
+            fill={'rgba(255, 255, 255, 0.5)'}
+          />
+          <Txt 
+            text="Pricing" 
+            fontSize={28}
+            fill={'rgba(255, 255, 255, 0.5)'}
+          />
+          <Txt 
+            text="Contact" 
+            fontSize={28}
+            fill={'rgba(255, 255, 255, 0.5)'}
+          />
+          <Txt 
+            text="Get Started" 
+            fontSize={28}
+            fontWeight={700}
+            fill={'rgba(255, 255, 255, 1)'}
+          />
+        </Rect>
+      </Rect>
+      // Hero
+      <Rect 
+        {...skeleton}
+        height={960}
+        width={1836}
+      >
+        <Video
+          src={'/assets/videos/bg_hero.mp4'}
+          width={'100%'}
+          play
+          loop
+          radius={24}
+        />
+      </Rect>
+    </Rect>
+  )
+
   // =============
   // Timeline
   // =============
   yield* fadeTransition(0.15);
-  yield* waitFor(1);
+  yield* waitFor(5);
 })
