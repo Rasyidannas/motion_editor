@@ -22,11 +22,17 @@ const purpleGradient = new Gradient({
   ],
 });
 
-const skeleton = {
+const skeletonOpacity = createSignal(1);
+
+const section = {
   padding:12,
+}
+
+const skeleton = {
   stroke:'rgba(124, 58, 237, 0.2)',
   lineWidth:2,
-  fill:'rgba(139, 92, 246, 0.1)'
+  fill:'rgba(139, 92, 246, 0.1)',
+  opacity: () => skeletonOpacity(),
 }
 
 // ---------------------------------------------------------------------------
@@ -37,6 +43,19 @@ const HOLD_DURATION = 0.5; // pauses between animation beats
 export default makeScene2D(function* (view) {
   // --- Node refs (must live inside the scene function) ---
   const btnMevin = createRef<Rect>();
+  const navSkeleton = createRef<Rect>();
+  const navLogo = createRef<Rect>();
+  const navLogoSkeleton = createRef<Rect>();
+  const navAbout = createRef<Rect>();
+  const navAboutSkeleton = createRef<Rect>();
+  const navFeature = createRef<Rect>();
+  const navFeatureSkeleton = createRef<Rect>();
+  const navPricing = createRef<Rect>();
+  const navPricingSkeleton = createRef<Rect>();
+  const navContact = createRef<Rect>();
+  const navContactSkeleton = createRef<Rect>();
+  const navGetStarted = createRef<Rect>();
+  const navGetStartedSkeleton = createRef<Rect>();
 
   const bgDark = blackRadialRect();
   bgDark.opacity(1);
@@ -65,70 +84,122 @@ export default makeScene2D(function* (view) {
     </Rect>
   );
 
+  // Page
   view.add(
     <Rect
       layout
       direction="column"
+      y={12}  
       gap={24}
-      {...skeleton}
       width={1860}
       minHeight={1040}
       fill={null}
     >
       // Navigation
       <Rect
+        {...section}
         layout
         direction="row"
         justifyContent="space-between"
-        {...skeleton}
         height={64}
         width={1836}
       >
-        <Txt
-          text={"VOID"}
-          fontSize={40}
-          fontWeight={'700'}
-          fill={'#ffffff'}
-          letterSpacing={2}
+        // border skeleton (NOW PROPERLY OVERLAID)
+        <Rect
+          {...skeleton}
+          layout={false}
+          width={1860}
+          height={96}
         />
-        
+
+        //Logo
+        <Rect>
+          <Txt
+            ref={navLogo}
+            opacity={0}
+            text={"VOID"}
+            fontSize={40}
+            fontWeight={'700'}
+            fill={'#ffffff'}
+            letterSpacing={2}
+          />
+
+          // border skeleton (NOW PROPERLY OVERLAID)
+          <Rect
+            {...skeleton}
+            ref={navLogoSkeleton}
+            layout={false}
+            width={120}
+            height={64}
+          />
+        </Rect>
+
         <Rect
           layout
           direction="row"
           alignItems="center"
-          gap={24}
+          gap={48}
         >
-          <Txt 
-            text="About" 
-            fontSize={28}
-            fill={'rgba(255, 255, 255, 0.5)'}
-          />
-          <Txt 
-            text="Feature" 
-            fontSize={28}
-            fill={'rgba(255, 255, 255, 0.5)'}
-          />
-          <Txt 
-            text="Pricing" 
-            fontSize={28}
-            fill={'rgba(255, 255, 255, 0.5)'}
-          />
-          <Txt 
-            text="Contact" 
-            fontSize={28}
-            fill={'rgba(255, 255, 255, 0.5)'}
-          />
-          <Txt 
-            text="Get Started" 
-            fontSize={28}
-            fontWeight={700}
-            fill={'rgba(255, 255, 255, 1)'}
-          />
+          <Rect>
+            <Txt text="About" fontSize={28} fill={'rgba(255, 255, 255, 0.5)'} />
+
+            // border skeleton (NOW PROPERLY OVERLAID)
+            <Rect
+              {...skeleton}
+              layout={false}
+              width={96}
+              height={64}
+            />
+          </Rect>
+          <Rect>
+            <Txt text="Feature" fontSize={28} fill={'rgba(255, 255, 255, 0.5)'} />
+
+            // border skeleton (NOW PROPERLY OVERLAID)
+            <Rect
+              {...skeleton}
+              layout={false}
+              width={120}
+              height={64}
+            />
+          </Rect>
+          <Rect>
+            <Txt text="Pricing" fontSize={28} fill={'rgba(255, 255, 255, 0.5)'} />
+
+            // border skeleton (NOW PROPERLY OVERLAID)
+            <Rect
+              {...skeleton}
+              layout={false}
+              width={120}
+              height={64}
+            />
+          </Rect>
+          <Rect>
+            <Txt text="Contact" fontSize={28} fill={'rgba(255, 255, 255, 0.5)'} />
+
+            // border skeleton (NOW PROPERLY OVERLAID)
+            <Rect
+              {...skeleton}
+              layout={false}
+              width={120}
+              height={64}
+            />
+          </Rect>
+          <Rect>
+            <Txt text="Get Started" fontSize={28} fontWeight={700} fill={'rgba(255, 255, 255, 1)'} />
+
+            // border skeleton (NOW PROPERLY OVERLAID)
+            <Rect
+              {...skeleton}
+              layout={false}
+              width={172}
+              height={64}
+            />
+          </Rect>
         </Rect>
-      </Rect>
+      </Rect>      
       // Hero
       <Rect 
-        {...skeleton}
+        {...section}
         height={960}
         width={1836}
       >
@@ -139,6 +210,14 @@ export default makeScene2D(function* (view) {
           loop
           radius={24}
         />
+
+          // border skeleton (NOW PROPERLY OVERLAID)
+          <Rect
+            {...skeleton}
+            layout={false}
+            width={1860}
+            height={956}
+          />
       </Rect>
     </Rect>
   )
@@ -146,6 +225,20 @@ export default makeScene2D(function* (view) {
   // =============
   // Timeline
   // =============
-  yield* fadeTransition(0.15);
-  yield* waitFor(5);
+  yield* all(
+    loopFor(2, function* () {
+      yield* skeletonOpacity(0.35, 1.5, easeInOutCubic);
+      yield* skeletonOpacity(1, 1.5, easeInOutCubic);
+    }),
+    function* () {
+      yield* fadeTransition(0.15);
+    },
+  );
+
+  yield* all(
+    // Reveal nav logo at the end of the wait period
+    navLogo().opacity(1, 0.5)
+  )
+
+  yield* waitFor(2)
 })
