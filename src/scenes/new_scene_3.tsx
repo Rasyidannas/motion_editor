@@ -2,7 +2,7 @@ import { Gradient, makeScene2D } from '@motion-canvas/2d';
 import { Txt, Rect, Img, Video } from '@motion-canvas/2d/lib/components';
 import { fadeTransition } from '@motion-canvas/core/lib/transitions';
 import { useScene } from '@motion-canvas/core';
-import { all, loopFor, waitFor } from '@motion-canvas/core/lib/flow';
+import { all, loop, waitFor } from '@motion-canvas/core/lib/flow';
 import { createSignal } from '@motion-canvas/core/lib/signals';
 import { easeInOutCubic, easeOutCubic, createEaseOutElastic, spring, makeSpring } from '@motion-canvas/core/lib/tweening';
 import { createRef } from '@motion-canvas/core/lib/utils';
@@ -44,17 +44,17 @@ export default makeScene2D(function* (view) {
   // --- Node refs (must live inside the scene function) ---
   const btnMevin = createRef<Rect>();
   const navSkeleton = createRef<Rect>();
-  const navLogo = createRef<Rect>();
+  const navLogo = createRef<Txt>();
   const navLogoSkeleton = createRef<Rect>();
-  const navAbout = createRef<Rect>();
+  const navAbout = createRef<Txt>();
   const navAboutSkeleton = createRef<Rect>();
-  const navFeature = createRef<Rect>();
+  const navFeature = createRef<Txt>();
   const navFeatureSkeleton = createRef<Rect>();
-  const navPricing = createRef<Rect>();
+  const navPricing = createRef<Txt>();
   const navPricingSkeleton = createRef<Rect>();
-  const navContact = createRef<Rect>();
+  const navContact = createRef<Txt>();
   const navContactSkeleton = createRef<Rect>();
-  const navGetStarted = createRef<Rect>();
+  const navGetStarted = createRef<Txt>();
   const navGetStartedSkeleton = createRef<Rect>();
 
   const bgDark = blackRadialRect();
@@ -106,6 +106,7 @@ export default makeScene2D(function* (view) {
       >
         // border skeleton (NOW PROPERLY OVERLAID)
         <Rect
+          ref={navSkeleton}
           {...skeleton}
           layout={false}
           width={1860}
@@ -141,10 +142,11 @@ export default makeScene2D(function* (view) {
           gap={48}
         >
           <Rect>
-            <Txt text="About" fontSize={28} fill={'rgba(255, 255, 255, 0.5)'} />
+            <Txt ref={navAbout} text="About" fontSize={28} fill={'rgba(255, 255, 255, 0.5)'} opacity={0} />
 
             // border skeleton (NOW PROPERLY OVERLAID)
             <Rect
+              ref={navAboutSkeleton}
               {...skeleton}
               layout={false}
               width={96}
@@ -152,10 +154,11 @@ export default makeScene2D(function* (view) {
             />
           </Rect>
           <Rect>
-            <Txt text="Feature" fontSize={28} fill={'rgba(255, 255, 255, 0.5)'} />
+            <Txt ref={navFeature} text="Feature" fontSize={28} fill={'rgba(255, 255, 255, 0.5)'}  opacity={0} />
 
             // border skeleton (NOW PROPERLY OVERLAID)
             <Rect
+              ref={navFeatureSkeleton}
               {...skeleton}
               layout={false}
               width={120}
@@ -163,10 +166,11 @@ export default makeScene2D(function* (view) {
             />
           </Rect>
           <Rect>
-            <Txt text="Pricing" fontSize={28} fill={'rgba(255, 255, 255, 0.5)'} />
+            <Txt ref={navPricing} text="Pricing" fontSize={28} fill={'rgba(255, 255, 255, 0.5)'}  opacity={0} />
 
             // border skeleton (NOW PROPERLY OVERLAID)
             <Rect
+              ref={navPricingSkeleton}
               {...skeleton}
               layout={false}
               width={120}
@@ -174,10 +178,11 @@ export default makeScene2D(function* (view) {
             />
           </Rect>
           <Rect>
-            <Txt text="Contact" fontSize={28} fill={'rgba(255, 255, 255, 0.5)'} />
+            <Txt ref={navContact} text="Contact" fontSize={28} fill={'rgba(255, 255, 255, 0.5)'}  opacity={0} />
 
             // border skeleton (NOW PROPERLY OVERLAID)
             <Rect
+              ref={navContactSkeleton}
               {...skeleton}
               layout={false}
               width={120}
@@ -185,10 +190,11 @@ export default makeScene2D(function* (view) {
             />
           </Rect>
           <Rect>
-            <Txt text="Get Started" fontSize={28} fontWeight={700} fill={'rgba(255, 255, 255, 1)'} />
+            <Txt ref={navGetStarted} text="Get Started" fontSize={28} fontWeight={700} fill={'rgba(255, 255, 255, 1)'} opacity={0} />
 
             // border skeleton (NOW PROPERLY OVERLAID)
             <Rect
+              ref={navGetStartedSkeleton}
               {...skeleton}
               layout={false}
               width={172}
@@ -225,20 +231,35 @@ export default makeScene2D(function* (view) {
   // =============
   // Timeline
   // =============
+  // One full pulse cycle lasts 3s (1.5s down + 1.5s up), so the main beats
+  // below are timed to total exactly 3s. The pulse therefore runs
+  // continuously until the end of the scene and finishes cleanly back at
+  // full opacity.
   yield* all(
-    loopFor(2, function* () {
+    loop(1, function* () {
       yield* skeletonOpacity(0.35, 1.5, easeInOutCubic);
       yield* skeletonOpacity(1, 1.5, easeInOutCubic);
     }),
-    function* () {
+    (function* () {
       yield* fadeTransition(0.15);
-    },
+
+      yield* waitFor(HOLD_DURATION);
+      // Navigation
+      // Reveal nav logo right after the fade-in.
+      yield* navLogo().opacity(1, 0.5);
+      yield* navLogoSkeleton().opacity(0, 0.25);
+      yield* navAbout().opacity(1, 0.25);
+      yield* navAboutSkeleton().opacity(0, 0.25);
+      yield* navFeature().opacity(1, 0.25);
+      yield* navFeatureSkeleton().opacity(0, 0.25);
+      yield* navPricing().opacity(1, 0.25);
+      yield* navPricingSkeleton().opacity(0, 0.25);
+      yield* navContact().opacity(1, 0.25);
+      yield* navContactSkeleton().opacity(0, 0.25);
+      yield* navGetStarted().opacity(1, 0.25);
+      yield* navGetStartedSkeleton().opacity(0, 0.25);
+      yield* navSkeleton().opacity(0, 0.25)
+      yield* waitFor(HOLD_DURATION);
+    })(),
   );
-
-  yield* all(
-    // Reveal nav logo at the end of the wait period
-    navLogo().opacity(1, 0.5)
-  )
-
-  yield* waitFor(2)
 })
