@@ -9,6 +9,10 @@ import { createRef } from '@motion-canvas/core/lib/utils';
 import {blackRadialRect} from '../components/backgrounds/purple_4.tsx';
 import logo from '../../public/assets/images/Logo.png';
 import cursorSvg from '../../public/assets/images/new_cursor.svg';
+import oneDiceSvg from '../../public/assets/images/one_dice.svg';
+import twoDiceSvg from '../../public/assets/images/two_dice.svg';
+import threeDiceSvg from '../../public/assets/images/three_dice.svg';
+import arrowRightSvg from '../../public/assets/images/arrow_right.svg';
 
 // ---------------------------------------------------------------------------
 // Style
@@ -43,6 +47,7 @@ const HOLD_DURATION = 0.5; // pauses between animation beats
 export default makeScene2D(function* (view) {
   // --- Node refs (must live inside the scene function) ---
   const btnMevin = createRef<Rect>();
+  const magicToolMevin = createRef<Rect>();
   const page = createRef<Rect>();
   const navSkeleton = createRef<Rect>();
   const navLogo = createRef<Txt>();
@@ -57,6 +62,7 @@ export default makeScene2D(function* (view) {
   const navContactSkeleton = createRef<Rect>();
   const navGetStarted = createRef<Txt>();
   const navGetStartedSkeleton = createRef<Rect>();
+  // --- Hero
   const videoContent = createRef<Video>();
   const videoContentSkeleton = createRef<Rect>();
   const headingContent = createRef<Txt>();
@@ -67,6 +73,48 @@ export default makeScene2D(function* (view) {
   const firstBtnSkeleton = createRef<Rect>();
   const secondBtn = createRef<Rect>();
   const secondBtnSkeleton = createRef<Rect>();
+  const serviceHeadingContent = createRef<Txt>();
+  const serviceHeadingSkeleton = createRef<Rect>();
+  // --- Service Second Card (02) ---
+  const serviceFirstCard = createRef<Rect>();
+  const serviceFirstCardSkeleton = createRef<Rect>();
+  const serviceFirstCardNumber = createRef<Txt>();
+  const serviceFirstCardNumberSkeleton = createRef<Rect>();
+  const serviceFirstCardIcon = createRef<Img>();
+  const serviceFirstCardIconSkeleton = createRef<Rect>();  
+  const serviceFirstCardHeading = createRef<Txt>();
+  const serviceFirstCardHeadingSkeleton = createRef<Rect>();
+  const serviceFirstCardParagraph = createRef<Txt>();
+  const serviceFirstCardParagraphSkeleton = createRef<Rect>();
+  const serviceFirstCardButton = createRef<Txt>();
+  const serviceFirstCardButtonSkeleton = createRef<Rect>();
+  // --- Service Second Card (02) ---
+  const serviceSecondCard = createRef<Rect>();
+  const serviceSecondCardSkeleton = createRef<Rect>();
+  const serviceSecondCardNumber = createRef<Txt>();
+  const serviceSecondCardNumberSkeleton = createRef<Rect>();
+  const serviceSecondCardIcon = createRef<Img>();
+  const serviceSecondCardIconSkeleton = createRef<Rect>();
+  const serviceSecondCardHeading = createRef<Txt>();
+  const serviceSecondCardHeadingSkeleton = createRef<Rect>();
+  const serviceSecondCardParagraph = createRef<Txt>();
+  const serviceSecondCardParagraphSkeleton = createRef<Rect>();
+  const serviceSecondCardButton = createRef<Rect>();
+  const serviceSecondCardButtonSkeleton = createRef<Rect>();
+
+  // --- Service Third Card (03) ---
+  const serviceThirdCard = createRef<Rect>();
+  const serviceThirdCardSkeleton = createRef<Rect>();
+  const serviceThirdCardNumber = createRef<Txt>();
+  const serviceThirdCardNumberSkeleton = createRef<Rect>();
+  const serviceThirdCardIcon = createRef<Img>();
+  const serviceThirdCardIconSkeleton = createRef<Rect>();
+  const serviceThirdCardHeading = createRef<Txt>();
+  const serviceThirdCardHeadingSkeleton = createRef<Rect>();
+  const serviceThirdCardParagraph = createRef<Txt>();
+  const serviceThirdCardParagraphSkeleton = createRef<Rect>();
+  const serviceThirdCardButton = createRef<Rect>();
+  const serviceThirdCardButtonSkeleton = createRef<Rect>();
 
   const bgDark = blackRadialRect();
   bgDark.opacity(1);
@@ -101,7 +149,7 @@ export default makeScene2D(function* (view) {
       layout
       direction="column"
       ref={page}
-      y={12}  
+      y={450}  
       gap={24}
       width={1860}
       minHeight={1040}
@@ -364,6 +412,486 @@ export default makeScene2D(function* (view) {
             </Rect>
           </Rect>
       </Rect>
+      // Services
+      <Rect
+        {...section}
+        paddingTop={48}
+        width={1836}
+        layout
+        direction="column"
+        gap={48}
+      >
+        <Txt
+          ref={serviceHeadingContent}
+          text={"FROM THE FIRST SPARK OF AN IDEA TO THE LAST PIXEL OF PERFECTION."}
+          fontSize={56}
+          fontWeight={600}
+          letterSpacing={-1.25}
+          lineHeigth={2}
+          fill="#ffffff"
+          width={1000}
+          textWrap
+          opacity={0}
+        />
+        // border skeleton (NOW PROPERLY OVERLAID)
+        <Rect
+          ref={serviceHeadingSkeleton}
+          {...skeleton}
+          layout={false}
+          width={1020}
+          height={148}
+          x={-410}
+          y={-295}
+        />
+
+        // 4 kind of services
+        <Rect
+          layout
+          direction="row"
+          gap={24}
+        >
+          // 01
+          // border skeleton (NOW PROPERLY OVERLAID)
+          <Rect
+            ref={serviceFirstCardSkeleton}
+            {...skeleton}
+            layout={false}
+            width={580}
+            height={610}
+            x={-622}
+            y={0}
+          />
+          <Rect
+            ref={serviceFirstCard}
+            padding={48}
+            fill={new Gradient({
+              type: 'radial',
+              from: [0, 0],
+              to: [0, 0],
+              fromRadius: 0,
+              toRadius: 400,
+              stops: [
+                { offset: 0.0, color: 'rgba(10, 10, 10, 0)' },
+                { offset: 0.2, color: 'rgba(10, 10, 10, 0)' },   // ← transparent holds to 50% radius
+                { offset: 1.0, color: 'rgba(10, 10, 10, 0.85)' },
+              ],
+            })}
+            layout
+            direction="column"
+            gap={16}
+            radius={24}
+            lineWidth={2}
+            stroke={"rgba(255, 255, 255, 0.15)"}
+            opacity={0}
+          >
+            <Rect
+              layout
+              direction="row"
+              justifyContent="space-between"
+              paddingBottom={24}
+            >
+              <Txt
+                ref={serviceFirstCardNumber}
+                text={"01"}
+                fontSize={96}
+                fontWeight={700}
+                fill={'rgba(255, 255, 255, 0.25)'}
+                opacity={0}
+              />
+              // border skeleton (NOW PROPERLY OVERLAID)
+              <Rect
+                ref={serviceFirstCardNumberSkeleton}
+                {...skeleton}
+                layout={false}
+                width={124}
+                height={96}
+                x={-185}
+                y={-15}
+              />
+              <Img
+                ref={serviceFirstCardIcon}
+                src={oneDiceSvg}
+                width={96}
+                height={96}
+                opacity={0}
+              />
+              // border skeleton (NOW PROPERLY OVERLAID)
+              <Rect
+                ref={serviceFirstCardIconSkeleton}
+                {...skeleton}
+                layout={false}
+                width={124}
+                height={96}
+                x={185}
+                y={-20}
+              />
+            </Rect>
+            <Txt 
+              ref={serviceFirstCardHeading}
+              text={"Brand Identity"}
+              fontSize={48}
+              fontWeight={600}
+              fill="rgba(255, 255, 255, 1)"
+              opacity={0}
+            />
+            // border skeleton (NOW PROPERLY OVERLAID)
+            <Rect
+              ref={serviceFirstCardHeadingSkeleton}
+              {...skeleton}
+              layout={false}
+              width={360}
+              height={64}
+              x={-75}
+              y={-50}
+            />
+            <Txt
+              ref={serviceFirstCardParagraph}
+              text={"We create distinctive identities that give your brand a voice, a presence, and a reason to be remembered."}
+              fontSize={32}
+              fill="rgba(255, 255, 255, 0.75)"
+              textWrap
+              opacity={0}
+            />
+            // border skeleton (NOW PROPERLY OVERLAID)
+            <Rect
+              ref={serviceFirstCardParagraphSkeleton}
+              {...skeleton}
+              layout={false}
+              width={460}
+              height={165}
+              x={-25}
+              y={70}
+            />
+
+            <Rect
+              layout
+              direction="row"
+              justifyContent="end"
+              alignItems="center"
+              gap={8}
+              paddingTop={48}
+            >
+              <Rect
+                ref={serviceFirstCardButton}
+                opacity={0}
+              >
+                <Txt
+                  text={"Learn more"}
+                  fontSize={24}
+                  fill="rgba(255, 255, 255, 1)"
+                />
+
+                <Img
+                  src={arrowRightSvg}
+                  width={24}
+                  height={24}
+                />
+              </Rect>
+              // border skeleton (NOW PROPERLY OVERLAID)
+              <Rect
+                ref={serviceFirstCardButtonSkeleton}
+                {...skeleton}
+                layout={false}
+                width={190}
+                height={40}
+                x={155}
+                y={25}
+              />
+            </Rect>
+          </Rect>
+
+          // 02
+          // border skeleton (NOW PROPERLY OVERLAID)
+          <Rect
+            ref={serviceSecondCardSkeleton}
+            {...skeleton}
+            layout={false}
+            width={600}
+            height={610}
+            x={-20}
+            y={0}
+          />
+          <Rect
+            ref={serviceSecondCard}
+            padding={48}
+            fill={new Gradient({
+              type: 'radial',
+              from: [0, 0],
+              to: [0, 0],
+              fromRadius: 0,
+              toRadius: 400,
+              stops: [
+                { offset: 0.0, color: 'rgba(10, 10, 10, 0)' },
+                { offset: 0.2, color: 'rgba(10, 10, 10, 0)' },   // ← transparent holds to 50% radius
+                { offset: 1.0, color: 'rgba(10, 10, 10, 0.85)' },
+              ],
+            })}
+            layout
+            direction="column"
+            gap={16}
+            radius={24}
+            lineWidth={2}
+            stroke={"rgba(255, 255, 255, 0.15)"}
+            opacity={0}
+          >
+            <Rect
+              layout
+              direction="row"
+              justifyContent="space-between"
+              paddingBottom={24}
+            >
+              <Txt
+                ref={serviceSecondCardNumber}
+                text={"02"}
+                fontSize={96}
+                fontWeight={700}
+                fill={'rgba(255, 255, 255, 0.25)'}
+              />
+              // border skeleton (NOW PROPERLY OVERLAID)
+              <Rect
+                ref={serviceSecondCardNumberSkeleton}
+                {...skeleton}
+                layout={false}
+                width={124}
+                height={96}
+                x={-190}
+                y={-15}
+              />
+              <Img
+                ref={serviceSecondCardIcon}
+                src={twoDiceSvg}
+                width={96}
+                height={96}
+              />
+              // border skeleton (NOW PROPERLY OVERLAID)
+              <Rect
+                ref={serviceSecondCardIconSkeleton}
+                {...skeleton}
+                layout={false}
+                width={124}
+                height={96}
+                x={195}
+                y={-20}
+              />
+            </Rect>
+            <Txt 
+              ref={serviceSecondCardHeading}
+              text={"Digital Experiences"}
+              fontSize={48}
+              fontWeight={600}
+              fill="rgba(255, 255, 255, 1)"
+            />
+            // border skeleton (NOW PROPERLY OVERLAID)
+            <Rect
+              ref={serviceSecondCardHeadingSkeleton}
+              {...skeleton}
+              layout={false}
+              width={450}
+              height={64}
+              x={-35}
+              y={-55}
+            />
+            <Txt
+              ref={serviceSecondCardParagraph}
+              text={"We design and build digital products that make complex things feel effortless and turn visitors into believers."}
+              fontSize={32}
+              fill="rgba(255, 255, 255, 0.75)"
+              textWrap
+            />
+            // border skeleton (NOW PROPERLY OVERLAID)
+            <Rect
+              ref={serviceSecondCardParagraphSkeleton}
+              {...skeleton}
+              layout={false}
+              width={460}
+              height={165}
+              x={-30}
+              y={65}
+            />
+
+            <Rect
+              layout
+              direction="row"
+              justifyContent="end"
+              alignItems="center"
+              gap={8}
+              paddingTop={48}
+            >
+              <Rect
+                ref={serviceSecondCardButton}
+              >
+                <Txt
+                  text={"Learn more"}
+                  fontSize={24}
+                  fill="rgba(255, 255, 255, 1)"
+                />
+
+                <Img
+                  src={arrowRightSvg}
+                  width={24}
+                  height={24}
+                />
+              </Rect>
+              // border skeleton (NOW PROPERLY OVERLAID)
+              <Rect
+                ref={serviceSecondCardButtonSkeleton}
+                {...skeleton}
+                layout={false}
+                width={190}
+                height={40}
+                x={165}
+                y={25}
+              />
+            </Rect>
+          </Rect>
+
+          // 03
+          // border skeleton (NOW PROPERLY OVERLAID)
+          <Rect
+            ref={serviceThirdCardSkeleton}
+            {...skeleton}
+            layout={false}
+            width={625}
+            height={610}
+            x={600}
+            y={0}
+          />
+          <Rect
+            ref={serviceThirdCard}
+            padding={48}
+            fill={new Gradient({
+              type: 'radial',
+              from: [0, 0],
+              to: [0, 0],
+              fromRadius: 0,
+              toRadius: 400,
+              stops: [
+                { offset: 0.0, color: 'rgba(10, 10, 10, 0)' },
+                { offset: 0.2, color: 'rgba(10, 10, 10, 0)' },   // ← transparent holds to 50% radius
+                { offset: 1.0, color: 'rgba(10, 10, 10, 0.85)' },
+              ],
+            })}
+            layout
+            direction="column"
+            gap={16}
+            radius={24}
+            lineWidth={2}
+            stroke={"rgba(255, 255, 255, 0.15)"}
+            opacity={0}
+          >
+            <Rect
+              layout
+              direction="row"
+              justifyContent="space-between"
+              paddingBottom={24}
+            >
+              <Txt
+                ref={serviceThirdCardNumber}
+                text={"03"}
+                fontSize={96}
+                fontWeight={700}
+                fill={'rgba(255, 255, 255, 0.25)'}
+              />
+              // border skeleton (NOW PROPERLY OVERLAID)
+              <Rect
+                ref={serviceThirdCardNumberSkeleton}
+                {...skeleton}
+                layout={false}
+                width={124}
+                height={96}
+                x={-200}
+                y={-15}
+              />
+              <Img
+                ref={serviceThirdCardIcon}
+                src={threeDiceSvg}
+                width={96}
+                height={96}
+              />
+              // border skeleton (NOW PROPERLY OVERLAID)
+              <Rect
+                ref={serviceThirdCardIconSkeleton}
+                {...skeleton}
+                layout={false}
+                width={124}
+                height={96}
+                x={210}
+                y={-20}
+              />
+            </Rect>
+            <Txt 
+              ref={serviceThirdCardHeading}
+              text={"Creative Direction"}
+              fontSize={48}
+              fontWeight={600}
+              fill="rgba(255, 255, 255, 1)"
+            />
+            // border skeleton (NOW PROPERLY OVERLAID)
+            <Rect
+              ref={serviceThirdCardHeadingSkeleton}
+              {...skeleton}
+              layout={false}
+              width={420}
+              height={64}
+              x={-65}
+              y={-55}
+            />
+            <Txt
+              ref={serviceThirdCardParagraph}
+              text={"We transform ideas into visual stories that communicate clearly, connect emotionally, and challenge expectations."}
+              fontSize={32}
+              fill="rgba(255, 255, 255, 0.75)"
+              textWrap
+            />
+            // border skeleton (NOW PROPERLY OVERLAID)
+            <Rect
+              ref={serviceThirdCardParagraphSkeleton}
+              {...skeleton}
+              layout={false}
+              width={540}
+              height={165}
+              x={-5}
+              y={70}
+            />
+
+            <Rect
+              layout
+              direction="row"
+              justifyContent="end"
+              alignItems="center"
+              gap={8}
+              paddingTop={48}
+            >
+              <Rect
+                ref={serviceThirdCardButton}
+                opacity={0}
+              >
+                <Txt
+                  text={"Learn more"}
+                  fontSize={24}
+                  fill="rgba(255, 255, 255, 1)"
+                />
+
+                <Img
+                  src={arrowRightSvg}
+                  width={24}
+                  height={24}
+                />
+              </Rect>
+              // border skeleton (NOW PROPERLY OVERLAID)
+              <Rect
+                ref={serviceThirdCardButtonSkeleton}
+                {...skeleton}
+                layout={false}
+                width={190}
+                height={40}
+                x={175}
+                y={25}
+              />
+            </Rect>
+          </Rect>
+        </Rect>
+      </Rect>
     </Rect>
   )
 
@@ -409,7 +937,59 @@ export default makeScene2D(function* (view) {
       yield* secondBtn().opacity(1, 0.25);
       yield* secondBtnSkeleton().opacity(0, 0.25);
       yield* waitFor(HOLD_DURATION);
-      yield* page().y(-720, 0.75, easeOutCubic);
+      yield* page().y(-450, 0.75, easeOutCubic);
+      yield* waitFor(0.25)
+      yield* serviceHeadingContent().opacity(1, 0.5);
+      yield* serviceHeadingSkeleton().opacity(0, 0.5);
+      // 01
+      yield* serviceFirstCard().opacity(1, 0.25);
+      yield* serviceFirstCardSkeleton().opacity(0, 0.25);
+      // 01 header row — number + icon
+      yield* serviceFirstCardNumber().opacity(1, 0.25);
+      yield* serviceFirstCardNumberSkeleton().opacity(0, 0.25);
+      yield* serviceFirstCardIcon().opacity(1, 0.25);
+      yield* serviceFirstCardIconSkeleton().opacity(0, 0.25);
+      // body
+      yield* serviceFirstCardHeading().opacity(1, 0.25);
+      yield* serviceFirstCardHeadingSkeleton().opacity(0, 0.25);
+      yield* serviceFirstCardParagraph().opacity(1, 0.25);
+      yield* serviceFirstCardParagraphSkeleton().opacity(0, 0.25);
+      // footer CTA — note ref is on wrapper Rect (:544), not Txt
+      yield* serviceFirstCardButton().opacity(1, 0.25);
+      yield* serviceFirstCardButtonSkeleton().opacity(0, 0.25);
+      // 02 
+      yield* serviceSecondCard().opacity(1, 0.25);
+      yield* serviceSecondCardSkeleton().opacity(0, 0.25);
+      // 02 header row — number + icon
+      yield* serviceSecondCardNumber().opacity(1, 0.25);
+      yield* serviceSecondCardNumberSkeleton().opacity(0, 0.25);
+      yield* serviceSecondCardIcon().opacity(1, 0.25);
+      yield* serviceSecondCardIconSkeleton().opacity(0, 0.25);
+      // body
+      yield* serviceSecondCardHeading().opacity(1, 0.25);
+      yield* serviceSecondCardHeadingSkeleton().opacity(0, 0.25);
+      yield* serviceSecondCardParagraph().opacity(1, 0.25);
+      yield* serviceSecondCardParagraphSkeleton().opacity(0, 0.25);
+      // footer CTA — note ref is on wrapper Rect (:544), not Txt
+      yield* serviceSecondCardButton().opacity(1, 0.25);
+      yield* serviceSecondCardButtonSkeleton().opacity(0, 0.25);
+      yield* waitFor(HOLD_DURATION);
+      // 02 
+      yield* serviceThirdCard().opacity(1, 0.25);
+      yield* serviceThirdCardSkeleton().opacity(0, 0.25);
+      // 02 header row — number + icon
+      yield* serviceThirdCardNumber().opacity(1, 0.25);
+      yield* serviceThirdCardNumberSkeleton().opacity(0, 0.25);
+      yield* serviceThirdCardIcon().opacity(1, 0.25);
+      yield* serviceThirdCardIconSkeleton().opacity(0, 0.25);
+      // body
+      yield* serviceThirdCardHeading().opacity(1, 0.25);
+      yield* serviceThirdCardHeadingSkeleton().opacity(0, 0.25);
+      yield* serviceThirdCardParagraph().opacity(1, 0.25);
+      yield* serviceThirdCardParagraphSkeleton().opacity(0, 0.25);
+      // footer CTA — note ref is on wrapper Rect (:544), not Txt
+      yield* serviceThirdCardButton().opacity(1, 0.25);
+      yield* serviceThirdCardButtonSkeleton().opacity(0, 0.25);
       yield* waitFor(HOLD_DURATION);
     })(),
   );
