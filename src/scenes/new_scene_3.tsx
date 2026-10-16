@@ -13,6 +13,13 @@ import oneDiceSvg from '../../public/assets/images/one_dice.svg';
 import twoDiceSvg from '../../public/assets/images/two_dice.svg';
 import threeDiceSvg from '../../public/assets/images/three_dice.svg';
 import arrowRightSvg from '../../public/assets/images/arrow_right.svg';
+import closeSvg from '../../public/assets/images/x.svg';
+import layoutSvg from '../../public/assets/images/layout.svg';
+import undoSvg from '../../public/assets/images/undo.svg';
+import redoSvg from '../../public/assets/images/redo.svg';
+import desktopSvg from '../../public/assets/images/desktop.svg';
+import mobileSvg from '../../public/assets/images/mobile.svg';
+import rocketSvg from '../../public/assets/images/rocket.svg';
 
 // ---------------------------------------------------------------------------
 // Style
@@ -142,6 +149,113 @@ export default makeScene2D(function* (view) {
       />
     </Rect>
   );
+
+  // magicTool mevinai
+  view.add(
+    <Rect
+      ref={magicToolMevin}
+      layout
+      direction="row"
+      padding={[24, 32]}
+      justifyContent="center"
+      alignItems="center"
+      fill={'rgba(0, 0, 0, 0.9)'}
+      lineWidth={2}
+      stroke={'rgba(124, 58, 237, 0.5)'}
+      radius={999}
+      gap={12}
+      zIndex={2}
+      y={800}
+    >
+      <Rect
+        padding={12}
+      >
+        <Img
+          src={closeSvg}
+          width={32}
+          height={32}
+          opacity={0.75}
+        />
+      </Rect>
+      <Rect
+        padding={12}
+      >
+        <Img
+          src={layoutSvg}
+          width={32}
+          height={32}
+          opacity={0.75}
+        />
+      </Rect>
+      <Rect
+        layout
+        direction="row"
+        gap={48}
+        fill={'rgba(255, 255, 255, 0.15)'}
+        padding={[16, 24]}
+        radius={999}
+      >
+        <Img
+          src={undoSvg}
+          width={32}
+          height={32}
+          opacity={0.75}
+        />
+        <Img
+          src={redoSvg}
+          width={32}
+          height={32}
+          opacity={0.75}
+        />
+      </Rect>
+      <Rect
+        layout
+        direction="row"
+        gap={48}
+        fill={'rgba(255, 255, 255, 0.15)'}
+        padding={[16, 24]}
+        radius={999}
+      >
+        <Img
+          src={desktopSvg}
+          width={32}
+          height={32}
+          opacity={0.75}
+        />
+        <Img
+          src={mobileSvg}
+          width={32}
+          height={32}
+          opacity={0.75}
+        />
+      </Rect>
+      <Rect
+        padding={12}
+      >
+        <Img
+          src={rocketSvg}
+          width={32}
+          height={32}
+          opacity={0.75}
+        />
+      </Rect>
+      <Rect      
+        layout
+        alignItems={"center"}
+        justifyContent={"center"}
+        fill={purpleGradient}
+        radius={99}
+        padding={[24, 48]}
+      >
+        <Txt
+          text="Preview"
+          fontSize={28}
+          fontWeight={700}
+          fill={'#ffffff'}
+        />
+      </Rect>
+    </Rect>
+  ) 
 
   // Page
   view.add(
@@ -910,6 +1024,8 @@ export default makeScene2D(function* (view) {
     (function* () {
       yield* fadeTransition(0.15);
 
+      yield* magicToolMevin().y(440, 0.5);
+
       yield* waitFor(HOLD_DURATION);
       // Navigation
       // Reveal nav logo right after the fade-in.
@@ -937,7 +1053,7 @@ export default makeScene2D(function* (view) {
       yield* secondBtn().opacity(1, 0.25);
       yield* secondBtnSkeleton().opacity(0, 0.25);
       yield* waitFor(HOLD_DURATION);
-      yield* page().y(-450, 0.75, easeOutCubic);
+      yield* page().y(-640, 0.75, easeOutCubic);
       yield* waitFor(0.25)
       yield* serviceHeadingContent().opacity(1, 0.5);
       yield* serviceHeadingSkeleton().opacity(0, 0.5);
