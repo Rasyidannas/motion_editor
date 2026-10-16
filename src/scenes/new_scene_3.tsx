@@ -406,7 +406,7 @@ export default makeScene2D(function* (view) {
           <Rect
             layout={false}
             width={1200}
-            y={300}
+            y={200}
             x={0}
           >
             <Rect
