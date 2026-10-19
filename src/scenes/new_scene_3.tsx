@@ -1,5 +1,5 @@
 import { Gradient, makeScene2D } from '@motion-canvas/2d';
-import { Txt, Rect, Img, Video } from '@motion-canvas/2d/lib/components';
+import { Txt, Rect, Img, Video, Line } from '@motion-canvas/2d/lib/components';
 import { fadeTransition } from '@motion-canvas/core/lib/transitions';
 import { useScene } from '@motion-canvas/core';
 import { all, loop, waitFor } from '@motion-canvas/core/lib/flow';
@@ -20,6 +20,8 @@ import redoSvg from '../../public/assets/images/redo.svg';
 import desktopSvg from '../../public/assets/images/desktop.svg';
 import mobileSvg from '../../public/assets/images/mobile.svg';
 import rocketSvg from '../../public/assets/images/rocket.svg';
+import sparklesSvg from '../../public/assets/images/sparkles.svg';
+import arrowUpSvg from '../../public/assets/images/arrow_up.svg';
 
 // ---------------------------------------------------------------------------
 // Helper
@@ -70,6 +72,9 @@ export default makeScene2D(function* (view) {
   // --- Node refs (must live inside the scene function) ---
   const btnMevin = createRef<Rect>();
   const magicToolMevin = createRef<Rect>();
+  const chatMevin = createRef<Rect>();
+  const chatTextareaMevin = createRef<Rect>();
+
   const page = createRef<Rect>();
   const navSkeleton = createRef<Rect>();
   const navLogo = createRef<Txt>();
@@ -148,6 +153,7 @@ export default makeScene2D(function* (view) {
       width={48}
       height={48}
       opacity={0}
+      y={1000}
       zIndex={200}
     />
   );
@@ -178,6 +184,123 @@ export default makeScene2D(function* (view) {
       />
     </Rect>
   );
+
+  // Chat Mevin
+  view.add(
+    <Rect
+      ref={chatMevin}
+      layout
+      direction={"column"}
+      gap={48}
+      padding={32}
+      fill={'rgba(10, 10, 10, 1)'}
+      radius={24}
+      lineWidth={2}
+      stroke={"rgba(255, 255, 255, 0.25)"}
+      zIndex={100}
+      position={[590, 50]}
+      width={660}
+      height={0}
+      opacity={0}
+    >
+      <Rect
+        layout
+        direction={"row"}
+        gap={24}
+        
+      >
+        <Img
+          src={sparklesSvg}
+          width={32}
+          height={32}
+        />
+        <Txt 
+          text="Chat to edit"
+          fontSize={32}
+          fontWeight={700}
+          fill={"#ffffff"}
+        />
+        <Line
+          lineWidth={2}
+          stroke={"rgba(255, 255, 255, 0.25)"}
+          points={[[0, 100], [640, 100]]} /* start/end coords at bottom */
+          position={[-320, -60]}
+          layout={false}
+        />
+      </Rect>
+
+      <Rect
+        layout
+        direction={"row"}
+        gap={24}
+        padding={24}
+        lineWidth={2}
+        stroke={"rgba(139, 92, 246, 0.5)"}
+        fill={"rgba(139, 92, 246, 0.15)"}
+        radius={8}
+      >
+        <Img
+          src={cursorSvg}
+          width={32}
+          height={32}
+        />
+        <Txt
+          text="Collection Blog posts, products and projects."
+          fontSize={24}
+          fontWeight={700}
+          fill={"#ffffff"}
+          textWrap
+        />
+      </Rect>
+
+      <Rect grow={1} fill={null} /> 
+
+      // Textarea
+      <Rect
+        ref={chatTextareaMevin}
+        layout
+        direction={"column"}
+        justifyContent={"space-between"}
+        padding={24}
+        height={160}
+        lineWidth={2}
+        stroke={'rgba(255, 255, 255, 0.25)'}
+        fill={'#0a0a0a'}
+        radius={16}
+      >
+        <Txt
+          text="Describe the change to this selection..."
+          fontSize="28"
+          fill={'rgba(255, 255, 255, 0.5)'}
+        />
+
+        <Rect
+          layout
+          direction={"row"}
+          justifyContent={"space-between"}
+          alignItems={"center"}
+        >
+          <Txt
+            text="Enter to send. Shift + Enter to newline."
+            fontSize="16"
+            fill={'rgba(255, 255, 255, 0.35)'}
+          />
+          <Rect
+            padding={12}
+            fill={'rgba(255, 255, 255, 0.15)'}
+            radius={8}
+          >
+            <Img
+              src={arrowUpSvg}
+              width={28}
+              height={28}
+              opacity={0.5}
+            />
+          </Rect>
+        </Rect>
+      </Rect>
+    </Rect>
+  )
 
   // magicTool mevinai
   view.add(
@@ -1187,6 +1310,7 @@ export default makeScene2D(function* (view) {
         "FROM THE FIRST SPARK OF AN IDEA TO THE LAST PIXEL OF PERFECTION.",
         0.03,
       );
+      yield* serviceHeadingSkeleton().height(96, 1);
 
       // Phase 2: write new text character by character
       yield* typeWrite(
@@ -1204,6 +1328,35 @@ export default makeScene2D(function* (view) {
       yield* serviceHeadingSkeleton().opacity(0, 0.25);
       
       yield* serviceHeadingSkeleton().opacity(0, 0.25);
+
+      // Chat Mevin animation
+      // TODO: 
+      // Click heading service and show the cursor
+      // Then click chatMevin
+      // Click textarea
+      // Write to ask "Change color to be light purple"
+      // Change the headline color
+
+      // Cursor animation
+      yield* cursor().opacity(1, 0.25);
+      yield* cursor().position({x: 0, y: -400}, 0.5, easeOutCubic);     // move to heading
+      yield* cursor().scale(0.85, 0.1);                               // press down
+      yield* cursor().scale(1, 0.1);                                  // release
+      yield* waitFor(0.25);
+
+      yield* serviceHeadingSkeleton().opacity(1, 0.25);
+
+      // Cursor animation
+      yield* cursor().position({x: 860, y: 450}, 0.5, easeOutCubic);     // move to chat mevinai
+      yield* cursor().scale(0.85, 0.1);                               // press down
+      yield* cursor().scale(1, 0.1);                                  // release
+      yield* waitFor(0.25);
+
+      yield* all (
+        chatMevin().height(640, 0.5),
+        waitFor(1),
+        chatMevin().opacity(1, 0.5),
+      )
     })(),
   );
 })
