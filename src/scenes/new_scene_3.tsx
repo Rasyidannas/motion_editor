@@ -24,21 +24,6 @@ import sparklesSvg from '../../public/assets/images/sparkles.svg';
 import arrowUpSvg from '../../public/assets/images/arrow_up.svg';
 
 // ---------------------------------------------------------------------------
-// Helper
-// ---------------------------------------------------------------------------
-function* typeWrite(target: Txt, text: string, charTime: number) {
-  for (let i = 1; i <= text.length; i++) {
-    yield* target.text(text.substring(0, i), charTime);
-  }
-}
-
-function* typeDelete(target: Txt, text: string, charTime: number) {
-  for (let i = text.length - 1; i >= 0; i--) {
-    yield* target.text(text.substring(0, i), charTime);
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Style
 // ---------------------------------------------------------------------------
 const purpleGradient = new Gradient({
@@ -74,6 +59,7 @@ export default makeScene2D(function* (view) {
   const magicToolMevin = createRef<Rect>();
   const chatMevin = createRef<Rect>();
   const chatTextareaMevin = createRef<Rect>();
+  const chatPlaceholderMevin = createRef<Txt>();
 
   const page = createRef<Rect>();
   const navSkeleton = createRef<Rect>();
@@ -269,6 +255,7 @@ export default makeScene2D(function* (view) {
         radius={16}
       >
         <Txt
+          ref={chatPlaceholderMevin}
           text="Describe the change to this selection..."
           fontSize="28"
           fill={'rgba(255, 255, 255, 0.5)'}
@@ -912,6 +899,7 @@ export default makeScene2D(function* (view) {
                 fontSize={96}
                 fontWeight={700}
                 fill={'rgba(255, 255, 255, 0.25)'}
+                opacity={0}
               />
               // border skeleton (NOW PROPERLY OVERLAID)
               <Rect
@@ -928,6 +916,7 @@ export default makeScene2D(function* (view) {
                 src={twoDiceSvg}
                 width={96}
                 height={96}
+                opacity={0}
               />
               // border skeleton (NOW PROPERLY OVERLAID)
               <Rect
@@ -946,6 +935,7 @@ export default makeScene2D(function* (view) {
               fontSize={48}
               fontWeight={600}
               fill="rgba(255, 255, 255, 1)"
+              opacity={0}
             />
             // border skeleton (NOW PROPERLY OVERLAID)
             <Rect
@@ -962,6 +952,7 @@ export default makeScene2D(function* (view) {
               text={"We design and build digital products that make complex things feel effortless and turn visitors into believers."}
               fontSize={32}
               fill="rgba(255, 255, 255, 0.75)"
+              opacity={0}
               textWrap
             />
             // border skeleton (NOW PROPERLY OVERLAID)
@@ -985,6 +976,7 @@ export default makeScene2D(function* (view) {
             >
               <Rect
                 ref={serviceSecondCardButton}
+                opacity={0}
               >
                 <Txt
                   text={"Learn more"}
@@ -1057,6 +1049,7 @@ export default makeScene2D(function* (view) {
                 fontSize={96}
                 fontWeight={700}
                 fill={'rgba(255, 255, 255, 0.25)'}
+                opacity={0}
               />
               // border skeleton (NOW PROPERLY OVERLAID)
               <Rect
@@ -1073,6 +1066,7 @@ export default makeScene2D(function* (view) {
                 src={threeDiceSvg}
                 width={96}
                 height={96}
+                opacity={0}
               />
               // border skeleton (NOW PROPERLY OVERLAID)
               <Rect
@@ -1091,6 +1085,7 @@ export default makeScene2D(function* (view) {
               fontSize={48}
               fontWeight={600}
               fill="rgba(255, 255, 255, 1)"
+              opacity={0}
             />
             // border skeleton (NOW PROPERLY OVERLAID)
             <Rect
@@ -1107,6 +1102,7 @@ export default makeScene2D(function* (view) {
               text={"We transform ideas into visual stories that communicate clearly, connect emotionally, and challenge expectations."}
               fontSize={32}
               fill="rgba(255, 255, 255, 0.75)"
+              opacity={0}
               textWrap
             />
             // border skeleton (NOW PROPERLY OVERLAID)
@@ -1330,13 +1326,6 @@ export default makeScene2D(function* (view) {
       yield* serviceHeadingSkeleton().opacity(0, 0.25);
 
       // Chat Mevin animation
-      // TODO: 
-      // Click heading service and show the cursor
-      // Then click chatMevin
-      // Click textarea
-      // Write to ask "Change color to be light purple"
-      // Change the headline color
-
       // Cursor animation
       yield* cursor().opacity(1, 0.25);
       yield* cursor().position({x: 0, y: -400}, 0.5, easeOutCubic);     // move to heading
@@ -1357,6 +1346,31 @@ export default makeScene2D(function* (view) {
         waitFor(1),
         chatMevin().opacity(1, 0.5),
       )
+
+      // Cursor animation
+      yield* cursor().position({x: 860, y: 220}, 0.5, easeOutCubic);     // move to chat mevinai
+      yield* cursor().scale(0.85, 0.1);                               // press down
+      yield* cursor().scale(1, 0.1);                                  // release
+      yield* waitFor(0.25);
+
+      chatPlaceholderMevin().text("");
+      yield* chatPlaceholderMevin().fill("#ffffff", 0.5)
+      yield* waitFor(0.5); 
+
+      yield* typeWrite(
+        chatPlaceholderMevin,
+        "Change color to be light purple",
+        0.05
+      );
+
+      // Cursor animation
+      yield* cursor().position({x: 860, y: 300}, 0.5, easeOutCubic);     // move to chat mevinai btn
+      yield* cursor().scale(0.85, 0.1);                               // press down
+      yield* cursor().scale(1, 0.1);                                  // release
+      yield* waitFor(0.25);
+
+      yield* serviceHeadingContent().fill('rgba(190, 162, 255, 1)')
+      yield* serviceHeadingSkeleton().opacity(0, 0.5)
     })(),
   );
 })
