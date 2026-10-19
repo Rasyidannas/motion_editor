@@ -1,8 +1,8 @@
-import { Gradient, makeScene2D } from '@motion-canvas/2d';
+import { Gradient, makeScene2D, Path } from '@motion-canvas/2d';
 import { Txt, Rect, Img, Video, Line } from '@motion-canvas/2d/lib/components';
 import { fadeTransition } from '@motion-canvas/core/lib/transitions';
 import { useScene } from '@motion-canvas/core';
-import { all, loop, waitFor } from '@motion-canvas/core/lib/flow';
+import { all, loop, loopFor, waitFor } from '@motion-canvas/core/lib/flow';
 import { createSignal } from '@motion-canvas/core/lib/signals';
 import { easeInOutCubic, easeOutCubic, createEaseOutElastic, spring, makeSpring } from '@motion-canvas/core/lib/tweening';
 import { createRef } from '@motion-canvas/core/lib/utils';
@@ -53,6 +53,69 @@ const skeleton = {
 // ---------------------------------------------------------------------------
 const HOLD_DURATION = 0.5; // pauses between animation beats
 
+// ---------------------------------------------------------------------------
+// Textarea walking-border trace (ported from scene_2)
+// ---------------------------------------------------------------------------
+const textareaTraceGradient = new Gradient({
+  type: 'linear',
+  from: [0, 80],
+  to:   [0, -80],
+  stops: [
+    {offset: 0, color: '#8b5cf6'},
+    {offset: 1, color: '#7C3AED'},
+  ],
+});
+
+const TEXTAREA_RADIUS = 16; // must match chatTextareaMevin radius
+const TRACE_WINDOW = 0.75;
+const TRACE_SEGMENTS = 200;
+const TRACE_LAPS = 1.5;
+
+const roundedRectPoint = (hw: number, hh: number, r: number, t: number) => {
+  const segLen = [
+    2 * hw - 2 * r,
+    Math.PI * r / 2,
+    2 * hh - 2 * r,
+    Math.PI * r / 2,
+    2 * hw - 2 * r,
+    Math.PI * r / 2,
+    2 * hh - 2 * r,
+    Math.PI * r / 2,
+  ];
+  const total = segLen.reduce((a, b) => a + b, 0);
+  const pos = ((t % 1) + 1) % 1 * total;
+  let cumul = 0;
+  for (let i = 0; i < 8; i++) {
+    if (pos < cumul + segLen[i] || i === 7) {
+      const f = (pos - cumul) / segLen[i];
+      switch (i) {
+        case 0: return { x: -hw + r + f * (2 * hw - 2 * r), y: -hh };
+        case 1: return { x: hw - r + r * Math.cos(-Math.PI / 2 + f * Math.PI / 2), y: -hh + r + r * Math.sin(-Math.PI / 2 + f * Math.PI / 2) };
+        case 2: return { x: hw, y: -hh + r + f * (2 * hh - 2 * r) };
+        case 3: return { x: hw - r + r * Math.cos(f * Math.PI / 2), y: hh - r + r * Math.sin(f * Math.PI / 2) };
+        case 4: return { x: hw - r - f * (2 * hw - 2 * r), y: hh };
+        case 5: return { x: -hw + r + r * Math.cos(Math.PI / 2 + f * Math.PI / 2), y: hh - r + r * Math.sin(Math.PI / 2 + f * Math.PI / 2) };
+        case 6: return { x: -hw, y: hh - r - f * (2 * hh - 2 * r) };
+        case 7: return { x: -hw + r + r * Math.cos(Math.PI + f * Math.PI / 2), y: -hh + r + r * Math.sin(Math.PI + f * Math.PI / 2) };
+      }
+    }
+    cumul += segLen[i];
+  }
+  return { x: -hw + r, y: -hh };
+};
+
+const roundedRectData = (hw: number, hh: number, r: number, phase: number) => {
+  const n = TRACE_SEGMENTS;
+  const offset = ((phase % n) + n) % n;
+  const pts: string[] = [];
+  for (let i = 0; i < n; i++) {
+    const p = roundedRectPoint(hw, hh, r, (i + offset) / n);
+    pts.push(i === 0 ? `M ${p.x.toFixed(2)} ${p.y.toFixed(2)}` : `L ${p.x.toFixed(2)} ${p.y.toFixed(2)}`);
+  }
+  pts.push('Z');
+  return pts.join(' ');
+};
+
 export default makeScene2D(function* (view) {
   // --- Node refs (must live inside the scene function) ---
   const btnMevin = createRef<Rect>();
@@ -60,6 +123,12 @@ export default makeScene2D(function* (view) {
   const chatMevin = createRef<Rect>();
   const chatTextareaMevin = createRef<Rect>();
   const chatPlaceholderMevin = createRef<Txt>();
+  const chatTextareaTrace = createRef<Path>();
+  const chatTracePhase = createSignal(0);
+  const chatTraceRadius = createSignal(TEXTAREA_RADIUS);
+  const chatTextedBox = createRef<Rect>();
+  const chatResTextedBox = createRef<Rect>();
+  const chatResTexted = createRef<Txt>();
 
   const page = createRef<Rect>();
   const navSkeleton = createRef<Rect>();
@@ -241,6 +310,25 @@ export default makeScene2D(function* (view) {
 
       <Rect grow={1} fill={null} /> 
 
+      // User ask
+      <Rect
+        ref={chatTextedBox}
+        layout
+        direction={'row'}
+        alignSelf={"end"}  
+        padding={12}
+        fill={purpleGradient}
+        radius={[16, 16, 8, 16]}
+        y={80}        // start below, slides up
+        opacity={0}
+      >
+        <Txt
+          text="Change the color to be light purple"
+          fontSize={24}
+          fill={"#ffffff"}
+        />
+      </Rect>
+
       // Textarea
       <Rect
         ref={chatTextareaMevin}
@@ -286,6 +374,30 @@ export default makeScene2D(function* (view) {
           </Rect>
         </Rect>
       </Rect>
+      <Path
+        ref={chatTextareaTrace}
+        data={() => {
+          const hw = chatTextareaMevin().width() / 2;
+          const hh = chatTextareaMevin().height() / 2;
+          return roundedRectData(
+            hw,
+            hh,
+            Math.min(chatTraceRadius(), hw, hh),
+            chatTracePhase(),
+          );
+        }}
+        stroke={textareaTraceGradient}
+        lineWidth={3}
+        start={0}
+        end={TRACE_WINDOW}
+        opacity={0}
+        x={() => chatTextareaMevin().x()}
+        y={() => chatTextareaMevin().y()}
+        shadowColor={'#8b5cf6'}
+        shadowBlur={45}
+        layout={false}
+        zIndex={10}
+      />
     </Rect>
   )
 
@@ -1357,20 +1469,55 @@ export default makeScene2D(function* (view) {
       yield* chatPlaceholderMevin().fill("#ffffff", 0.5)
       yield* waitFor(0.5); 
 
-      yield* typeWrite(
-        chatPlaceholderMevin,
-        "Change color to be light purple",
-        0.05
+      // Walking purple border trace while the prompt types
+      const TYPING_TIME = "Change color to be light purple".length * 0.05;
+      const TRACE_TOTAL_DURATION = TYPING_TIME + 1.2;
+      const TRACE_PHASE_TOTAL = Math.ceil(
+        TRACE_LAPS * TRACE_SEGMENTS * (TRACE_TOTAL_DURATION / TYPING_TIME),
       );
 
-      // Cursor animation
-      yield* cursor().position({x: 860, y: 300}, 0.5, easeOutCubic);     // move to chat mevinai btn
-      yield* cursor().scale(0.85, 0.1);                               // press down
-      yield* cursor().scale(1, 0.1);                                  // release
-      yield* waitFor(0.25);
+      yield* all(
+        chatTracePhase(TRACE_PHASE_TOTAL, TRACE_TOTAL_DURATION),
+        chatTextareaTrace().opacity(1, 0.3),
+        (function* () {
+          yield* typeWrite(
+            chatPlaceholderMevin,
+            "Change color to be light purple",
+            0.05,
+          );
+        })(),
+      );
+      yield* waitFor(0.5);
 
-      yield* serviceHeadingContent().fill('rgba(190, 162, 255, 1)')
-      yield* serviceHeadingSkeleton().opacity(0, 0.5)
+      // Keep the trace walking through the remaining beats (cursor click +
+      // headline color change), then let it fade out at the very end.
+      const TRACE_REST_DURATION = 0.5 + 0.5 + 0.1 + 0.1 + 0.25 + 0.5 + 0.3;
+      const TRACE_REST_PHASE = Math.ceil(
+        TRACE_LAPS * TRACE_SEGMENTS * (TRACE_REST_DURATION / TYPING_TIME),
+      );
+      yield* all(
+        chatTracePhase(
+          chatTracePhase() + TRACE_REST_PHASE,
+          TRACE_REST_DURATION,
+        ),
+        (function* () {
+          // Cursor animation
+          yield* cursor().position({x: 860, y: 300}, 0.5, easeOutCubic);     // move to chat mevinai btn
+          yield* cursor().scale(0.85, 0.1);                               // press down
+          yield* cursor().scale(1, 0.1);                                  // release
+          yield* waitFor(0.25);
+
+          yield* all(
+            chatTextedBox().y(0, 0.5, easeOutCubic),     // slides up into its slot
+            chatTextedBox().opacity(1, 0.5),
+            chatTextedBox().opacity(1, 0.5),                 // user-ask bubble fades in same time
+          );
+
+          yield* serviceHeadingContent().fill('rgba(190, 162, 255, 1)')
+          yield* serviceHeadingSkeleton().opacity(0, 0.5)
+          yield* chatTextareaTrace().opacity(0, 0.3);
+        })(),
+      );
     })(),
   );
 })
