@@ -22,6 +22,21 @@ import mobileSvg from '../../public/assets/images/mobile.svg';
 import rocketSvg from '../../public/assets/images/rocket.svg';
 
 // ---------------------------------------------------------------------------
+// Helper
+// ---------------------------------------------------------------------------
+function* typeWrite(target: Txt, text: string, charTime: number) {
+  for (let i = 1; i <= text.length; i++) {
+    yield* target.text(text.substring(0, i), charTime);
+  }
+}
+
+function* typeDelete(target: Txt, text: string, charTime: number) {
+  for (let i = text.length - 1; i >= 0; i--) {
+    yield* target.text(text.substring(0, i), charTime);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Style
 // ---------------------------------------------------------------------------
 const purpleGradient = new Gradient({
@@ -82,6 +97,7 @@ export default makeScene2D(function* (view) {
   const secondBtnSkeleton = createRef<Rect>();
   const serviceHeadingContent = createRef<Txt>();
   const serviceHeadingSkeleton = createRef<Rect>();
+  const CARET_CHAR = '|';
   // --- Service Second Card (02) ---
   const serviceFirstCard = createRef<Rect>();
   const serviceFirstCardSkeleton = createRef<Rect>();
@@ -122,6 +138,19 @@ export default makeScene2D(function* (view) {
   const serviceThirdCardParagraphSkeleton = createRef<Rect>();
   const serviceThirdCardButton = createRef<Rect>();
   const serviceThirdCardButtonSkeleton = createRef<Rect>();
+
+  const cursor = createRef<Img>();
+  // cursor
+  view.add(
+    <Img
+      ref={cursor}
+      src={cursorSvg}
+      width={48}
+      height={48}
+      opacity={0}
+      zIndex={200}
+    />
+  );
 
   const bgDark = blackRadialRect();
   bgDark.opacity(1);
@@ -555,7 +584,7 @@ export default makeScene2D(function* (view) {
           width={1020}
           height={148}
           x={-410}
-          y={-295}
+          y={-290}
         />
 
         // 4 kind of services
@@ -1010,6 +1039,32 @@ export default makeScene2D(function* (view) {
   )
 
   // =============
+  // Generator helpers
+  // =============
+  function* typeWrite(target: Ref<Txt>, text: string, charTime: number) {
+    for (let i = 1; i <= text.length; i++) {
+      target().text(text.substring(0, i) + CARET_CHAR);
+      yield* waitFor(charTime);
+    }
+  }
+
+  function* typeDelete(target: Ref<Txt>, text: string, charTime: number) {
+    for (let i = text.length - 1; i >= 0; i--) {
+      target().text(text.substring(0, i) + CARET_CHAR);
+      yield* waitFor(charTime);
+    }
+  }
+
+  function* blinkCaret(target: Ref<Txt>, times: number) {
+    for (let i = 0; i < times; i++) {
+      target().text(target().text().replace(CARET_CHAR, ''));
+      yield* waitFor(0.25);
+      target().text(target().text() + CARET_CHAR);
+      yield* waitFor(0.25);
+    }
+  }
+
+  // =============
   // Timeline
   // =============
   // One full pulse cycle lasts 3s (1.5s down + 1.5s up), so the main beats
@@ -1107,6 +1162,48 @@ export default makeScene2D(function* (view) {
       yield* serviceThirdCardButton().opacity(1, 0.25);
       yield* serviceThirdCardButtonSkeleton().opacity(0, 0.25);
       yield* waitFor(HOLD_DURATION);
+
+      // Cursor animation
+      yield* cursor().opacity(1, 0.25);
+      yield* cursor().position({x: 0, y: -400}, 0.5, easeOutCubic);     // move to heading
+      yield* cursor().scale(0.85, 0.1);                               // press down
+      yield* cursor().scale(1, 0.1);                                  // release
+      yield* waitFor(0.25);
+
+      // Dive: restore heading skeleton to hide old text, then typewrite
+      yield* serviceHeadingSkeleton().opacity(1, 0.25);
+      yield* serviceHeadingContent().text(
+        "FROM THE FIRST SPARK OF AN IDEA TO THE LAST PIXEL OF PERFECTION." + CARET_CHAR,
+        0,
+      );
+
+      // Cursor animation
+      yield* cursor().opacity(0, 0.25);
+      yield* waitFor(0.25);
+
+      // Phase 1: delete current text character by character
+      yield* typeDelete(
+        serviceHeadingContent,
+        "FROM THE FIRST SPARK OF AN IDEA TO THE LAST PIXEL OF PERFECTION.",
+        0.03,
+      );
+
+      // Phase 2: write new text character by character
+      yield* typeWrite(
+        serviceHeadingContent,
+        "FROM FIRST THOUGHT TO FINAL PIXEL.",
+        0.03,
+      );
+
+      // Phase 3: blink caret a few times then remove it
+      yield* blinkCaret(serviceHeadingContent, 3);
+      yield* serviceHeadingContent().text(
+        serviceHeadingContent().text().replace(CARET_CHAR, ''),
+      );
+      yield* waitFor(0.15);
+      yield* serviceHeadingSkeleton().opacity(0, 0.25);
+      
+      yield* serviceHeadingSkeleton().opacity(0, 0.25);
     })(),
   );
 })
