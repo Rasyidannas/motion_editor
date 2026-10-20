@@ -321,7 +321,7 @@ export default makeScene2D(function* (view) {
           radius={[16, 16, 8, 16]}
         >
           <Txt
-            text="Change the color to be light purple"
+            text="Change the color to be purple"
             fontSize={24}
             fill={"#ffffff"}
           />
@@ -1420,9 +1420,8 @@ export default makeScene2D(function* (view) {
 
       // Dive: restore heading skeleton to hide old text, then typewrite
       yield* serviceHeadingSkeleton().opacity(1, 0.25);
-      yield* serviceHeadingContent().text(
+      serviceHeadingContent().text(
         "FROM THE FIRST SPARK OF AN IDEA TO THE LAST PIXEL OF PERFECTION." + CARET_CHAR,
-        0,
       );
 
       // Cursor animation
@@ -1446,7 +1445,7 @@ export default makeScene2D(function* (view) {
 
       // Phase 3: blink caret a few times then remove it
       yield* blinkCaret(serviceHeadingContent, 3);
-      yield* serviceHeadingContent().text(
+      serviceHeadingContent().text(
         serviceHeadingContent().text().replace(CARET_CHAR, ''),
       );
       yield* waitFor(0.15);
@@ -1470,6 +1469,8 @@ export default makeScene2D(function* (view) {
       yield* cursor().scale(1, 0.1);                                  // release
       yield* waitFor(0.25);
 
+      // Let async resources (images inside chatMevin) finish loading
+      yield* waitFor(0);
       yield* all (
         chatMevin().height(680, 0.5),
         waitFor(1),
@@ -1499,7 +1500,7 @@ export default makeScene2D(function* (view) {
         (function* () {
           yield* typeWrite(
             chatPlaceholderMevin,
-            "Change color to be light purple",
+            "Change color to be purple",
             0.05,
           );
         })(),
@@ -1533,7 +1534,66 @@ export default makeScene2D(function* (view) {
             chatTextedBoxWrapper().opacity(1, 0.5),
           );
 
-          yield* serviceHeadingContent().fill('rgba(190, 162, 255, 1)')
+          // Per-character X-axis flip before color change (sequential, in order)
+          {
+            const flipChars = serviceHeadingContent().text().split('');
+            const FLIP_HALF = 0.12;
+            const CHAR_GAP = 0.02;
+
+            // Capture the real world position BEFORE hiding the text so the
+            // per-character nodes line up exactly where the text sits. The
+            // node itself is left untouched (only its opacity is toggled), so
+            // it never gets shifted out of the column layout.
+            const textCenter = serviceHeadingContent().absolutePosition();
+
+            // Hide the original single-node text while we flip per character.
+            serviceHeadingContent().opacity(0);
+
+            // Place the flip container in view space at the text's centre.
+            const flipBox = new Node({
+              x: textCenter.x,
+              y: textCenter.y,
+            });
+            view.add(flipBox);
+
+            // Lay characters out in a plain row, centred on the text centre.
+            const row = new Rect({
+              layout: true,
+              direction: 'row',
+              gap: 0,
+              position: [-965, -540]
+            });
+            flipBox.add(row);
+
+            const charNodes: Txt[] = [];
+            for (const ch of flipChars) {
+              const t = new Txt({
+                text: ch === ' ' ? '\u00A0' : ch,
+                fontSize: 56,
+                fontWeight: 900,
+                letterSpacing: -1.25,
+                fill: '#ffffff',
+                scaleY: 1,
+              });
+              row.add(t);
+              charNodes.push(t);
+            }
+
+            // Flip each character around its X-axis, one at a time, in order:
+            // squash to edge-on (scaleY 1 -> 0), then expand back out (0 -> 1).
+            for (const t of charNodes) {
+              yield* t.scale.y(0, FLIP_HALF, easeInOutCubic);
+              yield* t.scale.y(1, FLIP_HALF, easeInOutCubic);
+              yield* t.fill('#7C3AED')
+              yield* waitFor(CHAR_GAP);
+            }
+
+            // Remove the temporary per-character row and restore the real text.
+            flipBox.remove();
+            view.removeChild(flipBox);
+            serviceHeadingContent().opacity(1);
+          }
+          yield* serviceHeadingContent().fill('#7C3AED');
           yield* serviceHeadingSkeleton().opacity(0, 0.5)
           yield* chatTextareaTrace().opacity(0, 0.3);
 
