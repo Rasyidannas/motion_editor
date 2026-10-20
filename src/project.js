@@ -10,8 +10,8 @@ import scene_bg from './scenes/new_scene_bg?scene';
 export default makeProject({
   experimentalFeatures: true,
   scenes: [
-    scene1, 
-    scene2,
+    // scene1, 
+    // scene2,
     scene3
     // scene_bg
   ],

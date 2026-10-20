@@ -1,5 +1,5 @@
 import { Gradient, makeScene2D, Path } from '@motion-canvas/2d';
-import { Txt, Rect, Img, Video, Line } from '@motion-canvas/2d/lib/components';
+import { Txt, Rect, Img, Video, Line, Node } from '@motion-canvas/2d/lib/components';
 import { fadeTransition } from '@motion-canvas/core/lib/transitions';
 import { useScene } from '@motion-canvas/core';
 import { all, loop, loopFor, waitFor } from '@motion-canvas/core/lib/flow';
@@ -126,9 +126,8 @@ export default makeScene2D(function* (view) {
   const chatTextareaTrace = createRef<Path>();
   const chatTracePhase = createSignal(0);
   const chatTraceRadius = createSignal(TEXTAREA_RADIUS);
-  const chatTextedBox = createRef<Rect>();
-  const chatResTextedBox = createRef<Rect>();
-  const chatResTexted = createRef<Txt>();
+  const chatTextedBoxWrapper = createRef<Node>();
+  const chatResTextedBoxWrapper = createRef<Node>();
 
   const page = createRef<Rect>();
   const navSkeleton = createRef<Rect>();
@@ -310,24 +309,42 @@ export default makeScene2D(function* (view) {
 
       <Rect grow={1} fill={null} /> 
 
-      // User ask
-      <Rect
-        ref={chatTextedBox}
-        layout
-        direction={'row'}
-        alignSelf={"end"}  
-        padding={12}
-        fill={purpleGradient}
-        radius={[16, 16, 8, 16]}
-        y={80}        // start below, slides up
-        opacity={0}
-      >
-        <Txt
-          text="Change the color to be light purple"
-          fontSize={24}
-          fill={"#ffffff"}
-        />
-      </Rect>
+      // User ask — wrapped in a non-layout Node so we can tween y without
+      // affecting the flex column layout. The inner Rect takes the bubble's slot.
+      <Node ref={chatTextedBoxWrapper} y={80} opacity={0}>
+        <Rect
+          layout
+          direction={'row'}
+          alignSelf={"end"}  
+          padding={12}
+          fill={purpleGradient}
+          radius={[16, 16, 8, 16]}
+        >
+          <Txt
+            text="Change the color to be light purple"
+            fontSize={24}
+            fill={"#ffffff"}
+          />
+        </Rect>
+      </Node>
+
+      // Mevin response
+      <Node ref={chatResTextedBoxWrapper} y={80} opacity={0}>
+        <Rect
+          layout
+          direction={'row'}
+          alignSelf={"start"}  
+          padding={12}
+          fill={'#4d4d4d'}
+          radius={[16, 16, 16, 8]}
+        >
+          <Txt
+            text="Done!"
+            fontSize={24}
+            fill={"#ffffff"}
+          />
+        </Rect>
+      </Node>
 
       // Textarea
       <Rect
@@ -1454,13 +1471,13 @@ export default makeScene2D(function* (view) {
       yield* waitFor(0.25);
 
       yield* all (
-        chatMevin().height(640, 0.5),
+        chatMevin().height(680, 0.5),
         waitFor(1),
         chatMevin().opacity(1, 0.5),
       )
 
       // Cursor animation
-      yield* cursor().position({x: 860, y: 220}, 0.5, easeOutCubic);     // move to chat mevinai
+      yield* cursor().position({x: 860, y: 260}, 0.5, easeOutCubic);     // move to chat mevinai
       yield* cursor().scale(0.85, 0.1);                               // press down
       yield* cursor().scale(1, 0.1);                                  // release
       yield* waitFor(0.25);
@@ -1502,20 +1519,33 @@ export default makeScene2D(function* (view) {
         ),
         (function* () {
           // Cursor animation
-          yield* cursor().position({x: 860, y: 300}, 0.5, easeOutCubic);     // move to chat mevinai btn
+          yield* cursor().position({x: 860, y: 320}, 0.5, easeOutCubic);     // move to chat mevinai btn
           yield* cursor().scale(0.85, 0.1);                               // press down
           yield* cursor().scale(1, 0.1);                                  // release
           yield* waitFor(0.25);
+          chatPlaceholderMevin().text("Describe the chnage to this selection...");
+          chatPlaceholderMevin().opacity(0.5)
 
+          // The wrapper is a non-layout Node, so y() is the raw signal and
+          // tweening it actually moves the visual position.
           yield* all(
-            chatTextedBox().y(0, 0.5, easeOutCubic),     // slides up into its slot
-            chatTextedBox().opacity(1, 0.5),
-            chatTextedBox().opacity(1, 0.5),                 // user-ask bubble fades in same time
+            chatTextedBoxWrapper().y(0, 0.5, easeOutCubic),
+            chatTextedBoxWrapper().opacity(1, 0.5),
           );
 
           yield* serviceHeadingContent().fill('rgba(190, 162, 255, 1)')
           yield* serviceHeadingSkeleton().opacity(0, 0.5)
           yield* chatTextareaTrace().opacity(0, 0.3);
+
+
+          // The wrapper is a non-layout Node, so y() is the raw signal and
+          // tweening it actually moves the visual position.
+          yield* all(
+            chatResTextedBoxWrapper().y(0, 0.5, easeOutCubic),
+            chatResTextedBoxWrapper().opacity(1, 0.5),
+          );
+
+          waitFor(HOLD_DURATION)
         })(),
       );
     })(),
