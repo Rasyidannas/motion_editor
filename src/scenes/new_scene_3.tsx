@@ -1,10 +1,10 @@
 import { Gradient, makeScene2D, Path } from '@motion-canvas/2d';
-import { Txt, Rect, Img, Video, Line, Node } from '@motion-canvas/2d/lib/components';
+import { Txt, Rect, Img, Video, Line, Node, Circle } from '@motion-canvas/2d/lib/components';
 import { fadeTransition } from '@motion-canvas/core/lib/transitions';
 import { useScene } from '@motion-canvas/core';
 import { all, loop, loopFor, waitFor } from '@motion-canvas/core/lib/flow';
 import { createSignal } from '@motion-canvas/core/lib/signals';
-import { easeInOutCubic, easeOutCubic, createEaseOutElastic, spring, makeSpring } from '@motion-canvas/core/lib/tweening';
+import { easeInCubic, easeInOutCubic, easeOutCubic, createEaseOutElastic, spring, makeSpring } from '@motion-canvas/core/lib/tweening';
 import { createRef } from '@motion-canvas/core/lib/utils';
 import {blackRadialRect} from '../components/backgrounds/purple_4.tsx';
 import logo from '../../public/assets/images/Logo.png';
@@ -22,6 +22,9 @@ import mobileSvg from '../../public/assets/images/mobile.svg';
 import rocketSvg from '../../public/assets/images/rocket.svg';
 import sparklesSvg from '../../public/assets/images/sparkles.svg';
 import arrowUpSvg from '../../public/assets/images/arrow_up.svg';
+import squareSvg from '../../public/assets/images/square.svg';
+import filterSvg from '../../public/assets/images/filter.svg';
+import trashSvg from '../../public/assets/images/trash.svg';
 
 // ---------------------------------------------------------------------------
 // Style
@@ -128,6 +131,7 @@ export default makeScene2D(function* (view) {
   const chatTraceRadius = createSignal(TEXTAREA_RADIUS);
   const chatTextedBoxWrapper = createRef<Node>();
   const chatResTextedBoxWrapper = createRef<Node>();
+  const componentMagicToolMevin = createRef<Rect>();
 
   const page = createRef<Rect>();
   const navSkeleton = createRef<Rect>();
@@ -199,6 +203,21 @@ export default makeScene2D(function* (view) {
   const serviceThirdCardButtonSkeleton = createRef<Rect>();
 
   const cursor = createRef<Img>();
+  const circleBlack = createRef<Circle>();
+
+  // circle black
+  view.add(
+    <Circle
+      ref={circleBlack}
+      width={48}
+      height={48}
+      fill={'#000000'}
+      zIndex={200}
+      position={[10, -390]}
+      opacity={0}
+    />
+  )
+
   // cursor
   view.add(
     <Img
@@ -216,6 +235,63 @@ export default makeScene2D(function* (view) {
   bgDark.opacity(1);
   view.add(bgDark);
   bgDark.zIndex(-2);
+
+  // componentMagicToolMevin
+  view.add(
+    <Rect
+      ref={componentMagicToolMevin}
+      layout
+      direction={'row'}
+      padding={[24, 48]}
+      fill={'rgba(0, 0, 0, 0.9)'}
+      lineWidth={2}
+      stroke={'rgba(124, 58, 237, 0.5)'}
+      zIndex={100}
+      radius={12}
+      gap={32}
+      justifyContent={'center'}
+      alignItems={'center'}
+      y={-300}
+      opacity={0}
+    >
+      <Txt
+        text="Component"
+        fontSize={32}
+        fontWeight={600}
+        fill={"#ffffff"}
+      />
+      <Rect
+        layout
+        direction={'row'}
+        gap={24}
+      >
+        <Img
+          src={squareSvg}
+          width={32}
+          height={32}
+          opacity={0.5}
+        />
+        <Img
+          src={filterSvg}
+          width={32}
+          height={32}
+          opacity={0.5}
+        />
+        <Img
+          src={squareSvg}
+          width={32}
+          height={32}
+          opacity={0.5}
+        />
+        <Img
+          src={trashSvg}
+          width={32}
+          height={32}
+          opacity={0.5}
+        />
+      </Rect>
+    </Rect>
+  )
 
   // btn mevinai
   view.add(
@@ -353,11 +429,12 @@ export default makeScene2D(function* (view) {
         direction={"column"}
         justifyContent={"space-between"}
         padding={24}
-        height={160}
+        height={0}
         lineWidth={2}
         stroke={'rgba(255, 255, 255, 0.25)'}
         fill={'#0a0a0a'}
         radius={16}
+        opacity={0}
       >
         <Txt
           ref={chatPlaceholderMevin}
@@ -1469,12 +1546,18 @@ export default makeScene2D(function* (view) {
       yield* cursor().scale(1, 0.1);                                  // release
       yield* waitFor(0.25);
 
-      // Let async resources (images inside chatMevin) finish loading
-      yield* waitFor(0);
+      // Let async resources (images/video) finish loading before touching any
+      // layout-computed values. toPromise() on the root view awaits all async
+      // resources of the entire node tree.
+      yield* waitFor(0.5);
+      yield view.toPromise();
+      yield* chatMevin().height(680, 0.5)
+      yield* chatMevin().opacity(1, 0.5)
+      
       yield* all (
-        chatMevin().height(680, 0.5),
+        chatTextareaMevin().opacity(1, 0.5),
+        chatTextareaMevin().height(160, 0.5),
         waitFor(1),
-        chatMevin().opacity(1, 0.5),
       )
 
       // Cursor animation
@@ -1544,6 +1627,9 @@ export default makeScene2D(function* (view) {
             // per-character nodes line up exactly where the text sits. The
             // node itself is left untouched (only its opacity is toggled), so
             // it never gets shifted out of the column layout.
+            // Wait for all async resources (the Video ancestor in particular)
+            // before the layout walk triggered by absolutePosition().
+            yield view.toPromise();
             const textCenter = serviceHeadingContent().absolutePosition();
 
             // Hide the original single-node text while we flip per character.
@@ -1608,6 +1694,57 @@ export default makeScene2D(function* (view) {
           waitFor(HOLD_DURATION)
         })(),
       );
+
+      // Cursor animation
+      yield* cursor().position({x: 870, y: 470}, 0.5, easeOutCubic);     // move to chat Mevin
+      yield* cursor().scale(0.85, 0.1);                               // press down
+      yield* cursor().scale(1, 0.1);                                  // release
+      yield* waitFor(0.25);
+
+      // Let async resources (images inside chatMevin) finish loading
+      yield* waitFor(HOLD_DURATION);
+      yield* all(
+        chatTextareaMevin().opacity(0, 0.35, easeInOutCubic),
+        chatResTextedBoxWrapper().opacity(0, 0.25),
+        chatTextedBoxWrapper().opacity(0, 0.25)
+      );
+
+      yield* all(
+        chatMevin().opacity(0, 0.25, easeInCubic),
+        chatMevin().height(0, 0.25, easeInCubic),
+      );
+
+      yield* waitFor(HOLD_DURATION);
+
+      // Cursor animation
+      yield* cursor().position({x: 600, y: 200}, 0.5, easeOutCubic);     // move to service cards
+      yield* cursor().scale(0.85, 0.1);                               // press down
+      yield* cursor().scale(1, 0.1);                                  // release
+      yield* waitFor(0.25);
+
+      yield* all (
+        serviceFirstCardSkeleton().opacity(1, 0.5),
+        serviceFirstCardSkeleton().width(1850, 0.25),
+        serviceFirstCardSkeleton().x(0),
+      )
+
+      yield* all(
+        componentMagicToolMevin().y(-390, 0.5, easeOutCubic),
+        componentMagicToolMevin().opacity(1, 0.5),
+      );
+
+      // Cursor animation
+      yield* cursor().position({x: 30, y: -370}, 0.5, easeOutCubic);     // move to blog icon
+      yield* cursor().scale(0.85, 0.1);                               // press down
+      yield* cursor().scale(1, 0.1);                                  // release
+      yield* waitFor(0.25);
+
+      // circle black
+      yield* all (
+        circleBlack().opacity(1, 0.5),
+        circleBlack().scale(80, 0.5),
+        cursor().opacity(0, 0.5)
+      )
     })(),
   );
 })
