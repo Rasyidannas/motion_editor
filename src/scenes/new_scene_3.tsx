@@ -25,6 +25,7 @@ import arrowUpSvg from '../../public/assets/images/arrow_up.svg';
 import squareSvg from '../../public/assets/images/square.svg';
 import filterSvg from '../../public/assets/images/filter.svg';
 import trashSvg from '../../public/assets/images/trash.svg';
+import settingSvg from '../../public/assets/images/setting.svg';
 
 // ---------------------------------------------------------------------------
 // Style
@@ -278,7 +279,7 @@ export default makeScene2D(function* (view) {
           opacity={0.5}
         />
         <Img
-          src={squareSvg}
+          src={settingSvg}
           width={32}
           height={32}
           opacity={0.5}
