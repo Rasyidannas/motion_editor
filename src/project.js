@@ -14,6 +14,7 @@ export default makeProject({
     // scene1, 
     // scene2,
     scene3,
+    scene4
     // scene_bg
   ],
 });

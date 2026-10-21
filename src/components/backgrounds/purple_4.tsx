@@ -1,4 +1,4 @@
-import { Gradient, Layout, Rect, blur } from '@motion-canvas/2d';
+import { Gradient, Node, Rect, blur } from '@motion-canvas/2d';
 
 // ---------------------------------------------------------------------------
 // Dark top-glow background.
@@ -23,14 +23,12 @@ const FOCUS_Y = -756; // -20% down from the top edge (-540 - 216)
 const OVAL_Y = GLOW_RY / GLOW_RX; // ≈ 0.5625
 
 export function blackRadialRect() {
-  return new Layout({
-    width: '100%',
-    height: '100%',
+  return new Node({
     children: [
       // Base: neutral-950.
       new Rect({
-        width: '100%',
-        height: '100%',
+        width: 1920,
+        height: 1080,
         fill: '#000000',
       }),
       // Top glow: lavender core fading to transparent.
