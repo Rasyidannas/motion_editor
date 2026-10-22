@@ -1288,5 +1288,22 @@ export default makeScene2D(function* (view) {
     componentCollection().scale(1.25, 0.5),
   )
 
+  yield* waitFor(HOLD_DURATION)
 
+  // Outro
+  yield* all(
+    colorsDesignSystem().opacity(0, 0.25),
+    fontsDesignSystem().opacity(0, 0.25),
+    buttonsDesignSystem().opacity(0, 0.25),
+    inputsDesignSystem().opacity(0, 0.25),
+    animationsDesignSystem().opacity(0, 0.25),
+  )
+
+  yield* all(
+    resend().opacity(0, 0.25),
+    componentCollection().scale(5, 0.5),          // zoom OUT (scale down)
+    componentCollection().filters.blur(25, 0.5),    // blur simultaneously
+  )
+
+  yield* componentCollection().opacity(0, 0.25);
 })
