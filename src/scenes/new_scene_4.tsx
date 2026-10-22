@@ -9,7 +9,11 @@ import { createRef } from '@motion-canvas/core/lib/utils';
 import {blackRadialRect} from '../components/backgrounds/purple_4.tsx';
 import xSvg from '../../public/assets/images/x.svg';
 import palleteSvg from '../../public/assets/images/pallete.svg';
-import typeSvg from '../../public/assets/images/type.svg'
+import typeSvg from '../../public/assets/images/type.svg';
+import squareSvg from '../../public/assets/images/square.svg';
+import inputSvg from '../../public/assets/images/input.svg';
+import sparklesSvg from '../../public/assets/images/sparkles.svg';
+import cursorSvg from '../../public/assets/images/new_cursor.svg'
 
 // ---------------------------------------------------------------------------
 // Style
@@ -44,6 +48,10 @@ export default makeScene2D(function* (view) {
   const componentCollection = createRef<Rect>();
   const colorsDesignSystem = createRef<Rect>();
   const fontsDesignSystem = createRef<Rect>();
+  const buttonsDesignSystem = createRef<Rect>();
+  const inputsDesignSystem = createRef<Rect>();
+  const animationsDesignSystem = createRef<Rect>();
+  const resend = createRef<Rect>();
 
   view.add(
     <Rect
@@ -54,7 +62,7 @@ export default makeScene2D(function* (view) {
     />
   )
 
-  // Design System
+  // Colors Design System
   view.add(
     <Rect
       ref={colorsDesignSystem}
@@ -67,9 +75,9 @@ export default makeScene2D(function* (view) {
       lineWidth={2}
       radius={48}      
       // Simulate rotateY(-72deg) → compress width by cos(72°) ≈ 0.31
-      skewY={-10}
-      scale={1.5}
-      position={[1500, 0]}
+      skewY={10}
+      scale={3}
+      position={[-1500, 0]}
       opacity={0}
     >
       <Rect
@@ -203,7 +211,7 @@ export default makeScene2D(function* (view) {
     </Rect>
   )
 
-  // Fonts
+  // Fonts Design System
   view.add(
     <Rect
       ref={fontsDesignSystem}
@@ -216,8 +224,9 @@ export default makeScene2D(function* (view) {
       lineWidth={2}
       radius={48}      
       // Simulate rotateY(-72deg) → compress width by cos(72°) ≈ 0.31
-      scaleX={0.5}
-      x={-230}
+      skewY={10}
+      scale={3}
+      position={[1500, 0]}
       opacity={0}
     >
       <Rect
@@ -317,12 +326,12 @@ export default makeScene2D(function* (view) {
 
           <Rect
             padding={[8, 16]}
-            width={148}
             radius={12}
             stroke={'rgba(255, 255, 255, 0.5)'}
             lineWidth={2}
             fill={purpleGradient}
             marginTop={24}
+            alignSelf={'start'}
           >
             <Txt
               text="Edit Fonts"
@@ -336,13 +345,569 @@ export default makeScene2D(function* (view) {
     </Rect>
   )
 
-    // CMS Collection
+  // Buttons Design System
+  view.add(
+    <Rect
+      ref={buttonsDesignSystem}
+      layout
+      direction={'column'}
+      width={920}
+      height={460}
+      fill={'#0a0a0a'}
+      stroke={'rgba(255, 255, 255, 0.15)'}
+      lineWidth={2}
+      radius={48}      
+      // Simulate rotateY(-72deg) → compress width by cos(72°) ≈ 0.31
+      skewY={10}
+      scale={3}
+      position={[-1500, 0]}
+      opacity={0}
+    >
+      <Rect
+        layout
+        direction={'row'}
+        padding={[32, 48]}
+        justifyContent="space-between"
+      >
+        <Txt
+          text="Buttons Design System"
+          fontSize={24}
+          fontWeight={700}
+          fill={'rgba(255, 255, 255, 1)'}
+        />
+        <Line
+          lineWidth={2}
+          stroke={"rgba(255, 255, 255, 0.05)"}
+          points={[[0, 100], [920, 100]]} /* start/end coords at bottom */
+          position={[-460, -60]}
+          layout={false}
+        />
+      </Rect>
+
+      <Rect>
+        <Rect
+          layout
+          direction={'column'}
+          gap={24}
+          padding={[24, 48]}
+        >
+          <Rect
+            layout
+            direction={'row'}
+            gap={16}
+          >
+            <Rect
+              padding={24}
+              fill='#8a5cf630'
+              radius={24}
+            >
+              <Img
+                src={squareSvg}
+                width={48}
+                height={32}
+                opacity={0.5}
+              />
+            </Rect>
+            <Rect
+              layout
+              direction={"column"}
+              gap={16}
+              justifyContent="center"
+            >
+              <Txt
+                text="Button Variants"
+                fontSize={20}
+                fontWeight={600}
+                fill={'rgba(255, 255, 255, 0.75)'}
+              />
+              <Txt
+                text="4 variants"
+                fontSize={20}
+                fontWeight={600}
+                fill={'rgba(255, 255, 255, 0.5)'}
+              />
+            </Rect>
+          </Rect>
+
+          <Rect
+            layout
+            direction={'row'}
+            gap={12}
+          >
+            <Rect
+              layout
+              padding={[12, 16]}
+              stroke={'rgba(255, 255, 255, 0.35)'}
+              lineWidth={2}
+              radius={8}
+              alignSelf={'start'}
+            >
+              <Txt
+                text={"Ghost"}
+                fill={'rgba(255, 255, 255, 0.5)'}
+                fontSize={20}
+                alignSelf={"start"}
+              />
+            </Rect>
+            <Rect
+              layout
+              padding={[12, 16]}
+              stroke={'rgba(255, 255, 255, 0.35)'}
+              lineWidth={2}
+              radius={8}
+              alignSelf={'start'}
+            >
+              <Txt
+                text={"Link"}
+                fill={'rgba(255, 255, 255, 0.5)'}
+                fontSize={20}
+                alignSelf={"start"}
+              />
+            </Rect>
+            <Rect
+              layout
+              padding={[12, 16]}
+              stroke={'rgba(255, 255, 255, 0.35)'}
+              lineWidth={2}
+              radius={8}
+              alignSelf={'start'}
+            >
+              <Txt
+                text={"Primary"}
+                fill={'rgba(255, 255, 255, 0.5)'}
+                fontSize={20}
+                alignSelf={"start"}
+              />
+            </Rect>
+            <Rect
+              layout
+              padding={[12, 16]}
+              stroke={'rgba(255, 255, 255, 0.35)'}
+              lineWidth={2}
+              radius={8}
+              alignSelf={'start'}
+            >
+              <Txt
+                text={"Secondary"}
+                fill={'rgba(255, 255, 255, 0.5)'}
+                fontSize={20}
+                alignSelf={"start"}
+              />
+            </Rect>
+          </Rect>
+
+          <Txt
+            text={"Primary, secondary, ghost and link button styles with normal and hover states."}
+            fill={'rgba(255, 255, 255, 0.5)'}
+            width={624}
+            fontSize={20}
+            alignSelf={"start"}
+          />
+
+          <Rect
+            padding={[8, 16]}
+            radius={12}
+            stroke={'rgba(255, 255, 255, 0.5)'}
+            lineWidth={2}
+            fill={purpleGradient}
+            marginTop={24}
+            alignSelf={"start"}
+          >
+            <Txt
+              text="Edit Buttons"
+              fontSize={24}
+              fill="#ffffff"
+              fontWeight={600}
+            />
+          </Rect>
+        </Rect>
+      </Rect>
+    </Rect>
+  )
+
+  // Inputs Design System
+  view.add(
+    <Rect
+      ref={inputsDesignSystem}
+      layout
+      direction={'column'}
+      width={920}
+      height={460}
+      fill={'#0a0a0a'}
+      stroke={'rgba(255, 255, 255, 0.15)'}
+      lineWidth={2}
+      radius={48}      
+      // Simulate rotateY(-72deg) → compress width by cos(72°) ≈ 0.31
+      skewY={10}
+      scale={3}
+      position={[1500, 0]}
+      opacity={0}
+    >
+      <Rect
+        layout
+        direction={'row'}
+        padding={[32, 48]}
+        justifyContent="space-between"
+      >
+        <Txt
+          text="Inputs Design System"
+          fontSize={24}
+          fontWeight={700}
+          fill={'rgba(255, 255, 255, 1)'}
+        />
+        <Line
+          lineWidth={2}
+          stroke={"rgba(255, 255, 255, 0.05)"}
+          points={[[0, 100], [920, 100]]} /* start/end coords at bottom */
+          position={[-460, -60]}
+          layout={false}
+        />
+      </Rect>
+
+      <Rect>
+        <Rect
+          layout
+          direction={'column'}
+          gap={24}
+          padding={[24, 48]}
+        >
+          <Rect
+            layout
+            direction={'row'}
+            gap={16}
+          >
+            <Rect
+              padding={24}
+              fill='#8a5cf630'
+              radius={24}
+            >
+              <Img
+                src={inputSvg}
+                width={32}
+                height={32}
+                opacity={0.5}
+              />
+            </Rect>
+            <Rect
+              layout
+              direction={"column"}
+              gap={16}
+              justifyContent="center"
+            >
+              <Txt
+                text="Input Variants"
+                fontSize={20}
+                fontWeight={600}
+                fill={'rgba(255, 255, 255, 0.75)'}
+              />
+              <Txt
+                text="2 variants"
+                fontSize={20}
+                fontWeight={600}
+                fill={'rgba(255, 255, 255, 0.5)'}
+              />
+            </Rect>
+          </Rect>
+
+          <Rect
+            layout
+            direction={'row'}
+            gap={12}
+          >
+            <Rect
+              layout
+              padding={[12, 16]}
+              stroke={'rgba(255, 255, 255, 0.35)'}
+              lineWidth={2}
+              radius={8}
+              alignSelf={'start'}
+            >
+              <Txt
+                text={"Dark"}
+                fill={'rgba(255, 255, 255, 0.5)'}
+                fontSize={20}
+                alignSelf={"start"}
+              />
+            </Rect>
+            <Rect
+              layout
+              padding={[12, 16]}
+              stroke={'rgba(255, 255, 255, 0.35)'}
+              lineWidth={2}
+              radius={8}
+              alignSelf={'start'}
+            >
+              <Txt
+                text={"Default"}
+                fill={'rgba(255, 255, 255, 0.5)'}
+                fontSize={20}
+                alignSelf={"start"}
+              />
+            </Rect>
+          </Rect>
+
+          <Txt
+            text={"Default, dark, and other input styles with focus and placeholder states."}
+            fill={'rgba(255, 255, 255, 0.5)'}
+            width={624}
+            fontSize={20}
+            alignSelf={"start"}
+          />
+
+          <Rect
+            padding={[8, 16]}
+            radius={12}
+            stroke={'rgba(255, 255, 255, 0.5)'}
+            lineWidth={2}
+            fill={purpleGradient}
+            marginTop={24}
+            alignSelf={"start"}
+          >
+            <Txt
+              text="Edit Inputs"
+              fontSize={24}
+              fill="#ffffff"
+              fontWeight={600}
+            />
+          </Rect>
+        </Rect>
+      </Rect>
+    </Rect>
+  )
+
+  // Animation Design System
+  view.add(
+    <Rect
+      ref={animationsDesignSystem}
+      layout
+      direction={'column'}
+      width={920}
+      height={460}
+      fill={'#0a0a0a'}
+      stroke={'rgba(255, 255, 255, 0.15)'}
+      lineWidth={2}
+      radius={48}      
+      // Simulate rotateY(-72deg) → compress width by cos(72°) ≈ 0.31
+      skewY={10}
+      scale={3}
+      position={[-1500, 0]}
+      opacity={0}
+    >
+      <Rect
+        layout
+        direction={'row'}
+        padding={[32, 48]}
+        justifyContent="space-between"
+      >
+        <Txt
+          text="Animations Design System"
+          fontSize={24}
+          fontWeight={700}
+          fill={'rgba(255, 255, 255, 1)'}
+        />
+        <Line
+          lineWidth={2}
+          stroke={"rgba(255, 255, 255, 0.05)"}
+          points={[[0, 100], [920, 100]]} /* start/end coords at bottom */
+          position={[-460, -60]}
+          layout={false}
+        />
+      </Rect>
+
+      <Rect>
+        <Rect
+          layout
+          direction={'column'}
+          gap={24}
+          padding={[24, 48]}
+        >
+          <Rect
+            layout
+            direction={'row'}
+            gap={16}
+          >
+            <Rect
+              padding={24}
+              fill='#8a5cf630'
+              radius={24}
+            >
+              <Img
+                src={sparklesSvg}
+                width={32}
+                height={32}
+                opacity={0.5}
+              />
+            </Rect>
+            <Rect
+              layout
+              direction={"column"}
+              gap={16}
+              justifyContent="center"
+            >
+              <Txt
+                text="Animations"
+                fontSize={20}
+                fontWeight={600}
+                fill={'rgba(255, 255, 255, 0.75)'}
+              />
+              <Txt
+                text="Reveal once"
+                fontSize={20}
+                fontWeight={600}
+                fill={'rgba(255, 255, 255, 0.5)'}
+              />
+            </Rect>
+          </Rect>
+
+          <Txt
+            text={"Whether scroll reveal animations play once or replay each time an element scrolls back into view."}
+            fill={'rgba(255, 255, 255, 0.5)'}
+            width={624}
+            fontSize={19}
+            alignSelf={"start"}
+          />
+
+          <Rect
+            padding={[8, 16]}
+            radius={12}
+            stroke={'rgba(255, 255, 255, 0.5)'}
+            lineWidth={2}
+            fill={purpleGradient}
+            marginTop={24}
+            alignSelf={"start"}
+          >
+            <Txt
+              text="Edit Animations"
+              fontSize={24}
+              fill="#ffffff"
+              fontWeight={600}
+            />
+          </Rect>
+        </Rect>
+      </Rect>
+    </Rect>
+  )
+
+    // Integrated Tools
+  view.add(
+    <Rect
+      ref={resend}
+      layout
+      direction={'column'}
+      width={920}
+      height={460}
+      fill={'#0a0a0a'}
+      stroke={'rgba(255, 255, 255, 0.15)'}
+      lineWidth={2}
+      radius={48}      
+      // Simulate rotateY(-72deg) → compress width by cos(72°) ≈ 0.31
+      skewY={10}
+      scale={3}
+      position={[1500, 0]}
+      opacity={0}
+    >
+      <Rect
+        layout
+        direction={'row'}
+        padding={[32, 48]}
+        justifyContent="space-between"
+      >
+        <Txt
+          text="Integrations Tool"
+          fontSize={24}
+          fontWeight={700}
+          fill={'rgba(255, 255, 255, 1)'}
+        />
+        <Line
+          lineWidth={2}
+          stroke={"rgba(255, 255, 255, 0.05)"}
+          points={[[0, 100], [920, 100]]} /* start/end coords at bottom */
+          position={[-460, -60]}
+          layout={false}
+        />
+      </Rect>
+
+      <Rect>
+        <Rect
+          layout
+          direction={'column'}
+          gap={24}
+          padding={[24, 48]}
+        >
+          <Rect
+            layout
+            direction={'row'}
+            gap={16}
+          >
+            <Rect
+              padding={24}
+              fill='#8a5cf630'
+              radius={24}
+            >
+              <Img
+                src={cursorSvg}
+                width={32}
+                height={32}
+                opacity={0.5}
+              />
+            </Rect>
+            <Rect
+              layout
+              direction={"column"}
+              gap={16}
+              justifyContent="center"
+            >
+              <Txt
+                text="Resend"
+                fontSize={20}
+                fontWeight={600}
+                fill={'rgba(255, 255, 255, 0.75)'}
+              />
+              <Txt
+                text="Auth: API key"
+                fontSize={20}
+                fontWeight={600}
+                fill={'rgba(255, 255, 255, 0.5)'}
+              />
+            </Rect>
+          </Rect>
+
+          <Txt
+            text={"Transactional email"}
+            fill={'rgba(255, 255, 255, 0.5)'}
+            width={624}
+            fontSize={20}
+            alignSelf={"start"}
+          />
+
+          <Rect
+            padding={[8, 16]}
+            radius={12}
+            stroke={'rgba(255, 255, 255, 0.5)'}
+            lineWidth={2}
+            fill={purpleGradient}
+            marginTop={24}
+            alignSelf={"start"}
+          >
+            <Txt
+              text="Edit Animations"
+              fontSize={24}
+              fill="#ffffff"
+              fontWeight={600}
+            />
+          </Rect>
+        </Rect>
+      </Rect>
+    </Rect>
+  )
+
+  // CMS Collection
   view.add(
     <Rect
       ref={componentCollection}
       layout
       direction={'column'}
-      width={740}
+      width={775}
       height={740}
       fill={'#0a0a0a'}
       stroke={'rgba(255, 255, 255, 0.15)'}
@@ -375,8 +940,8 @@ export default makeScene2D(function* (view) {
         <Line
           lineWidth={2}
           stroke={"rgba(255, 255, 255, 0.05)"}
-          points={[[0, 100], [720, 100]]} /* start/end coords at bottom */
-          position={[-360, -60]}
+          points={[[0, 100], [775, 100]]} /* start/end coords at bottom */
+          position={[-387, -60]}
           layout={false}
         />
       </Rect>
@@ -448,8 +1013,8 @@ export default makeScene2D(function* (view) {
         <Line
           lineWidth={2}
           stroke={"rgba(255, 255, 255, 0.05)"}
-          points={[[0, 100], [720, 100]]} /* start/end coords at bottom */
-          position={[-360, -60]}
+          points={[[0, 100], [775, 100]]} /* start/end coords at bottom */
+          position={[-387, -60]}
           layout={false}
         />
       </Rect>
@@ -500,8 +1065,8 @@ export default makeScene2D(function* (view) {
         <Line
           lineWidth={2}
           stroke={"rgba(255, 255, 255, 0.05)"}
-          points={[[0, 100], [720, 100]]} /* start/end coords at bottom */
-          position={[-360, -60]}
+          points={[[0, 100], [775, 100]]} /* start/end coords at bottom */
+          position={[-387, -60]}
           layout={false}
         />
       </Rect>
@@ -551,8 +1116,8 @@ export default makeScene2D(function* (view) {
         <Line
           lineWidth={2}
           stroke={"rgba(255, 255, 255, 0.05)"}
-          points={[[0, 100], [720, 100]]} /* start/end coords at bottom */
-          position={[-360, -60]}
+          points={[[0, 100], [775, 100]]} /* start/end coords at bottom */
+          position={[-387, -60]}
           layout={false}
         />
       </Rect>
@@ -618,8 +1183,8 @@ export default makeScene2D(function* (view) {
         <Line
           lineWidth={2}
           stroke={"rgba(255, 255, 255, 0.05)"}
-          points={[[0, 100], [720, 100]]} /* start/end coords at bottom */
-          position={[-360, 50]}
+          points={[[0, 100], [775, 100]]} /* start/end coords at bottom */
+          position={[-388, 50]}
           layout={false}
         />
       </Rect>
@@ -673,6 +1238,46 @@ export default makeScene2D(function* (view) {
     colorsDesignSystem().y(0, 0.5),
     colorsDesignSystem().skew.y(0, 0.5),
     colorsDesignSystem().scale(1, 0.5)
+  )
+
+  yield* all (
+    fontsDesignSystem().opacity(1, 0.15),
+    fontsDesignSystem().x(0, 0.5),
+    fontsDesignSystem().y(0, 0.5),
+    fontsDesignSystem().skew.y(0, 0.5),
+    fontsDesignSystem().scale(1.01, 0.5),
+  )
+
+  yield* all (
+    buttonsDesignSystem().opacity(1, 0.15),
+    buttonsDesignSystem().x(0, 0.5),
+    buttonsDesignSystem().y(0, 0.5),
+    buttonsDesignSystem().skew.y(0, 0.5),
+    buttonsDesignSystem().scale(1.02, 0.5),
+  )
+
+  yield* all (
+    inputsDesignSystem().opacity(1, 0.15),
+    inputsDesignSystem().x(0, 0.5),
+    inputsDesignSystem().y(0, 0.5),
+    inputsDesignSystem().skew.y(0, 0.5),
+    inputsDesignSystem().scale(1.03, 0.5),
+  )
+
+  yield* all (
+    animationsDesignSystem().opacity(1, 0.15),
+    animationsDesignSystem().x(0, 0.5),
+    animationsDesignSystem().y(0, 0.5),
+    animationsDesignSystem().skew.y(0, 0.5),
+    animationsDesignSystem().scale(1.04, 0.5),
+  )
+
+  yield* all (
+    resend().opacity(1, 0.15),
+    resend().x(0, 0.5),
+    resend().y(0, 0.5),
+    resend().skew.y(0, 0.5),
+    resend().scale(1.05, 0.5),
   )
   
   yield* all (

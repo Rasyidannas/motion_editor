@@ -13,7 +13,7 @@ export default makeProject({
   scenes: [
     // scene1, 
     // scene2,
-    scene3,
+    // scene3,
     scene4
     // scene_bg
   ],
